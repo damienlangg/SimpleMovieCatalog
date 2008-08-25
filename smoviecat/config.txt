@@ -1,0 +1,9 @@
+# All command line options can be used in a config file.
+# Use only one option per line, followed by optional arguments in same line.
+# Empty lines and lines starting with # are ignored.
+
+# Specify directories to scan, 1 per line, example:
+# D:\Movies
+# E:\Movies
+
+
