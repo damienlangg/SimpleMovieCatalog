@@ -1486,6 +1486,7 @@ sub parse_cfg
     open $F_CFG, "<", $cfg_name;
     while (<$F_CFG>) {
         chomp;   # strip newline
+        s/\r$//; # strip carriage return
         s/^ *//; # strip leading space
         s/ *$//; # strip trailing space
         if (/^#/) { next; } # skip comment
@@ -1624,12 +1625,19 @@ sub init
     print_debug "Cache IMDB: '$imdb_cache' Image: '$image_cache'\n";
 }
 
+sub open_log {
+    open $F_LOG, ">", $scan_log;
+    print_log "$progname $progver";
+    print_log "Perl: ", $^X, " ", $^V, " ", $^O;
+    print_log "CYGWIN='", $ENV{CYGWIN}, "'";
+}
+
+
 ###############################
 
 ### Main
 
-open $F_LOG, ">", $scan_log;
-print_log "$progname $progver";
+open_log;
 
 parse_opt(@ARGV);
 
