@@ -1,5 +1,5 @@
 
-Simple Movie Catalog 1.0
+Simple Movie Catalog 1.0.1
 Copyright (C) 2008 damien.langg@gmail.com
 
 Simple Movie Catalog will scan a given directory for movies,
@@ -18,14 +18,14 @@ Make sure to have perl in PATH!
 
 2. Drag & Drop
 
-Drag and drop a directory to the run_scan.cmd shortcut.
+Drag and drop a directory to the run_scan.cmd command.
 The directory will be scanned, html report generated
 and opened using your favorite web browser.
 
 3. Edit config.txt
 
 Edit config.txt and write each directory to be scanned in a separate line.
-Start the run_scan.cmd program directly, it will use the config file, scan
+Start the run_scan.cmd command directly, it will use the config file, scan
 all the specified directories, generate html report and open it in a browser.
 
 
@@ -81,7 +81,7 @@ Usage: ./moviecat.pl [OPTIONS] [DIRECTORY ...]
     regex skip: [/subs-.*/ /\W*sample\W*/]
     media ext: [mpg mpeg avi mov qt wmv mkv nfo rar iso bin cue srt sub]
     codec tags: [cam ts r5 dvdscr dvdrip dvd dvd9 cd1 cd2 hdtv hddvdrip hddvd bluray bd5 bd9 vcd xvid divx x264 matroska wmv dts dolby ac3 vorbis mp3 sub 720p 1080p hd hidef]
-    cache dir: [/home/langod/imdb/imdb_cache]
+    cache dir: [imdb_cache]
     output: [report/movies]
 
 

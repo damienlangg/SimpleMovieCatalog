@@ -22,26 +22,31 @@ explorer report\cmd.html
 goto :EXIT
 
 :SCANCONF
-
 perl moviecat.pl -c config.txt %OPT%
+if %ERRORLEVEL% == 10 goto :NODIR
 if ERRORLEVEL 1 goto :ERROR
 explorer report\movies.html
 goto :EXIT
 
 :NOPERL
-
 echo ********************************
 echo ERROR: Perl not found!
 echo Install Perl and add it to PATH!
 echo ********************************
 goto :EXIT
 
-:ERROR
+:NODIR
+:: echo ERROR: No directory specified!
+echo.
+echo Edit config file and re-run.
+echo.
+explorer config.txt
+goto :EXIT
 
+:ERROR
 echo ERROR running moviecat.pl: %ERRORLEVEL%
 
 :EXIT
-
 echo Press any key to exit ...
 pause >NUL
 
