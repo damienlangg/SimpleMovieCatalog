@@ -5,47 +5,97 @@
 <body bgcolor=dimgray>
 
 <br>
-<table width=90% align=center bgcolor=white><tr><td>
+<table width=95% align=center bgcolor=white><tr><td>
+<table width=95% align=center bgcolor=white><tr><td>
 
-<center><h2>Simple Movie Catalog</h2></center>
-<ul>
-Go to sourceforge project page for
-<a href="http://sourceforge.net/projects/smoviecat/">
-details and download.</a>
-
+<center><h2>Simple Movie Catalog</h2>
+| <a href=#about>about</a> |
+<a href=#download>download</a> |
+<a href=#screenshot>screenshot</a> |
+<a href=#install>install</a> |
+<a href=#faq>faq</a> |
+<a href=#contact>contact</a> |
 <br>
-<h3>About:</h3>
+</center>
+
+<h3><a name=about>About:</a></h3>
 Simple Movie Catalog will scan a given directory for movies,
-query imdb for info and <br> generate a catalog in html
+query imdb for info and generate a catalog in html
 which offers sorting and grouping of found movies by different criteria.
 <br>
 
-<h3>Install:</h3>
-Simple Movie Catalog is written in perl so you'll have to first:
-<br><br>
-<ol>
-<li><b>Install Perl</b><br>
-Download from here:
-<a href="http://www.activestate.com/Products/activeperl/">ActiveState Perl</a>.
-Or install <a href="http://www.cygwin.com/">cygwin</a>, which includes perl.<br>
-Make sure to have perl in PATH!<br><br>
-<li><b>Install Simple Movie Catalog</b><br>
-Download
-<a href="http://sourceforge.net/projects/smoviecat/">SimpleMovieCatalog.zip</a>.<br>
-Unpack to a directory of your liking.<br>
-<ul>(example: <code>C:\Program Files\SimpleMovieCatalog</code>)</ul>
-Follow the instruction in the <a href=readme.txt>readme.txt</a> file.
-</ol>
+<h3><a name=download>Download:</a></h3>
+Go to sourceforge project page for
+<a href="http://sourceforge.net/projects/smoviecat/">
+details and download.</a>
+<br>
 
-<h3>Screenshot:</h3>
+<h3><a name=screenshot>Screenshot:</a></h3>
 <center>
 <img src="http://sourceforge.net/dbimage.php?id=184227">
 </center><br>
 
-<b>Contact:</b>
-<a href="http://sourceforge.net/users/damienlangg/">Damien Langg</a>
+<br>
+<h3><a name=install>Install Instructions:</a></h3>
 
+<ul>
+<li><b>Windows:</b><br><br>
+<ol>
+<li><b>Install Perl</b><br>
+Simple Movie Catalog is written in perl so you'll have to install it first.<br>
+Download from here:
+<a href="http://www.activestate.com/Products/activeperl/">ActiveState Perl</a>.
+(Or install <a href="http://www.cygwin.com/">cygwin</a>, which includes perl.)<br>
+Make sure to have perl in PATH!<br><br>
+<li><b>Install Simple Movie Catalog</b><br>
+Download
+<a href="http://sourceforge.net/projects/smoviecat/">SimpleMovieCatalog.zip</a> and
+unpack to a directory of your liking.<br>
+(example: <code>C:\Program Files\SimpleMovieCatalog</code>)
+<br><br>
+<li><b>Run</b><br>
+Drag&drop a directory to run_scan.cmd
+or edit config.txt and start run_scan.cmd<br>
+The directory will be scanned, html report generated
+and opened using your favorite web browser.<br>
+Read the instruction in the <a href=readme.txt>readme.txt</a> file for more details.
+</ol>
+
+<br><li><b>Linux:</b><br>
+<ul>
+Unpack, edit config.txt and run:<br>
+<code>$ perl moviecat.pl -c config.txt</code><br>
+Open report/movies.html with your favorite browser.<br>
+Read the instruction in the <a href=readme.txt>readme.txt</a> file for more details.
 </ul>
+</ul>
+
+<br>
+<h3><a name=faq>FAQ:</a></h3>
+<ul>
+<li>Q: Why? - There are many movie catalogs / managers / organizers / database programs. Why is there a need for another one?
+<li>A: Because none that I tried would meet my requirements:
+<ul>
+<li>really usable disk scanning capabilities
+<li>simple - no web server or database dependancies
+<li>completely automatic - no manual editing
+<li>free
+</ul></ul>
+
+<br>
+<h3><a name=contact>Contact:</a></h3>
+Send an email to:
+<a href="http://sourceforge.net/users/damienlangg/">Damien Langg</a>.<br>
+Or post a message in the
+<a href="http://sourceforge.net/forum/?group_id=237575">Forum</a>.<br>
+Or leave a comment on
+<a href="http://freshmeat.net/projects/smoviecat/">freshmeat</a>.<br>
+Any feedback is welcome!
+<br><br>
+
+<br>
+</td></tr></table>
+
 </td></tr></table>
 
 <br><hr>
@@ -53,6 +103,8 @@ Follow the instruction in the <a href=readme.txt>readme.txt</a> file.
 <a href="http://sourceforge.net"><img src="http://sflogo.sourceforge.net/sflogo.php?group_id=237575&amp;type=3" width="125" height="37" border="0" alt="SourceForge.net Logo" /></a>
 
 <a href="http://freshmeat.net/projects/smoviecat/"><img src="http://c.fsdn.com/fm/link_button_3.gif" border="0" alt="freshmeat.net"></a>
+
+<br><br><br>
 
 </body>
 </html>

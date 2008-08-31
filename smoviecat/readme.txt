@@ -1,5 +1,5 @@
 
-Simple Movie Catalog 1.0.1
+Simple Movie Catalog 1.0.2
 Copyright (C) 2008 damien.langg@gmail.com
 
 Simple Movie Catalog will scan a given directory for movies,
@@ -7,26 +7,37 @@ query imdb for info and generate a catalog in html which offers
 sorting and grouping of found movies by different criteria.
 
 
-Quick Start for Windows users:
-==============================
 
-1. Install PERL.
+Install Instructions:
+=====================
 
-Download from here: http://www.activestate.com/Products/activeperl/
-Or install cygwin, which includes perl (http://www.cygwin.com/)
-Make sure to have perl in PATH!
+* Windows:
 
-2. Drag & Drop
+Simple Movie Catalog is written in perl so you'll have to first:
 
-Drag and drop a directory to the run_scan.cmd command.
-The directory will be scanned, html report generated
-and opened using your favorite web browser.
+   1. Install Perl
+      Download from: http://www.activestate.com/Products/activeperl/
+      Or install cygwin, which includes perl (http://www.cygwin.com/)
+      Make sure to have perl in PATH!
 
-3. Edit config.txt
+   2. Install Simple Movie Catalog
+      Download SimpleMovieCatalog.zip and unpack to a directory of your liking.
+      (example: C:\Program Files\SimpleMovieCatalog)
 
-Edit config.txt and write each directory to be scanned in a separate line.
-Start the run_scan.cmd command directly, it will use the config file, scan
-all the specified directories, generate html report and open it in a browser.
+   3. Run
+      Drag&drop a directory to run_scan.cmd or edit config.txt and start run_scan.cmd
+      The directory will be scanned, html report generated and opened using your
+      favorite web browser.
+
+* Linux:
+
+      Unpack, edit config.txt and run:
+      $ perl moviecat.pl -c config.txt
+      Open report/movies.html with your favorite browser.
+      Read the instruction in the readme.txt file for more details. 
+      Also you might want to convert all .txt files to unix format:
+      $ dos2unix *.txt doc/*.txt
+
 
 
 How does it work?
@@ -46,12 +57,13 @@ All imdb queries are cached in imdb_cache directory so running the scan
 multiple times should be fast.
 
 
+
 Command Line Options:
 =====================
 
 Brief help on command line options:
 
-Usage: ./moviecat.pl [OPTIONS] [DIRECTORY ...]
+Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
   Options:
     -h|-help                Help (short|long)
     -V|-version             Version
@@ -85,12 +97,15 @@ Usage: ./moviecat.pl [OPTIONS] [DIRECTORY ...]
     output: [report/movies]
 
 
+
 Config file:
 ============
 
 All command line options can be used in a config file.
 Use only one option per line, followed by optional arguments in same line.
 Empty lines and lines starting with # are ignored.
+See doc/sample-cfg.txt for an example.
+
 
 
 Interactive mode:
@@ -98,7 +113,7 @@ Interactive mode:
 
 Start with -i option or run interactive.cmd to enter interactive mode.
 In interactive mode, you can assign movies to directories which are missing
-info, or guessing does not give exact matches.
+info (either missing a .nfo file or guessing didn't give an exact match).
 
 Brief help on interactive commands:
 
@@ -108,23 +123,25 @@ ID              -  Specify IMDB ID
 URL             -  Specify IMDB URL
 
 .               -  Show current dir info and guesses
-l / ll          -  List relevant/all files
-d / dd / dir    -  List dirs (missing info / with info / all)
-cd N / c N      -  Change to dir N / search missing info from N
+l / ll          -  List relevant / all files
+d / dd          -  List dirs (missing info / all)
+dir             -  List sub-dirs to current dir
+cd N/DIR        -  Change to dir number(N) / name(DIR)
 <enter>         -  Next dir with missing info
 n / p           -  Next / Previous dir
 pwd             -  Print Current Dir
 !CMD            -  Run command CMD in dir
 r               -  Recreate Report
-?               -  Print Help
-q               -  Quit
+? / h / help    -  Print Help
+q / quit        -  Quit
+
 
 
 License:
 ========
 
-Covered by the GPL.
-Read license.txt and gpl.txt for licensing information
+Covered by the GPL License.
+Read doc/license.txt and doc/gpl.txt for details.
 
 
 

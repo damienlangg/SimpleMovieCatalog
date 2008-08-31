@@ -8,7 +8,7 @@ use LWP::Simple;
 use HTML::TokeParser;
 use Data::Dumper;
 
-$VERSION = '0.20';
+$VERSION = '0.21';
 $ERROR = "";
 
 sub error {
@@ -24,36 +24,32 @@ sub new {
     chomp($key);
     carp "can't instantiate $class without id or keyword" unless $key;
     $site ||= 'www';
-    my $parser;
+    # my $parser;
+    my $html;
     my $id;
     if ($key =~ /^\d{7}$/) {
         $id = $key;
-        $parser = _get_toker_id($id, $site) or return undef;
+        # $parser = _get_toker_id($id, $site) or return undef;
+        $html = get_page_id(@_) or return undef;
     } else {
-        $parser = _get_toker_find($key, $year, $site) or return undef;
+        # $parser = _get_toker_find($key, $year, $site) or return undef;
+        $html = get_page_find(@_) or return undef;
     }
     #print ("IMDB id: $id\n");
-    return _new_parser($class, $id, $parser);
+    # return _new_parser($class, $id, $parser);
+    return new_html($class, $id, $html);
 }
 
 sub new_html {
-    my ($class, $id, $html_ref) = @_;
+    my ($class, $id, $html) = @_;
     @MATCH = ();
     chomp($id);
-    carp "can't instantiate $class without html" unless ($html_ref);
-    my $parser = _get_toker_html($html_ref);
-    return _new_parser($class, $id, $parser);
-}
-
-sub _new_parser {
-    my ($class, $id, $parser) = @_;
-    chomp($id);
-    carp "can't instantiate $class without parser" unless $parser;
-
-    my ($title, $year, $newid);
+    carp "can't instantiate $class without html" unless ($html);
+    my $parser = _get_toker_html($html);
+    my ($title, $year, $newid, $newhtml);
 
     # get the ball rolling here
-    ($parser, $title, $year, $newid) = _title_year_search($parser);
+    ($parser, $title, $year, $newid, $newhtml) = _title_year_search($parser);
 
     # need better way to handle errors, maybe?
     if (!$parser) {
@@ -64,6 +60,10 @@ sub _new_parser {
         # print STDERR "NEW ID: $newid ($id)\n";
         $id = $newid; 
     }
+    if ($newhtml) {
+        # print STDERR "NEW HTML: $newhtml ($id)\n";
+        $html = $newhtml; 
+    }
     # print STDERR "IMDB ID: $id\n";
 
     $title =~ tr/"//d;
@@ -71,19 +71,35 @@ sub _new_parser {
     my $self = {
         title       => $title,
         year        => $year,
-        img         => _image($parser),
-        id          => $id ? $id : _id($parser),
-        user_rating => _user_rating($parser),
-        directors   => _person($parser),
-        writers     => _person($parser),
-        genres      => _genre($parser),
-        plot        => _plot($parser),
-        cast        => _cast($parser),
-        runtime     => _runtime($parser),
-        direct_hit  => !$newid,
-        matches     => \@MATCH,
     };
+    $self->{img}         = _get(\&_image, \$parser, $html);
+    if (!$id) { $id      = _get(\&_id, \$parser, $html); }
+    $self->{id}          = $id;
+    $self->{user_rating} = _get(\&_user_rating, \$parser, $html);
+    $self->{directors}   = _get(\&_person, \$parser, $html) || {};
+    $self->{writers}     = _get(\&_person, \$parser, $html) || {};
+    $self->{genres}      = _get(\&_genre, \$parser, $html) || [];
+    $self->{plot}        = _get(\&_plot, \$parser, $html);
+    $self->{cast}        = _get(\&_cast, \$parser, $html) || {};
+    $self->{runtime}     = _get(\&_runtime, \$parser, $html);
+    $self->{direct_hit}  = !$newid;
+    $self->{matches}     = \@MATCH;
+    # note: [] = ref to empty array
+    # note: {} = ref to empty hash
+
     return bless $self, $class;
+}
+
+sub _get
+{
+    my ($func, $parse_r, $html) = @_;
+    my $val = &$func($$parse_r);
+    if (!$val) {
+        # if func returns undef then rewind parser and retry
+        $$parse_r = _get_toker_html($html);
+        $val = &$func($$parse_r);
+    }
+    return $val;
 }
 
 sub to_string() {
@@ -143,7 +159,7 @@ sub get_matches
 
 sub _title_year_search {
     my ($parser) = @_;
-    my ($pagetitle, $title, $year, $id);
+    my ($pagetitle, $title, $year, $id, $html);
 
     $parser->get_tag('title');
     $pagetitle = $parser->get_text();
@@ -154,7 +170,9 @@ sub _title_year_search {
         return undef unless ($id);
 
         # start over
-        $parser = _get_toker_id($id);
+        # $parser = _get_toker_id($id);
+        $html = get_page_id(@_) or return undef;
+        $parser = _get_toker_html($html);
         $parser->get_tag('title');
         $pagetitle = $parser->get_text();
     }
@@ -162,7 +180,7 @@ sub _title_year_search {
     return undef unless $pagetitle =~ /([^\(]+)\s+\((\d{4})/;
     $title = $1;
     $year = $2;
-    return ($parser, $title, $year, $id);
+    return ($parser, $title, $year, $id, $html);
 }
 
 
@@ -264,7 +282,7 @@ sub _person {
 
         redo;
     }
-
+    return undef if (!%name);
     return {%name};
 }
 
@@ -297,6 +315,7 @@ sub _genre {
     $genre =~ tr/ //d;
     @genre = split(/\|/, $genre);
 
+    return undef if (!@genre);
     return [ unique(@genre) ];
 }
 
@@ -337,6 +356,7 @@ sub _cast {
             }
         }
     }
+    return undef if (!%name);
     return {%name};
 }
 

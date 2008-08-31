@@ -2,7 +2,7 @@
 
 =copyright
 
-    Simple Movie Catalog 1.0.1
+    Simple Movie Catalog 1.0.2
     Copyright (C) 2008 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -29,11 +29,12 @@ use File::Basename;
 use LWP::Simple;
 #use IMDB_Movie;
 push @INC, $FindBin::Bin;
+push @INC, $FindBin::Bin . "/lib";
 require "IMDB_Movie.pm";
 
 ### Globals
 
-my $progver = "1.0.1";
+my $progver = "1.0.2";
 my $progbin = "moviecat.pl";
 my $progname = "Simple Movie Catalog";
 my $progurl = "http://smoviecat.sf.net/";
@@ -127,7 +128,7 @@ sub print_debug {
 }
 
 sub _print_debug {
-    print @_;
+    print @_, "\n";
 }
 
 sub abort {
@@ -169,6 +170,12 @@ sub normal_path {
     $path =~ tr[\\][/];
     return $path;
 }
+
+# sort by alphanum, ignore case
+sub by_alpha {
+    lc($a) cmp lc($b);
+}
+
 
 sub path_to_guess;
 
@@ -739,7 +746,7 @@ sub format_movie
     print_html "<tr><td height=1*><font size=-2>Location: ";
     my $i = 0;
     my $nloc = scalar @location;
-    for my $loc (sort { $a cmp $b } @location) {
+    for my $loc (sort by_alpha @location) {
         $i++;
         if ($nloc > 1) {
             print_html "<br><b>($i)</b> ";
@@ -778,7 +785,7 @@ sub count_missing
 
 sub report_missing
 {
-    my @sort_dirs = sort { $a cmp $b } keys %all_dirs;
+    my @sort_dirs = sort by_alpha keys %all_dirs;
     my $perf_match = 0;
 
     print_html "<br>Directories with missing info:<br>";
@@ -959,7 +966,7 @@ sub print_page_genre
     }
 
     print_html "Genre: <ul>";
-    @glist = sort {$a cmp $b} keys %genres;
+    @glist = sort by_alpha keys %genres;
     for $g (@glist) {
         my $ng = scalar keys %{$genres{$g}};
         print_html "<li><a href=#$g>$g</a> ($ng)";
@@ -1054,23 +1061,34 @@ sub get_guess_list
     return @guess;
 }
 
+sub list_file
+{
+    my ($dir, $f) = @_;
+    my $fn = "$dir/$f";
+    if (-d $fn) {
+        print "           $f/\n";
+    } elsif (-f $fn) {
+        my $size = (-s _) / 1024 / 1024;
+        printf "  %6.1fM  %s\n", $size, $f;
+    } else {
+        print "           $f\n";
+    }
+}
+
 sub list_files
 {
     my $dir = shift;
     my @flist;
     opendir(my $dh, $dir) or print_error("opendir $dir\n") and return;
-    for my $f (readdir($dh)) {
+    for my $f (sort by_alpha readdir($dh)) {
         next if ($f eq "." or $f eq "..");
         my $fn = "$dir/$f";
-        if (-d $fn) { print "           $f/\n"; }
-        else { push @flist, $f; }
+        if (-d $fn) {
+            list_file $dir, $f;
+        } else { push @flist, $f; }
     }
     for my $f (@flist) {
-        my $fn = "$dir/$f";
-        if (-f $fn) {
-            my $size = (-s _) / 1024 / 1024;
-            printf "  %6.1fM  %s\n", $size, $f;
-        } else { print "           $f\n"; }
+        list_file $dir, $f;
     }
     print "\n";
     close $dh;
@@ -1079,10 +1097,11 @@ sub list_files
 
 sub list_relevant
 {
-    my @files = @_;
+    my ($dir, @files) = @_;
     print_info "Relevant files:\n";
-    for my $f (@files) {
-        print_info "  $f\n";
+    for my $f (sort by_alpha @files) {
+        #print_info "  $f\n";
+        list_file $dir, $f;
     }
     print_info "\n";
 }
@@ -1090,33 +1109,92 @@ sub list_relevant
 sub print_dir
 {
     my ($all, $i, $dir) = @_;
+    my $dtag;
     if ($all_dirs{$dir}->{info}) {
         next if (!$all);
         if ($all_dirs{$dir}->{guess}) {
-            print_info "  g";
+            $dtag = "g";
         } else {
-            print_info "  *";
+            $dtag = "*";
         }
     } elsif ($all_dirs{$dir}->{relevant}) {
-        print_info "  -";
+        $dtag = "-";
     } else {
         next if ($all < 2);
-        print_info "   ";
+        $dtag = " ";
     }
-    print_info " [$i] $dir\n";
+    print_info "  $dtag [$i] $dir\n";
 }
 
 sub list_dirs
 {
     my $all = shift;
     my @dirs = @_;
-    print_info "\nDirs with missing info:\n\n";
+    if ($all) { print_info "\nAll Directories:\n\n"; }
+    else { print_info "\nDirectories with missing info:\n\n"; }
     my $i;
     for my $dir (@dirs) {
         $i++;
         print_dir $all, $i, $dir;
     }
     print_info "\n";
+}
+
+sub get_subdirs
+{
+    my ($dir, @dirs) = @_;
+    my @subdirs;
+    for my $d (@dirs) {
+        if (index($d, "$dir/") == 0) {
+            my $subdir = substr($d, length "$dir/");
+            if (index($subdir, "/") < 0) {
+                # found subdir
+                push @subdirs, $subdir;
+            }
+        }
+    }
+    return @subdirs;
+}
+
+sub list_subdirs
+{
+    my ($dir, @dirs) = @_;
+    my @subdirs = get_subdirs($dir, @dirs);
+    if (scalar @subdirs) {
+        print_info "\nSub-Directories:\n";
+    } else {
+        print_info "No Sub-Directories.";
+    }
+    for my $sd (@subdirs) {
+        my $d = "$dir/$sd";
+        my $i = $all_dirs{$d}->{idx};
+        print_dir 2, $i+1, $sd;
+    }
+    print_info "\n";
+}
+
+sub find_dir
+{
+    my ($dir, $arg, @dirs) = @_;
+    if ($arg eq "/") {
+        return 0;
+    } elsif ($arg eq ".") {
+        return $all_dirs{$dir}->{idx};
+    } elsif ($arg eq "..") {
+        return -1 if (rindex($dir, "/") < 0);
+        $arg = substr($dir, 0, rindex($dir, "/"));
+    } else {
+        # search relative dir
+        my $sdir = "$dir/$arg";
+        if ($all_dirs{$sdir}) {
+            return $all_dirs{$sdir}->{idx};
+        }
+    }
+    # search absolute dir
+    if ($all_dirs{$arg}) {
+        return $all_dirs{$arg}->{idx};
+    }
+    return -1;
 }
 
 sub run_cmd
@@ -1223,26 +1301,30 @@ ID              -  Specify IMDB ID
 URL             -  Specify IMDB URL
 
 .               -  Show current dir info and guesses
-l / ll          -  List relevant/all files
-d / dd / dir    -  List dirs (missing info / with info / all)
-cd N / c N      -  Change to dir N / search missing info from N
+l / ll          -  List relevant / all files
+d / dd          -  List dirs (missing info / all)
+dir             -  List sub-dirs to current dir
+cd N/DIR        -  Change to dir number(N) / name(DIR)
 <enter>         -  Next dir with missing info
 n / p           -  Next / Previous dir
 pwd             -  Print Current Dir
 !CMD            -  Run command CMD in dir
 r               -  Recreate Report
-?               -  Print Help
-q               -  Quit
+? / h / help    -  Print Help
+q / quit        -  Quit
 
 IHELP
-#0          -  Mark Ignore dir
-#v          -  View nfo
-#e          -  Explore
 }
 
 sub interactive
 {
-    my @sort_dirs = sort { $a cmp $b } keys %all_dirs;
+    # sort
+    my @sort_dirs = sort by_alpha keys %all_dirs;
+    for (my $i=0; $i<scalar @sort_dirs; $i++) {
+        # index
+        $all_dirs{$sort_dirs[$i]}->{idx} = $i;
+    }
+
     my $cur_dir = 0;
     my $nmiss = count_missing;
     print_info "Directories with missing info: ",
@@ -1301,7 +1383,7 @@ sub interactive
             }
             goto CHDIR;
 
-        } elsif ($cmd eq "?") {
+        } elsif ($cmd eq "?" or $cmd eq "h" or $cmd eq "help") {
             print_ihelp;
 
         } elsif ($cmd eq ".") {
@@ -1311,7 +1393,7 @@ sub interactive
             print_dir 2, $cur_dir + 1, $dir;
 
         } elsif ($cmd eq "l") {
-            list_relevant @files;
+            list_relevant $dir, @files;
 
         } elsif ($cmd eq "ll" or $cmd eq "ls") {
             list_files $dir;
@@ -1320,21 +1402,29 @@ sub interactive
             list_dirs 0, @sort_dirs;
 
         } elsif ($cmd eq "dd") {
-            list_dirs 1, @sort_dirs;
-
-        } elsif ($cmd eq "dir") {
             list_dirs 2, @sort_dirs;
 
-        } elsif ($cmd =~ /^c (\d+)$/) {
+        } elsif ($cmd eq "dir") {
+            list_subdirs $dir, @sort_dirs;
+
+        } elsif ($cmd =~ /^c +(\d+)$/) {
             if ($1 >=1 and $1 <= scalar @sort_dirs) {
                 $cur_dir = $1 - 1;
                 goto NEXT_MISS;
             }
 
-        } elsif ($cmd =~ /^cd (\d+)$/) {
-            if ($1 >=1 and $1 <= scalar @sort_dirs) {
-                $cur_dir = $1 - 1;
+        } elsif ($cmd =~ /^cd +(.+) *$/) {
+            my $arg = $1;
+            if (($arg =~ /^\d+$/) and $arg >=1 and $arg <= scalar @sort_dirs) {
+                $cur_dir = $arg - 1;
                 goto CHDIR;
+            } else {
+                my $new_dir = find_dir($dir, $arg, @sort_dirs);
+                if ($new_dir >= 0 and $new_dir <= scalar @sort_dirs) {
+                    $cur_dir = $new_dir;
+                    goto CHDIR;
+                }
+                print_info "Directory '", $arg, "' Not found!\n";
             }
 
         } elsif ($cmd eq "n") {
@@ -1361,12 +1451,21 @@ sub interactive
             my $run = $1;
             run_cmd($dir, $run);
 
+        } elsif ($cmd =~ /^\d{7}$/) {
+            # search by ID            
+            goto GO_SEARCH;
+
         } elsif ($cmd >= 1 and $cmd <= $num_guess) {
             do_search($dir, $guess[$cmd - 1]->{title}, $guess[$cmd - 1]->{year});
             goto INFO;
 
-        } elsif ($cmd =~ /^s (.+)$/ or length $cmd >3) {
-            my $title = $1 ? $1 : $cmd;
+        } elsif ($cmd =~ /^s +(.+)$/) {
+            $cmd = $1;
+            goto GO_SEARCH;
+
+        } elsif (length $cmd >3) {
+            GO_SEARCH:
+            my $title = $cmd;
             my $year;
             if ($title =~ /^(.+) \((\d{4})\)$/) {
                 $title = $1;
@@ -1514,7 +1613,7 @@ sub usage
     my $long = shift;
     version;
     print_info << "USAGE";
-Usage: $0 [OPTIONS] [DIRECTORY ...]
+Usage: perl $progbin [OPTIONS] [DIRECTORY ...]
   Options:
     -h|-help|-ihelp         Help (short|long|interactive)
     -V|-version             Version
@@ -1628,7 +1727,7 @@ sub init
 sub open_log {
     open $F_LOG, ">", $scan_log;
     print_log "$progname $progver";
-    print_log "Perl: ", $^X, " ", $^V, " ", $^O;
+    print_log "Perl: ", $^X, " ", sprintf("v%vd", $^V), " ", $^O;
     print_log "CYGWIN='", $ENV{CYGWIN}, "'";
 }
 

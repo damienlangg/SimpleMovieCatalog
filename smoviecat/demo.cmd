@@ -2,7 +2,8 @@
 
 title Simple Movie Catalog - DEMO
 
-perl moviecat.pl -c demo-cfg.txt
+cd ..
+perl moviecat.pl -c demo\demo-cfg.txt
 explorer demo\catalog.html
 
 echo Press any key to exit ...
