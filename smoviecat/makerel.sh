@@ -9,6 +9,7 @@ rm -rf $RELDIR $ZIP
 mkdir $RELDIR
 mkdir $RELDIR/lib
 mkdir $RELDIR/doc
+mkdir $RELDIR/demo
 
 cp moviecat.pl interactive.cmd run_scan.cmd $RELDIR
 
@@ -22,8 +23,8 @@ fi
 cp readme.txt $RELDIR
 cp license.txt gpl.txt todo.txt sample-cfg.txt changelog.txt  $RELDIR/doc
 
-cp demo.cmd demo-cfg.txt $RELDIR/demo
 tar cf - demo --exclude CVS --exclude '*.jpg' | tar xvf - -C $RELDIR
+cp demo.cmd demo-cfg.txt $RELDIR/demo
 
 unix2dos $RELDIR/*.txt $RELDIR/doc/*.txt $RELDIR/demo/*.txt
 unix2dos $RELDIR/*.cmd $RELDIR/demo/*.cmd
