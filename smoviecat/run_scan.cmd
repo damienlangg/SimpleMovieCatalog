@@ -33,6 +33,7 @@ echo ********************************
 echo ERROR: Perl not found!
 echo Install Perl and add it to PATH!
 echo ********************************
+explorer http://www.activestate.com/Products/activeperl/
 goto :EXIT
 
 :NODIR
