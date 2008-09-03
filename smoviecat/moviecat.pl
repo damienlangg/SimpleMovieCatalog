@@ -2,7 +2,7 @@
 
 =copyright
 
-    Simple Movie Catalog 1.0.2
+    Simple Movie Catalog 1.0.3
     Copyright (C) 2008 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -34,7 +34,7 @@ require "IMDB_Movie.pm";
 
 ### Globals
 
-my $progver = "1.0.2";
+my $progver = "1.0.3";
 my $progbin = "moviecat.pl";
 my $progname = "Simple Movie Catalog";
 my $progurl = "http://smoviecat.sf.net/";
@@ -63,6 +63,7 @@ my $opt_auto = 1;       # Auto guess and report exact matches
 my $opt_miss = 1;       # Report folders with missing info
 my $opt_miss_match = 0; # Report guessed exact matches as missing
 my $opt_auto_save = 0;  # Save auto guessed exact matches
+my $opt_group_table = 1; # use table for groups
 my $verbose = 1;
 
 my %movie;  # movie{id}
@@ -896,16 +897,24 @@ sub page_start
     if (scalar @group > 1) { 
         #print_html "Group:";
         print_html "<table><tr><td valign=top>Group:<td>";
+        print_html "<table cellpadding=0 cellspacing=0><tr>" if ($opt_group_table);
         for my $g (@group) {
             my $gnm = scalar keys %{$g->{mlist}};
+            print_html "<td>" if ($opt_group_table);
             page_head_group $fadd, $g->{title}, $gname, $gnm;
             if ($g->{separate}) {
-                print_html "<br>";
+                if ($opt_group_table) {
+                    print_html "<tr>";
+                } else {
+                    print_html "<br>";
+                }
             }
         }
         if ($opt_miss and scalar @group > 1) {
+            print_html "<td>" if ($opt_group_table);
             page_head_group "", "Missing Info", $gname, count_missing;
         }
+        print_html "</table>" if ($opt_group_table);
         print_html "</table><br>";
     }
 
@@ -946,6 +955,9 @@ sub print_page
     for my $id (sort $sort_by keys %{$pmlist}) {
         format_movie($pmlist->{$id}->{movie}, keys %{$pmlist->{$id}->{location}});
     }
+    if (!%{$pmlist}) {
+        print_html "<br><br><ul><i>* No Movies *</i></ul><br><br>";
+    }
 
     page_end;
 }
@@ -959,24 +971,29 @@ sub print_page_genre
     my %genres;
     my @glist;
     my $g;
+    # build a genre list from all movies
     for my $id (keys %{$pmlist}) {
         for $g (@{$pmlist->{$id}->{movie}->genres}) {
             $genres{$g}{$id} = $pmlist->{$id};
         }
     }
 
-    print_html "Genre: <ul>";
-    @glist = sort by_alpha keys %genres;
-    for $g (@glist) {
-        my $ng = scalar keys %{$genres{$g}};
-        print_html "<li><a href=#$g>$g</a> ($ng)";
-    }
-    print_html "</ul><br>";
+    if (!%{$pmlist}) {
+        print_html "<br><br><ul><i>* No Movies *</i></ul><br><br>";
+    } else {
+        print_html "Genre: <ul>";
+        @glist = sort by_alpha keys %genres;
+        for $g (@glist) {
+            my $ng = scalar keys %{$genres{$g}};
+            print_html "<li><a href=#$g>$g</a> ($ng)";
+        }
+        print_html "</ul><br>";
 
-    for $g (@glist) {
-        print_html "<a name=$g><br><hr><h2><center>$g</center></h2><hr></a><br>";
-        for my $id (sort by_rating keys %{$genres{$g}}) {
-            format_movie($pmlist->{$id}->{movie}, keys %{$pmlist->{$id}->{location}});
+        for $g (@glist) {
+            print_html "<a name=$g><br><hr><h2><center>$g</center></h2><hr></a><br>";
+            for my $id (sort by_rating keys %{$genres{$g}}) {
+                format_movie($pmlist->{$id}->{movie}, keys %{$pmlist->{$id}->{location}});
+            }
         }
     }
 
@@ -1028,7 +1045,7 @@ sub path_to_guess
     if ($name =~ /^(.+)(\b\d{4}\b)/) {
         $year = $2;
         my $cur_year = 1900 + ((localtime)[5]);
-        if ($year >= 1930 and $year <= $cur_year + 1) {
+        if ($year >= 1920 and $year <= $cur_year + 2) {
             $title = $1;
         } else {
             $year = 0;
@@ -1040,10 +1057,10 @@ sub path_to_guess
     for my $c (@codec) {
         $title =~ s/\W$c\b.*$//i;
     }
-    $title =~ s/\W+/ /g; # replace non alphanum to space
+    $title =~ s/[^\w']/ /g; # replace non alphanum to space, keep '
     $title =~ s/^ +//;   # strip leading space
     $title =~ s/ +$//;   # strip trailing space
-    $title =~ s/ +/ /;   # strip duplicate space
+    $title =~ s/ +/ /g;   # strip duplicate space
     return ($title, $year);
 }
 

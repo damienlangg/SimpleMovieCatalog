@@ -8,7 +8,7 @@ use LWP::Simple;
 use HTML::TokeParser;
 use Data::Dumper;
 
-$VERSION = '0.21';
+$VERSION = '0.22';
 $ERROR = "";
 
 sub error {
@@ -30,10 +30,10 @@ sub new {
     if ($key =~ /^\d{7}$/) {
         $id = $key;
         # $parser = _get_toker_id($id, $site) or return undef;
-        $html = get_page_id(@_) or return undef;
+        $html = get_page_id($id, $site) or return undef;
     } else {
         # $parser = _get_toker_find($key, $year, $site) or return undef;
-        $html = get_page_find(@_) or return undef;
+        $html = get_page_find($key, $year, $site) or return undef;
     }
     #print ("IMDB id: $id\n");
     # return _new_parser($class, $id, $parser);
@@ -171,7 +171,7 @@ sub _title_year_search {
 
         # start over
         # $parser = _get_toker_id($id);
-        $html = get_page_id(@_) or return undef;
+        $html = get_page_id($id) or return undef;
         $parser = _get_toker_html($html);
         $parser->get_tag('title');
         $pagetitle = $parser->get_text();

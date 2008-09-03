@@ -1,5 +1,5 @@
 
-Simple Movie Catalog 1.0.2
+Simple Movie Catalog 1.0.3
 Copyright (C) 2008 damien.langg@gmail.com
 
 Simple Movie Catalog will scan a given directory for movies,
@@ -34,8 +34,9 @@ Simple Movie Catalog is written in perl so you'll have to first:
       Unpack, edit config.txt and run:
       $ perl moviecat.pl -c config.txt
       Open report/movies.html with your favorite browser.
-      Read the instruction in the readme.txt file for more details. 
-      Also you might want to convert all .txt files to unix format:
+
+      Note: the packaged text files are in msdos format.
+      Convert them to unix format with:
       $ dos2unix *.txt doc/*.txt
 
 
