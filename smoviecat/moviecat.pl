@@ -49,6 +49,7 @@ my $base_path = "report/movies";
 my $base_name;
 my $base_dir;
 
+my @parse_ext = qw( nfo txt url desktop );
 my @m_ext = qw( mpg mpeg avi mov qt wmv mkv nfo rar iso bin cue srt sub );
 my @codec = qw(
         cam ts r5 dvdscr dvdrip dvd dvd9 cd1 cd2
@@ -149,7 +150,19 @@ sub unique_icase {
 
 sub match_ext
 {
-    grep { $_[0] =~ /\.$_$/i } @m_ext;
+    my ($name, @ext) = @_;
+    grep { $name =~ /\.$_$/i } @ext;
+}
+
+sub match_ext_list
+{
+    my @match;
+    for my $name (@_) {
+        if (match_ext($name, @m_ext)) {
+            push @match, $name;
+        }
+    }
+    return @match;
 }
 
 sub cut_ext {
@@ -409,18 +422,6 @@ sub open_bom
     return $FH;
 }
 
-sub match_ext_list
-{
-    my $name;
-    my @match;
-    for $name (@_) {
-        if (match_ext($name)) {
-            push @match, $name;
-        }
-    }
-    return @match;
-}
-
 sub dir_assign_movie
 {
     my ($dir, $movie) = @_;
@@ -449,20 +450,20 @@ sub count_loc
 
 sub process_nfo
 {
-    my $name = $_;
-    return unless (-f $name and (/\.nfo$/i or /\.txt$/i));
-    print_debug "PROCESS: $File::Find::name\n";
-    my $shortname = shorten($File::Find::name);
+    my $fname = $File::Find::name;
+    return unless (-f $fname and match_ext($fname, @parse_ext));
+    print_debug "PROCESS: $fname\n";
+    my $shortname = shorten($fname);
     my $found = 0;
-    my $F_NFO = open_bom $name;
+    my $F_NFO = open_bom $fname;
     while (<$F_NFO>) {
         if (/imdb\.com\/title\/tt(\d+)/i) {
             my $id = $1;
             $found++;
             if ($found>1) {
-                $shortname = shorten(" +++ ($found) " . $File::Find::name . "");
+                $shortname = shorten(" +++ ($found) " . $fname . "");
             }
-            print_detail "$File::Find::name: $id\n";
+            print_detail "$fname: $id\n";
             print_note "$shortname: $id";
             my $m;
             if ($pmlist->{$id}) {
@@ -485,10 +486,10 @@ sub process_nfo
     close $F_NFO;
     if (!$found) {
         # if ( ! -e "imdb.nfo" ) {
-        print_detail "$File::Find::name: IMDB NOT FOUND\n";
+        print_detail "$fname: IMDB NOT FOUND\n";
         print_note "$shortname: IMDB NOT FOUND\n";
         # $nfo_no_id++;
-        # $nfo_noid{$File::Find::dir}{$name} = 1;
+        # $nfo_noid{$File::Find::dir}{$fname} = 1;
         # }
     }
 }
@@ -531,7 +532,7 @@ sub filter_dir
             }
         }
         if ($skip) {
-            my $fn = shorten(" --- " . $File::Find::dir . "/" . $name);
+            my $fn = shorten(" --- " . $File::Find::dir."/".$name);
             print_note "$fn: SKIP\n";
         } else {
             push @list, $name;
@@ -541,14 +542,13 @@ sub filter_dir
     # my @relevant = match_ext_list(@list);
     my @relevant;
     for my $name (@list) {
-        if (match_ext $name and -f $File::Find::dir ."/". $name) {
+        if (match_ext($name, @m_ext) and -f $File::Find::dir."/".$name) {
             push @relevant, $name;
         }
     }
     if (@relevant) {
         %{$all_dirs{$File::Find::dir}->{relevant}} = map { $_ => 1 } @relevant;
     }
-    # print_debug "MATCHES: ", (match_ext @list), "\n";
     # print_debug "RELEVANT: ", %{$all_dirs{$File::Find::dir}->{relevant}}, "\n";
     return @list;
 }

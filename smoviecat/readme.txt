@@ -13,9 +13,8 @@ Install Instructions:
 
 * Windows:
 
-Simple Movie Catalog is written in perl so you'll have to first:
-
    1. Install Perl
+      Simple Movie Catalog is written in perl so you'll have to install it first.
       Download from: http://www.activestate.com/Products/activeperl/
       Or install cygwin, which includes perl (http://www.cygwin.com/)
       Make sure to have perl in PATH!
@@ -44,18 +43,36 @@ Simple Movie Catalog is written in perl so you'll have to first:
 How does it work?
 =================
 
-The directories are scanned for .nfo and .txt files that contain links to
-imdb info like this: http://www.imdb.com/title/tt0062622/
+The directories are scanned for: *.nfo, *.txt, *.url, *.desktop files that
+contain links to imdb info like this: http://www.imdb.com/title/tt0062622/
+
 If no such link is present then the movie title and year is guessed from
 directory name and searched on imdb for an exact match.
-If none of the above methods produce valid info, then the directory is reported
-in the "Missing Info" group.
-You can then resolve missing info for these directories by either:
- - renaming the directory to reflect the "Title (Year)"
- - manually adding imdb link to a .nfo or .txt file in the directory
- - using the interactive mode to assign movies to directories
+
+If none of the above methods produce valid info, then the directory is
+reported in the "Missing Info" group.
+
+You can then resolve missing info for these directories by using one of
+these methods:
+
+ - Find the movie on imdb and then drag&drop the link from your
+   browser location bar to the directory containing the movie.
+   This will create a .url file (.desktop on linux) in the directory.
+
+ - To make guessing work better rename the directory to use the format:
+   "Title (Year) [optional additional info]"
+   Guessing will only use Title and Year. Year is mandatory and anything
+   following year is ignored.
+
+ - Manually create a .nfo or .txt file in the directory and put
+   the imdb link inside.
+
+ - Use the interactive mode to search and assign movies to directories
+
+After the info is added re-run the scan.
+
 All imdb queries are cached in imdb_cache directory so running the scan
-multiple times should be fast.
+multiple times is fast.
 
 
 
