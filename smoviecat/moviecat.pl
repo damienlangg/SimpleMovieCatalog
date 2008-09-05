@@ -34,7 +34,7 @@ require "IMDB_Movie.pm";
 
 ### Globals
 
-my $progver = "1.0.3";
+my $progver = "1.0.3+";
 my $progbin = "moviecat.pl";
 my $progname = "Simple Movie Catalog";
 my $progurl = "http://smoviecat.sf.net/";
@@ -194,6 +194,10 @@ sub by_alpha {
     lc($a) cmp lc($b);
 }
 
+# config error
+sub exit_cfg {
+    exit 10;
+}
 
 ###############################
 
@@ -667,7 +671,7 @@ sub do_scan
             print_info "[ ", $g->{title}, " ] Searching ... $dir\n";
             if ( ! -d $dir ) {
                 print_error "Directory not found: '$dir'\n";
-                exit 10;
+                exit_cfg;
             }
             $pmlist = \%{$g->{mlist}};
             find( { preprocess  => \&filter_dir,
@@ -1546,8 +1550,8 @@ sub set_opt
 {
     my ($opt, $arg) = @_;
     my $arg_used = 0;
-    my $is_dir;
-    #print_debug "opt: $opt ( $arg )\n";
+
+    print_log("OPT: '$opt' ($arg)");
 
     if ($opt eq "-v" or $opt eq "-verbose") {
         $verbose++;
@@ -1610,25 +1614,36 @@ sub set_opt
     } elsif ($opt eq "-as" or $opt eq "-autosave") {
         $opt_auto_save = 1;
 
+    } elsif ($opt eq "-c" or $opt eq "-config") {
+        $arg_used = required_arg($opt, $arg);
+        parse_cfg($arg);
+
     } elsif ($opt =~ /^-/) {
         abort "Unknown option: $opt\n";
 
     } else {
         $ndirs++;
         push @{$group[$ngroup]->{dirs}}, normal_path($opt);
-        $is_dir = 1;
+        print_log("DIR: '$opt'");
     }
-    print_log("OPT: '$opt'", ($arg_used?" ($arg)":""));
-    print_log("DIR: '$opt'") if ($is_dir);
     return $arg_used;
 }
+
+my %cfg_check;
 
 sub parse_cfg
 {
     my $cfg_name = shift;
+    if ($cfg_check{$cfg_name}++) {
+        print_error "Recursive config: $cfg_name";
+        exit_cfg;
+    }
     my $F_CFG;
     my ($opt, $arg);
-    open $F_CFG, "<", $cfg_name;
+    if (!open $F_CFG, "<", $cfg_name) {
+        print_error "open config: $cfg_name";
+        exit_cfg;
+    }
     while (<$F_CFG>) {
         chomp;   # strip newline
         s/\r$//; # strip carriage return
@@ -1645,6 +1660,7 @@ sub parse_cfg
         }
         set_opt($opt, $arg);
     }
+    $cfg_check{$cfg_name}--;
 }
 
 sub version
@@ -1727,18 +1743,14 @@ sub parse_opt
             print_ihelp;
             exit;
         }
-        if ($opt eq "-c" or $opt eq "-config") {
-            required_arg($opt, $arg);
-            parse_cfg($arg);
-            shift;
-        } elsif (set_opt($opt, $arg)) {
+        if (set_opt($opt, $arg)) {
             # arg was used
             shift;
         }
     }
     if (!$ndirs) {
         print_error "No directory specified!\n";
-        exit 10;
+        exit_cfg;
     }
 }
 
