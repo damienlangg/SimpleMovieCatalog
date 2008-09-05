@@ -50,7 +50,10 @@ my $base_name;
 my $base_dir;
 
 my @parse_ext = qw( nfo txt url desktop );
-my @m_ext = qw( mpg mpeg avi mov qt wmv mkv nfo rar iso bin cue srt sub );
+
+my @media_ext = qw( mpg mpeg mpe avi mov qt wmv mkv vob
+        nfo rar iso bin cue srt sub );
+
 my @codec = qw(
         cam ts r5 dvdscr dvdrip dvd dvd9 cd1 cd2
         hdtv hddvdrip hddvd bluray bd5 bd9
@@ -158,7 +161,7 @@ sub match_ext_list
 {
     my @match;
     for my $name (@_) {
-        if (match_ext($name, @m_ext)) {
+        if (match_ext($name, @media_ext)) {
             push @match, $name;
         }
     }
@@ -190,8 +193,6 @@ sub by_alpha {
     lc($a) cmp lc($b);
 }
 
-
-sub path_to_guess;
 
 ###############################
 
@@ -427,7 +428,7 @@ sub dir_assign_movie
     my ($dir, $movie) = @_;
     my $id = $movie->id;
     $all_dirs{$dir}->{info} = 1;
-    $all_dirs{$dir}->{id}{$id} = 1;
+    $all_dirs{$dir}->{id}{$id} = 1; # $movie
 }
 
 sub group_assign_movie
@@ -448,6 +449,7 @@ sub count_loc
 }
 
 
+# find process (wanted)
 sub process_nfo
 {
     my $fname = $File::Find::name;
@@ -494,16 +496,31 @@ sub process_nfo
     }
 }
 
+# find preprocess
 sub filter_dir
 {
     my @list;
-    print_debug "VISITED: $File::Find::dir\n";
-    $all_dirs{$File::Find::dir}->{visited} = 1;
+    my $visited = $all_dirs{$File::Find::dir}->{visited};
+    # if already visited in previous group, just copy info.
+    if ($visited) {
+        print_debug "RE-VISITED: $File::Find::dir\n";
+        for my $id (keys %{$all_dirs{$File::Find::dir}->{id}}) {
+            group_assign_movie($File::Find::dir, $movie{$id});
+            print_debug "RE-VISITED: $File::Find::dir : $id\n";
+            print_note shorten("$File::Find::dir/"), ": $id (re)\n";
+        }
+    } else {
+        print_debug "VISITED: $File::Find::dir\n";
+        $all_dirs{$File::Find::dir}->{visited} = 1;
+    }
     for my $name (@_) {
         next if ($name eq "." or $name eq "..");
         my $skip = 0;
         my $sname = normal_path($name);
         my $fname = normal_path($File::Find::dir . "/" . $name);
+        # if already visited, pass through only directories,
+        # no need to process files again.
+        next if ($visited and ! -d $fname);
         # print_debug "filter check: $name\n";
         for my $s (@{$pgroup->{skiplist}}, @skiplist) {
             my $ssname = $sname;
@@ -542,7 +559,7 @@ sub filter_dir
     # my @relevant = match_ext_list(@list);
     my @relevant;
     for my $name (@list) {
-        if (match_ext($name, @m_ext) and -f $File::Find::dir."/".$name) {
+        if (match_ext($name, @media_ext) and -f $File::Find::dir."/".$name) {
             push @relevant, $name;
         }
     }
@@ -605,6 +622,7 @@ sub automatch
     }
 }
 
+# find postprocess
 sub check_dir_info
 {
     # my ($dir, $parent) = fileparse($File::Find::dir);
@@ -612,7 +630,8 @@ sub check_dir_info
     my $dir = basename($File::Find::dir);
     print_debug "CHECK DIR: '$parent' '$dir' $File::Find::dir\n";
     return if (!$parent or $dir eq ".");
-    if ($all_dirs{$File::Find::dir}->{guess}) { goto AUTOMATCH; }
+    # if already visited, no need to guess again
+    #if ($all_dirs{$File::Find::dir}->{guess}) { goto AUTOMATCH; }
     return if ($all_dirs{$File::Find::dir}->{info});
     return if (!$all_dirs{$File::Find::dir}->{relevant});
     # check for rar
@@ -1664,7 +1683,7 @@ USAGE
   Presets:
     skip list: [@skiplist]
     regex skip: [@rxskiplist]
-    media ext: [@m_ext]
+    media ext: [@media_ext]
     codec tags: [@codec]
     cache dir: [$imdb_cache]
     output: [$base_path]
