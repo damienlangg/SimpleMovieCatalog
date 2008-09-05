@@ -53,6 +53,7 @@ my @parse_ext = qw( nfo txt url desktop );
 
 my @media_ext = qw( mpg mpeg mpe avi mov qt wmv mkv vob
         nfo rar iso bin cue srt sub );
+        # VIDEO_TS
 
 my @codec = qw(
         cam ts r5 dvdscr dvdrip dvd dvd9 cd1 cd2
@@ -594,8 +595,7 @@ sub inherit
 sub automatch
 {
     my $path = shift;
-    my $dir = basename($path);
-    my ($title, $year) = path_to_guess($dir);
+    my ($title, $year) = path_to_guess($path);
     if ($title and $year) {
         print_note shorten($path ."/"), ": GUESS\n";
         print_note shorten(" ??? Guess: '".$title."' (".$year.")"), ": ";
@@ -634,7 +634,7 @@ sub check_dir_info
     #if ($all_dirs{$File::Find::dir}->{guess}) { goto AUTOMATCH; }
     return if ($all_dirs{$File::Find::dir}->{info});
     return if (!$all_dirs{$File::Find::dir}->{relevant});
-    # check for rar
+    # check for rar, nfo
     my $rar = "$parent/$dir.rar";
     my $nfo = "$parent/$dir.nfo";
     if ( -e $rar or -e $nfo ) {
@@ -643,6 +643,11 @@ sub check_dir_info
     }
     # check for cd1/cd2
     if ( $dir =~ /^cd\d$/i ) {
+        inherit($File::Find::dir, $parent);
+        return;
+    }
+    # check for VIDEO_TS
+    if ( uc($dir) eq "VIDEO_TS" ) {
         inherit($File::Find::dir, $parent);
         return;
     }
@@ -1056,7 +1061,12 @@ sub print_report
 
 sub path_to_guess
 {
-    my $name = basename(shift);
+    my $path = shift;
+    my $name = basename($path);
+    if (uc($name) eq "VIDEO_TS") {
+        # if VIDEO_TS get parent dir
+        $name = basename(dirname($path));
+    }
     my $title = $name;
     my $year;
     # search for year
