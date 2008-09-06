@@ -83,6 +83,8 @@ my $ndirs;
 # global skip: sample subs subtitles
 my @skiplist = qw( sample subs subtitles cover covers );
 my @rxskiplist = qw( /subs-.*/ /\W*sample\W*/ );
+my @ignorelist; # ignore dir with missing info, not recursive 
+
 my $F_HTML;
 my $F_LOG;
 
@@ -288,10 +290,11 @@ sub cache_image
         print_error "Getting image: ", $m->img, "\n";
         return 0;
     }
-    if (open F_IMG, ">:raw", $img_file) {
+    my $F_IMG;
+    if (open $F_IMG, ">:raw", $img_file) {
         print_debug "Write Image Cache: $img_file\n";
-        print F_IMG $image;
-        close F_IMG;
+        print $F_IMG $image;
+        close $F_IMG;
     } else {
         print_error "Saving image: ", $img_file, "\n";
         return 0;
@@ -501,6 +504,25 @@ sub process_nfo
     }
 }
 
+sub match_path
+{
+    my ($path, $match) = @_;
+    my $dir = dirname($path);
+    my $name = basename($path);
+    my $cmpname;
+    # equalize slashes
+    $match = normal_path($match);
+    if ($match =~ m{/}) {
+        # slash in match name, use last part of full path name
+        $cmpname = substr($path, -length($match), length($match));
+        #print_debug "Skip-search path: $match in: $cmpname\n";
+    } else {
+        $cmpname = $name;
+    }
+    # ignore case
+    return (lc($cmpname) eq lc($match));
+}
+
 # find preprocess
 sub filter_dir
 {
@@ -521,23 +543,14 @@ sub filter_dir
     for my $name (@_) {
         next if ($name eq "." or $name eq "..");
         my $skip = 0;
-        my $sname = normal_path($name);
         my $fname = normal_path($File::Find::dir . "/" . $name);
         # if already visited, pass through only directories,
         # no need to process files again.
         next if ($visited and ! -d $fname);
+
         # print_debug "filter check: $name\n";
         for my $s (@{$pgroup->{skiplist}}, @skiplist) {
-            my $ssname = $sname;
-            # equalize slashes
-            $s = normal_path($s);
-            if ($s =~ m{/}) {
-                # slash in skip name, use full path name
-                $ssname = substr($fname, -length($s), length($s));
-                #print_debug "Skip-search path: $s in: $ssname\n";
-            }
-            # ignore case
-            if (lc($ssname) eq lc($s)) {
+            if (match_path($fname, $s)) {
                 $skip = 1;
                 last;
             }
@@ -799,6 +812,11 @@ sub is_missing
         return 0 if ($all_dirs{$dir}->{info});
     }
     return 0 if (!$all_dirs{$dir}->{relevant});
+    for my $ign (@ignorelist) {
+        if (match_path($dir, $ign)) {
+            return 0;        
+        }
+    }
     return 1;
 }
 
@@ -1358,6 +1376,7 @@ cd N/DIR        -  Change to dir number(N) / name(DIR)
 <enter>         -  Next dir with missing info
 n / p           -  Next / Previous dir
 pwd             -  Print Current Dir
+ignoredir       -  Add dir to ignore.txt
 !CMD            -  Run command CMD in dir
 r               -  Recreate Report
 ? / h / help    -  Print Help
@@ -1493,6 +1512,17 @@ sub interactive
                 print_info "First Directory! [", $cur_dir+1, "]\n";
             }
 
+        } elsif ($cmd eq "ignoredir") {
+            my $F_IGN;
+            my $fign = "$prog_dir/ignore.txt";
+            if (!open($F_IGN, ">>", $fign)) {
+                print_error "open $fign\n";
+            } else {
+                print $F_IGN "\n-ignore $dir\n";
+                close $F_IGN;
+                print_info "Dir added to $fign.\n(use -c ignore.txt)\n\n";
+            }
+
         } elsif ($cmd eq "r") {
             print_report;
             print_info "\n";
@@ -1596,6 +1626,10 @@ sub set_opt
         $arg_used = required_arg($opt, $arg);
         push @rxskiplist, $arg;
 
+    } elsif ($opt eq "-ignore") { # short? -e?
+        $arg_used = required_arg($opt, $arg);
+        push @ignorelist, $arg;
+
     } elsif ($opt eq "-a" or $opt eq "-automatch") {
         $opt_auto = 1;
 
@@ -1685,11 +1719,12 @@ Usage: perl $progbin [OPTIONS] [DIRECTORY ...]
     -o|-out <FILENAME>      Output path base name
     -t|-title <TITLE>       Set Title (multiple to define groups)
     -g|-group               Group separator
-    -s|-skip <NAME>         Skip file or dir
+    -s|-skip <NAME>         Skip file or dir (recursive) 
     -x|-regex <EXPR>        Skip using regular expressions
     -ns|-noskip             Clear preset skip lists
     -gs|-gskip <NAME>       Group Skip file or dir
     -gx|-gregex <EXPR>      Group Skip using regular expressions
+    -ignore <DIR>           Ignore dir with missing info (not recursive)
     DIRECTORY               Directory to scan
 USAGE
 
