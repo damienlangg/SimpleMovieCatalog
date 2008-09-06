@@ -8,7 +8,7 @@ use LWP::Simple;
 use HTML::TokeParser;
 use Data::Dumper;
 
-$VERSION = '0.22';
+$VERSION = '0.23';
 $ERROR = "";
 
 sub error {
@@ -75,6 +75,7 @@ sub new_html {
     $self->{img}         = _get(\&_image, \$parser, $html);
     if (!$id) { $id      = _get(\&_id, \$parser, $html); }
     $self->{id}          = $id;
+    $self->{type}        = _get(\&_type, \$parser, $html);
     $self->{user_rating} = _get(\&_user_rating, \$parser, $html);
     $self->{directors}   = _get(\&_person, \$parser, $html) || {};
     $self->{writers}     = _get(\&_person, \$parser, $html) || {};
@@ -94,7 +95,7 @@ sub _get
 {
     my ($func, $parse_r, $html) = @_;
     my $val = &$func($$parse_r);
-    if (!$val) {
+    if (!defined $val) {
         # if func returns undef then rewind parser and retry
         $$parse_r = _get_toker_html($html);
         $val = &$func($$parse_r);
@@ -303,6 +304,22 @@ sub _get_info {
         $val = $parser->get_text();
     }
     $val =~ tr/\n//d;
+    return $val;
+}
+
+sub _type {
+    my $parser = shift;
+    my $tag;
+    my $val;
+    $tag = $parser->get_tag("h1") or return undef;
+    $tag = $parser->get_tag or return undef;
+    return "" unless ($tag->[0] eq "span");
+    $val = $parser->get_text("/span");
+    # strip year
+    $val =~ s/^[^)]*\) *//;
+    # type and year range separated by: &#160;
+    # translate all non-printables to space
+    $val =~ s/[^[:print:]]/ /g;
     return $val;
 }
 
