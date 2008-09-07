@@ -1,7 +1,7 @@
 
 set -x
 RELDIR=SimpleMovieCatalog
-VER=1.0.3
+VER=1.1.0
 ZIP=$RELDIR-$VER.zip
 
 rm -rf $RELDIR $ZIP

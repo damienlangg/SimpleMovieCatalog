@@ -2,6 +2,9 @@
 # Use only one option per line, followed by optional arguments in same line.
 # Empty lines and lines starting with # are ignored.
 
+# include ignore list
+-c ignore.txt
+
 # skip all directories named "sample"
 -s sample
 

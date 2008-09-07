@@ -1,6 +1,15 @@
 Changelog:
 
 
+2008-09-07 Release 1.1.0
+ * report movie type
+ * parse also .url and .desktop files for movie info
+ * added -ignore option and ignoredir interactive command
+ * allow nested config files
+ * recognize *.mp4, *.VOB and VIDEO_TS as media
+ * minor speedup
+
+
 2008-09-03 Release 1.0.3
  * bugfix: search in interactive mode
  * minor improvements in scanning and formatting
