@@ -2,7 +2,7 @@
 
 =copyright
 
-    Simple Movie Catalog 1.1.0
+    Simple Movie Catalog 1.1.1
     Copyright (C) 2008 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -34,7 +34,7 @@ require "IMDB_Movie.pm";
 
 ### Globals
 
-my $progver = "1.1.0";
+my $progver = "1.1.1";
 my $progbin = "moviecat.pl";
 my $progname = "Simple Movie Catalog";
 my $progurl = "http://smoviecat.sf.net/";
@@ -78,8 +78,6 @@ my $pgroup; # ptr to current group
 my $pmlist; # current group movie list - ptr to hash
 my %all_dirs;   # visited dirs
 my $ndirs;
-#my %nfo_noid;
-#my $nfo_no_id;
 # global skip: sample subs subtitles
 my @skiplist = qw( sample subs subtitles cover covers );
 my @rxskiplist = qw( /subs-.*/ /\W*sample\W*/ );
@@ -457,12 +455,11 @@ sub count_loc
 }
 
 
-# find process (wanted)
-sub process_nfo
+sub parse_nfo
 {
-    my $fname = $File::Find::name;
-    return unless (-f $fname and match_ext($fname, @parse_ext));
-    print_debug "PROCESS: $fname\n";
+    my ($fdir, $fname) = @_;
+
+    print_debug "PARSE: $fname\n";
     my $shortname = shorten($fname);
     my $found = 0;
     my $F_NFO = open_bom $fname;
@@ -486,8 +483,8 @@ sub process_nfo
                 print_note "\n";
                 next;
             }
-            dir_assign_movie($File::Find::dir, $m);
-            group_assign_movie($File::Find::dir, $m);
+            dir_assign_movie($fdir, $m);
+            group_assign_movie($fdir, $m);
             my $num_loc = count_loc($id);
             if ( $num_loc > 1 ) { print_note "*$num_loc"; }
             print_note " OK\n";
@@ -495,12 +492,27 @@ sub process_nfo
     }
     close $F_NFO;
     if (!$found) {
-        # if ( ! -e "imdb.nfo" ) {
         print_detail "$fname: IMDB NOT FOUND\n";
         print_note "$shortname: IMDB NOT FOUND\n";
-        # $nfo_no_id++;
-        # $nfo_noid{$File::Find::dir}{$fname} = 1;
-        # }
+    }
+}
+
+
+my $END_DIR_MARK = "...END...";
+
+# find process (wanted)
+sub process_file
+{
+    my $fname = $File::Find::name;
+    print_debug "PROCESS: '$fname'\n";
+    if (substr($fname, -1-length($END_DIR_MARK)) eq "/$END_DIR_MARK") {
+        # filter will append this as the last entry in dir.
+        # this is better done here than in post-process,
+        check_dir_info($File::Find::dir);
+        return;
+    }
+    if (match_ext($fname, @parse_ext) and -f $fname) {
+        parse_nfo($File::Find::dir, $fname);
     }
 }
 
@@ -513,7 +525,7 @@ sub match_path
     if ($match =~ m{/}) {
         # slash in match name, use last part of full path name
         my $path = "$dir/$name";
-        $cmpname = substr($path, -length($match), length($match));
+        $cmpname = substr($path, -length($match));
         #print_debug "Skip-search path: $match in: $cmpname\n";
     } else {
         $cmpname = $name;
@@ -539,13 +551,18 @@ sub filter_dir
         print_debug "VISITED: $File::Find::dir\n";
         $all_dirs{$File::Find::dir}->{visited} = 1;
     }
+    print_debug "FILTER: @_\n";
     for my $name (@_) {
         next if ($name eq "." or $name eq "..");
         my $skip = 0;
-        my $fname = normal_path($File::Find::dir . "/" . $name);
+        #my $fname = normal_path($File::Find::dir . "/" . $name);
+        my $fname = "$File::Find::dir/$name";
+        # only stat file once
+        my $f_is_dir = -d $fname;
+        my $f_is_file = -f _; # _ is previous stat
         # if already visited, pass through only directories,
         # no need to process files again.
-        next if ($visited and ! -d $fname);
+        next if ($visited and ! $f_is_dir);
 
         # print_debug "filter check: $name\n";
         for my $s (@{$pgroup->{skiplist}}, @skiplist) {
@@ -555,35 +572,41 @@ sub filter_dir
             }
         }
         # append "/" to dirs
-        if ( -d $fname ) { $fname .= "/"; }
+        my $fnamex = $fname;
+        if ( $f_is_dir ) { $fnamex .= "/"; }
         for my $re (@{$pgroup->{rxskiplist}}, @rxskiplist) {
             # ignore case
             # use (?-i) in regex to force case sensitive
-            if ($fname =~ /$re/i) {
+            if ($fnamex =~ /$re/i) {
                 #print_debug "SKIP RegEx: $re path: $fname\n";
                 $skip = 1;
                 last;
             }
         }
         if ($skip) {
-            my $fn = shorten(" --- " . $File::Find::dir."/".$name);
-            print_note "$fn: SKIP\n";
+            print_note shorten(" --- " . $fname), ": SKIP\n";
         } else {
-            push @list, $name;
+            # is file?
+            if ($f_is_file) {
+                # is relevant media file?
+                if (match_ext($name, @media_ext)) {
+                    $all_dirs{$File::Find::dir}->{relevant}->{$name} = 1;
+                }
+                # has to be parsed?
+                if (match_ext($name, @parse_ext)) {
+                    push @list, $name;
+                }
+            }
+            # directory
+            elsif ($f_is_dir) {
+                push @list, $name;
+            }
         }
     }
-    # build relevant list
-    # my @relevant = match_ext_list(@list);
-    my @relevant;
-    for my $name (@list) {
-        if (match_ext($name, @media_ext) and -f $File::Find::dir."/".$name) {
-            push @relevant, $name;
-        }
-    }
-    if (@relevant) {
-        %{$all_dirs{$File::Find::dir}->{relevant}} = map { $_ => 1 } @relevant;
-    }
-    # print_debug "RELEVANT: ", %{$all_dirs{$File::Find::dir}->{relevant}}, "\n";
+    # append a special marker to end of list, so that process_files
+    # will try to autoguess if no info is found.
+    push @list, $END_DIR_MARK;
+    
     return @list;
 }
 
@@ -641,37 +664,43 @@ sub automatch
 # find postprocess
 sub check_dir_info
 {
-    # my ($dir, $parent) = fileparse($File::Find::dir);
-    my $parent = dirname($File::Find::dir);
-    my $dir = basename($File::Find::dir);
-    print_debug "CHECK DIR: '$parent' '$dir' $File::Find::dir\n";
+    my $path = shift;
+    # my ($dir, $parent) = fileparse($path);
+    my $parent = dirname($path);
+    my $dir = basename($path);
+    print_debug "CHECK DIR: '$parent' '$dir' $path\n";
     return if (!$parent or $dir eq ".");
     # if already visited, no need to guess again
-    #if ($all_dirs{$File::Find::dir}->{guess}) { goto AUTOMATCH; }
-    return if ($all_dirs{$File::Find::dir}->{info});
-    return if (!$all_dirs{$File::Find::dir}->{relevant});
+    #if ($all_dirs{$path}->{guess}) { goto AUTOMATCH; }
+    return if ($all_dirs{$path}->{info});
+    return if (!$all_dirs{$path}->{relevant});
     # check for rar, nfo
     my $rar = "$parent/$dir.rar";
     my $nfo = "$parent/$dir.nfo";
     if ( -e $rar or -e $nfo ) {
-        inherit($File::Find::dir, $parent);
+        inherit($path, $parent);
         return;
     }
     # check for cd1/cd2
     if ( $dir =~ /^cd\d$/i ) {
-        inherit($File::Find::dir, $parent);
+        inherit($path, $parent);
         return;
     }
     # check for VIDEO_TS
     if ( uc($dir) eq "VIDEO_TS" ) {
-        inherit($File::Find::dir, $parent);
+        inherit($path, $parent);
         return;
     }
     # automatch
-    AUTOMATCH:
+    #AUTOMATCH:
     if ($opt_auto) {
-        automatch($File::Find::dir);
+        automatch($path);
     }
+}
+
+sub postprocess_dir
+{
+    check_dir_info($File::Find::dir);
 }
 
 sub do_scan
@@ -687,13 +716,12 @@ sub do_scan
             }
             $pmlist = \%{$g->{mlist}};
             find( { preprocess  => \&filter_dir,
-                    wanted      => \&process_nfo,
-                    postprocess => \&check_dir_info,
+                    wanted      => \&process_file,
+                    # postprocess => \&postprocess_dir,
                     no_chdir    => 1 },
                     $dir);
         }
         print_info "Movies found: ", scalar keys %{$pmlist}, "\n";
-        # print_info "NFOs without imdb: ", $nfo_no_id, "\n";
     }
     print_note "\n";
 }
@@ -765,11 +793,10 @@ sub format_movie
     }
 
     # style=\"padding-left: 10px\"
-    print_html "<td bgcolor=lightblue height=1*><b>&nbsp;",
-            "<a href=http://www.imdb.com/title/tt", $m->id, ">",
-            $m->title, "</a></b>",
-            " (", $m->year, ")",
-            " &nbsp; <small><i>", $m->type, "</i></small>";
+    print_html "<td bgcolor=lightblue height=1*><b>&nbsp;";
+    print_html "<a href=http://www.imdb.com/title/tt", $m->id, ">",
+               $m->title, "</a></b>";
+    print_html " (", $m->year, ") &nbsp; <small><i>", $m->type, "</i></small>";
     print_html "</td></tr>";
 
     my ($runtime) = $m->runtime; #split '\|', $m->runtime;

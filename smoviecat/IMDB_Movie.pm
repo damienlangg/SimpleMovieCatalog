@@ -8,7 +8,7 @@ use LWP::Simple;
 use HTML::TokeParser;
 use Data::Dumper;
 
-$VERSION = '0.23';
+$VERSION = '0.24';
 $ERROR = "";
 
 sub error {
@@ -287,16 +287,22 @@ sub _person {
     return {%name};
 }
 
+sub _jump_attr {
+    my ($parser, $attr, @tags) = @_;
+    while ($parser->get_tag(@tags)) {
+        # return 1 if ($parser->get_text('/'.$stag) =~ /$attr/i);
+        return 1 if ($parser->get_text() =~ /$attr/i);
+    }
+    return 0;
+}
 
 sub _get_info {
     my $parser = shift;
     my $attr = shift;
     my $stag = shift || "h5";
     my $etag = shift;
-    my ($tag, $val);
-    while ($tag = $parser->get_tag($stag)) {
-        last if ($parser->get_text('/'.$stag) =~ /$attr/i);
-    }
+    my $val;
+    _jump_attr($parser, $attr, $stag);
     $parser->get_tag('/'.$stag);
     if ($etag) {
         $val = $parser->get_text($etag);
@@ -314,13 +320,21 @@ sub _type {
     $tag = $parser->get_tag("h1") or return undef;
     $tag = $parser->get_tag or return undef;
     return "" unless ($tag->[0] eq "span");
-    $val = $parser->get_text("/span");
+    $val = $parser->get_text("/h1");
     # strip year
     $val =~ s/^[^)]*\) *//;
     # type and year range separated by: &#160;
     # translate all non-printables to space
     $val =~ s/[^[:print:]]/ /g;
-    return $val;
+    # extract type in ()
+    if ($val =~ /(\(\w+\))/) {
+        return $1;
+    }
+    # extract tv series
+    if ($val =~ /([tv ]*series[\d ?-]*)/i) {
+        return $1;
+    }
+    return "";
 }
 
 sub _genre {
@@ -329,7 +343,7 @@ sub _genre {
 
     my $genre = _get_info($parser, "genre", "h5", "/div");
     $genre =~ s/more//i;
-    $genre =~ tr/ //d;
+    $genre =~ s/[^\w|-]//g;
     @genre = split(/\|/, $genre);
 
     return undef if (!@genre);
@@ -340,8 +354,13 @@ sub _genre {
 sub _user_rating {
     my $parser = shift;
     my $tag;
+    my $rating;
 
-    my $rating = _get_info($parser, "rating", "b", "/div");
+    # my $rating = _get_info($parser, "rating", "b", "/div");
+    _jump_attr($parser, "rating", "h5", "b");
+    $parser->get_tag("b");
+    $rating = $parser->get_text();
+
     ($rating) = split('\/', $rating, 2);
     return $rating;
 }

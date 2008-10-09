@@ -1,6 +1,10 @@
 Changelog:
 
 
+2008-10-09 Release 1.1.1
+ * bugfix: update parsing for new imdb layout
+
+
 2008-09-07 Release 1.1.0
  * report movie type
  * parse also .url and .desktop files for movie info
