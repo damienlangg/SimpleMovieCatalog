@@ -1,5 +1,5 @@
 
-Simple Movie Catalog 1.1.1
+Simple Movie Catalog 1.1.2
 Copyright (C) 2008 damien.langg@gmail.com
 
 Simple Movie Catalog will scan a given directory for movies,
@@ -74,7 +74,7 @@ the following methods:
 
 After the info is added you need to re-run the scan to update the html report.
 
-All imdb queries are cached in imdb_cache directory so running scan
+All imdb queries are cached for 30 days in imdb_cache directory so running scan
 multiple times is fast.
 
 
@@ -103,6 +103,8 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
     DIRECTORY               Directory to scan
 
   More Options:
+    -subs URL               Add subtitle search site
+    -nosubs                 Clear subtitle search site list
     -a|-automatch           Auto guess and report exact matches [default]
     -na|-noautomatch        Disable auto match
     -m|-missing             Report folders with missing info [default]

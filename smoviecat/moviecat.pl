@@ -2,7 +2,7 @@
 
 =copyright
 
-    Simple Movie Catalog 1.1.1
+    Simple Movie Catalog 1.1.2
     Copyright (C) 2008 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -27,6 +27,7 @@ use FindBin;
 use File::Find;
 use File::Basename;
 use LWP::Simple;
+use Term::ReadKey;
 #use IMDB_Movie;
 push @INC, $FindBin::Bin;
 push @INC, $FindBin::Bin . "/lib";
@@ -34,7 +35,7 @@ require "IMDB_Movie.pm";
 
 ### Globals
 
-my $progver = "1.1.1";
+my $progver = "1.1.2";
 my $progbin = "moviecat.pl";
 my $progname = "Simple Movie Catalog";
 my $progurl = "http://smoviecat.sf.net/";
@@ -45,6 +46,7 @@ my $imdb_cache = "$prog_dir/imdb_cache";
 my $scan_log = "$prog_dir/scan.log";
 my $image_dir = "images";
 my $image_cache;
+my $max_cache_days = 30; # keep cache for up to 1 month
 my $base_path = "report/movies";
 my $base_name;
 my $base_dir;
@@ -63,6 +65,13 @@ my @codec = qw(
         720p 1080p hd hidef
         );
 
+my @subsearch = (
+        "http://opensubtitles.org/en/search2/sublanguageid-eng/moviename-",
+        "http://subscene.com/filmsearch.aspx?q=",
+        "http://podnapisi.net/ppodnapisi/search?tbsl=1&asdp=0&sJ=2&sY=&sAKA=1&sK=",
+        "http://divxtitles.com/%TITLE%/English/any/1"
+        );
+
 my $opt_i = 0; # interactive
 my $opt_auto = 1;       # Auto guess and report exact matches
 my $opt_miss = 1;       # Report folders with missing info
@@ -70,6 +79,7 @@ my $opt_miss_match = 0; # Report guessed exact matches as missing
 my $opt_auto_save = 0;  # Save auto guessed exact matches
 my $opt_group_table = 1; # use table for groups
 my $verbose = 1;
+my $columns = 80;
 
 my %movie;  # movie{id}
 my @group;  # group list - array of ptr to mlist
@@ -85,6 +95,7 @@ my @ignorelist; # ignore dir with missing info, not recursive
 
 my $F_HTML;
 my $F_LOG;
+my $last_cache_valid;
 
 ### Setup
 
@@ -216,13 +227,26 @@ sub getfile {
   return \$contents; # return reference
 }
 
+sub valid_cache
+{
+    my $fname = shift;
+    $last_cache_valid = 0;
+    return 0 unless -e $fname;
+    my $age = -M $fname; # age in days
+    my $valid = $age <= $max_cache_days;
+    print_debug "Cache age: ", sprintf("%.1f ", $age),
+                ($valid?"(ok)":"(too old)"), " '$fname'";
+    $last_cache_valid = $valid;
+    return $valid;
+}
+
 sub cache_imdb_id
 {
     my $id = shift;
 
     my $html_file = $imdb_cache . "/imdb-$id.html";
     my $html;
-    if ($html = getfile($html_file)) {
+    if (valid_cache($html_file) and $html = getfile($html_file)) {
         print_debug "Using Cached: $html_file\n";
         print_note " ";
     } else {
@@ -247,7 +271,7 @@ sub cache_imdb_find
     $fname =~ tr[:/\\][-];
     my $html_file = $imdb_cache . "/imdb_find-$fname.html";
     my $html;
-    if ($html = getfile($html_file)) {
+    if (valid_cache($html_file) and $html = getfile($html_file)) {
         print_debug "Using Cached: $html_file\n";
         print_note " ";
     } else {
@@ -273,12 +297,18 @@ sub img_name
 sub cache_image
 {
     my $m = shift;
-    if (!$m or !$m->id or !$m->img) {
+    if (!$m or !$m->id or (!$m->img and (!$m->photos or !$m->photos->[0]))) {
         print_note "-";
         return 1;
     }
+    if (!$m->img and $m->photos and $m->photos->[0]) {
+        # use first gallery photo if no poster
+        print_debug "No poster found - using first photo '", $m->photos->[0], "'";
+        $m->{img} = $m->photos->[0];
+    }
     my $img_file = $image_cache . "/" . img_name($m->id);
-    if ( -e $img_file ) {
+    # only refresh image cache if html cache changed
+    if ($last_cache_valid and -e $img_file) {
         print_note " ";
         return 1;
     }
@@ -366,7 +396,7 @@ sub findmovie
         return $m;
     }
     # direct hit or no match
-    my $m = IMDB::Movie->new_html(0, $html);
+    $m = IMDB::Movie->new_html(0, $html);
     if (!$m) {
         print_log "*** Error: parse imdb '$title' ($year)\n";
         return undef;
@@ -400,7 +430,7 @@ sub save_movie
 sub shorten
 {
     my $name = shift;
-    my $max = 60;
+    my $max = $columns - 20; #60;
     my $sep = "~~";
     if (length($name) > $max) {
         my ($l1, $l2, $l3);
@@ -823,6 +853,24 @@ sub format_movie
             print_html "<b>(GUESSED)</b> ";
         }
         print_html format_html_path($loc);
+    }
+    if (@subsearch) {
+        print_html "<br>Search Subtitles: ";
+        my $title = $m->title;
+        my $year = $m->year;
+        $title =~ s/ /+/g;
+        for my $subs (@subsearch) {
+            my $subsite = $subs;
+            if ($subs =~ /^http:\/\/([^\/]+)/) {
+                $subsite = $1;
+            }
+            my $subsurl = $subs;
+            $subsurl =~ s/%YEAR%/$year/;
+            if (!($subsurl =~ s/%TITLE%/$title/)) {
+                $subsurl .= $title;
+            }
+            print_html "[<a href=\"", $subsurl, "\">$subsite</a>]&nbsp;";
+        }
     }
     print_html "</font></td></tr>";
 
@@ -1678,6 +1726,13 @@ sub set_opt
         $arg_used = required_arg($opt, $arg);
         parse_cfg($arg);
 
+    } elsif ($opt eq "-subs") {
+        $arg_used = required_arg($opt, $arg);
+        push @subsearch, $arg;
+
+    } elsif ($opt eq "-nosubs") {
+        @subsearch = ();
+
     } elsif ($opt =~ /^-/) {
         abort "Unknown option: $opt\n";
 
@@ -1760,6 +1815,8 @@ USAGE
         print_info << "USAGE_LONG";
 
   More Options:
+    -subs URL               Add subtitle search site
+    -nosubs                 Clear subtitle search site list
     -a|-automatch           Auto guess and report exact matches [default]
     -na|-noautomatch        Disable auto match
     -m|-missing             Report folders with missing info [default]
@@ -1839,8 +1896,12 @@ sub init
     makedir $base_dir;
     makedir $imdb_cache;
     makedir $image_cache;
-    print_debug "Base dir: '$base_dir' name: '$base_name'\n";
-    print_debug "Cache IMDB: '$imdb_cache' Image: '$image_cache'\n";
+    my ($width) = GetTerminalSize();
+    if ($width >= 40 and $width <= 300) { $columns = $width; }
+    print_debug "Base dir: '$base_dir' name: '$base_name'";
+    print_debug "Cache IMDB: '$imdb_cache' Image: '$image_cache'";
+    print_debug "Cache age: $max_cache_days";
+    print_debug "Terminal width: $columns";
 }
 
 sub open_log {

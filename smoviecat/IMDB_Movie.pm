@@ -8,7 +8,7 @@ use LWP::Simple;
 use HTML::TokeParser;
 use Data::Dumper;
 
-$VERSION = '0.24';
+$VERSION = '0.25';
 $ERROR = "";
 
 sub error {
@@ -76,6 +76,7 @@ sub new_html {
     if (!$id) { $id      = _get(\&_id, \$parser, $html); }
     $self->{id}          = $id;
     $self->{type}        = _get(\&_type, \$parser, $html);
+    $self->{photos}      = _get(\&_photos, \$parser, $html) || [];
     $self->{user_rating} = _get(\&_user_rating, \$parser, $html);
     $self->{directors}   = _get(\&_person, \$parser, $html) || {};
     $self->{writers}     = _get(\&_person, \$parser, $html) || {};
@@ -227,10 +228,10 @@ sub _id {
         if ($tag->[1]{href} =~ /pro.imdb.com\/title\/tt(\d{7})/i) {
             $id = $1;
             # print STDERR "FOUND IMDB _ID: $id\n";
-            last; 
+            return $id;
         }
     }
-    return $id;
+    return undef;
 }
 
 
@@ -251,6 +252,21 @@ sub _image {
     }
 
     return $image;
+}
+
+
+sub _photos
+{
+    my $parser = shift;
+    my ($tag, @photos);
+    _jump_attr($parser, "photos", "b") or return undef;
+    while ($tag = $parser->get_tag()) {
+        last if ($tag->[0] eq "hr");
+        if ($tag->[0] eq "img" and $tag->[1]->{src}) {
+            push @photos, $tag->[1]->{src};
+        }
+    }
+    return [ @photos ];
 }
 
 
@@ -356,13 +372,14 @@ sub _user_rating {
     my $tag;
     my $rating;
 
-    # my $rating = _get_info($parser, "rating", "b", "/div");
-    _jump_attr($parser, "rating", "h5", "b");
+    _jump_attr($parser, "rating", "h5", "b") or return undef;
     $parser->get_tag("b");
     $rating = $parser->get_text();
-
-    ($rating) = split('\/', $rating, 2);
-    return $rating;
+    if ($rating =~ /([\d.]+) *\/ *10/) {
+        return $1;
+    }
+    # no rating
+    return "";
 }
 
 

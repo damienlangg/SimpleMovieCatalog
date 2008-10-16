@@ -1,6 +1,14 @@
 Changelog:
 
 
+2008-10-16 Release 1.1.2
+ * subtitle search link
+ * bugfix: no rating
+ * detect terminal width
+ * if no poster, use 1st image in gallery
+ * don't use cache if older than 30 days
+
+
 2008-10-09 Release 1.1.1
  * bugfix: update parsing for new imdb layout
 
