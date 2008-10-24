@@ -1,7 +1,7 @@
 Changelog:
 
 
-Release 1.2.0
+2008-10-25 Release 1.2.0
  * javascript dynamic sort and filter
  * xml export
 
