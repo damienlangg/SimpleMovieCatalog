@@ -1,7 +1,7 @@
 
 set -x
 RELDIR=SimpleMovieCatalog
-VER=1.1.2
+VER=1.2.0
 ZIP=$RELDIR-$VER.zip
 
 rm -rf $RELDIR $ZIP
@@ -13,7 +13,7 @@ mkdir $RELDIR/demo
 
 cp moviecat.pl interactive.cmd run_scan.cmd $RELDIR
 
-cp IMDB_Movie.pm  $RELDIR/lib
+cp moviecat.js IMDB_Movie.pm  $RELDIR/lib
 
 if [ -e default-cfg.txt ]; then
     cp default-cfg.txt $RELDIR/config.txt

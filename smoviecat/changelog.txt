@@ -1,6 +1,11 @@
 Changelog:
 
 
+Release 1.2.0
+ * javascript dynamic sort and filter
+ * xml export
+
+
 2008-10-16 Release 1.1.2
  * subtitle search link
  * bugfix: no rating

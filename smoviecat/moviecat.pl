@@ -2,7 +2,7 @@
 
 =copyright
 
-    Simple Movie Catalog 1.1.2
+    Simple Movie Catalog 1.2.0
     Copyright (C) 2008 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -26,6 +26,7 @@ use Cwd;
 use FindBin;
 use File::Find;
 use File::Basename;
+use File::Copy;
 use LWP::Simple;
 use Term::ReadKey;
 #use IMDB_Movie;
@@ -35,7 +36,7 @@ require "IMDB_Movie.pm";
 
 ### Globals
 
-my $progver = "1.1.2";
+my $progver = "1.2.0";
 my $progbin = "moviecat.pl";
 my $progname = "Simple Movie Catalog";
 my $progurl = "http://smoviecat.sf.net/";
@@ -50,6 +51,7 @@ my $max_cache_days = 30; # keep cache for up to 1 month
 my $base_path = "report/movies";
 my $base_name;
 my $base_dir;
+my $jsname = "moviecat.js";
 
 my @parse_ext = qw( nfo txt url desktop );
 
@@ -77,7 +79,9 @@ my $opt_auto = 1;       # Auto guess and report exact matches
 my $opt_miss = 1;       # Report folders with missing info
 my $opt_miss_match = 0; # Report guessed exact matches as missing
 my $opt_auto_save = 0;  # Save auto guessed exact matches
-my $opt_group_table = 1; # use table for groups
+my $opt_group_table = 1;# use table for groups
+my $opt_xml = 0;        # xml export
+my $opt_js = 1;         # javascript sort & filter
 my $verbose = 1;
 my $columns = 80;
 
@@ -780,14 +784,15 @@ sub html_head
     my $title = shift;
     my $bgcolor = shift || "lightgrey";
 
-    print_html << "HTML_HEAD";
-<head>
-<title>$title</title>
-<meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\">
-</head>
-<body bgcolor=\"$bgcolor\">
-
-HTML_HEAD
+    print_html "<head>";
+    print_html "<title>$title</title>";
+    print_html "<meta http-equiv=\"Content-Type\""
+        . " content=\"text/html; charset=iso-8859-1\">";
+    if ($opt_js) {
+        print_html "<script src=\"$jsname\" type=\"text/javascript\"></script>";
+    }
+    print_html "</head>";
+    print_html "<body bgcolor=\"$bgcolor\">";
 }
 
 sub format_html_path
@@ -800,7 +805,8 @@ sub format_html_path
     if ($^O =~ /win/i) {
         $link =~ tr[/][\\];
     }
-    return "<a href=\"file://$path\" style=word-wrap:break-word>$link</a>";
+    #return "<a href=\"file://$path\" style=word-wrap:break-word>$link</a>";
+    return "<a href=\"file://$path\">$link</a>";
 }
 
 sub format_movie
@@ -824,17 +830,17 @@ sub format_movie
 
     # style=\"padding-left: 10px\"
     print_html "<td bgcolor=lightblue height=1*><b>&nbsp;";
-    print_html "<a href=http://www.imdb.com/title/tt", $m->id, ">",
-               $m->title, "</a></b>";
+    print_html "<a class=MTITLE href=http://www.imdb.com/title/tt",
+               $m->id, ">", $m->title, "</a></b>";
     print_html " (", $m->year, ") &nbsp; <small><i>", $m->type, "</i></small>";
     print_html "</td></tr>";
 
     my ($runtime) = $m->runtime; #split '\|', $m->runtime;
     print_html "<tr><td height=1*>"; #"<font size=-1>";
-    print_html "Rating: <b>", $m->user_rating, "</b> &nbsp;&nbsp; ",
-            "Runtime: <b>", $runtime ? $runtime : "?" , "</b> min",
-            " &nbsp;&nbsp; <i>(", join(' / ',@{$m->genres}), ")</i>";
-    print_html "</font></td></tr>";
+    print_html "Rating: <b class=MRATING>", $m->user_rating, "</b> &nbsp;&nbsp; ",
+            "Runtime: <b class=MRUNTIME>", $runtime ? $runtime : "?" , "</b> min",
+            " &nbsp;&nbsp; <i class=MGENRE>(", join(' / ',@{$m->genres}), ")</i>";
+    print_html "</td></tr>";
 
     print_html "<tr><td><font size=-1>";
     print_html $m->plot ? $m->plot : "&nbsp;?";
@@ -977,7 +983,7 @@ sub by_runtime {
 sub get_gfname {
     my $gfname = shift;
     return "" unless $gfname;
-    return "" unless (scalar @group > 1); 
+    return "" unless (scalar @group > 1 or ($opt_js and $opt_miss)); 
     return "" if ($group[0]->{title} eq $gfname);
     $gfname =~ s/[\W]/_/g; # replace non-alphanum with _
     $gfname = "_" . lc( $gfname ); # lo-case
@@ -996,10 +1002,15 @@ sub page_head_group {
 
 sub page_head_sort {
     my ($fbase, $this_fadd, $add, $sname) = @_;
-    if ($this_fadd eq $add) {
-        print_html "<b>[$sname]</b>";
+    if ($opt_js and $sname ne "Genre") {
+        print_html "<a id=\"SORT_", uc($sname), "\"",
+                   " href=javascript:sort_", lc($sname), "()>$sname</a>";
     } else {
-        print_html "<a href=$fbase$add.html>$sname</a>";
+        if ($this_fadd eq $add) {
+            print_html "<b>[$sname]</b>";
+        } else {
+            print_html "<a href=$fbase$add.html>$sname</a>";
+        }
     }
 }
 
@@ -1014,7 +1025,7 @@ sub page_start
     html_start;
     html_head("Movie Catalog" . ($gname ? ": $gname" : ""));
 
-    if (scalar @group > 1) { 
+    if (scalar @group > 1 or ($opt_js and $opt_miss)) { 
         #print_html "Group:";
         print_html "<table><tr><td valign=top>Group:<td>";
         print_html "<table cellpadding=0 cellspacing=0><tr>" if ($opt_group_table);
@@ -1030,7 +1041,7 @@ sub page_start
                 }
             }
         }
-        if ($opt_miss and scalar @group > 1) {
+        if ($opt_miss) {
             print_html "<td>" if ($opt_group_table);
             page_head_group "", "Missing Info", $gname, count_missing;
         }
@@ -1046,9 +1057,11 @@ sub page_start
         page_head_sort $fbase, $fadd, "", "Title";
         page_head_sort $fbase, $fadd, "-rating", "Rating";
         page_head_sort $fbase, $fadd, "-runtime", "Runtime";
-        page_head_sort $fbase, $fadd, "-genre", "Genre";
-        if ($opt_miss and scalar @group == 1) {
-            page_head_sort $fbase, $fadd, "-missinfo", "Missing Info";
+        if (!$opt_js) {
+            page_head_sort $fbase, $fadd, "-genre", "Genre";
+            if ($opt_miss and scalar @group == 1) {
+                page_head_sort $fbase, $fadd, "-missinfo", "Missing Info";
+            }
         }
         print_html "<br><br>";
     }
@@ -1057,7 +1070,7 @@ sub page_start
 sub page_end
 {
     #print end_html; # end the HTML
-    if (scalar @group < 2) {
+    if (scalar @group < 2 and !$opt_js) {
         print_html "<br>Total: ", scalar keys %{$pmlist}, " Movies<br>";
     }
     print_html "<br><div align=right><font size=-2><i>Generated by ";
@@ -1066,18 +1079,67 @@ sub page_end
     close $F_HTML;
 }
 
+sub get_all_genres
+{
+    my %genres;
+    for my $id (keys %{$pmlist}) {
+        for my $g (@{$pmlist->{$id}->{movie}->genres}) {
+            $genres{$g} = 1;
+        }
+    }
+    return keys %genres;
+}
+
+sub genre_filter
+{
+    my @genres = sort by_alpha get_all_genres;
+    my $i = 0;
+    print_html "<style type=text/css><!--";
+    print_html "span.GENRE_NAME:hover {text-decoration: underline}";
+    print_html "//--></style>";
+    print_html "<table cellspacing=0 cellpadding=0><tr>";
+    print_html "<td valign=top align=center>Genre:<br><font size=-1>";
+    print_html "<a href=javascript:genre_all()>All</a><br>";
+    print_html "<a href=javascript:genre_none()>None</a><br></font>";
+    #print_html "<input type=button value=Filter onclick=do_filter()><br>";
+    print_html "</td><td><font size=-1>";
+    print_html "<table id=GENRE_TABLE cellspacing=0 cellpadding=0>";
+    print_html "<tr valign=top><td>";
+    for my $g (@genres) {
+        my $gid = "G_" . uc($g);
+        print_html "<input type=checkbox id=$gid checked=checked onclick=do_filter()>",
+                   "<span class=GENRE_NAME onclick=genre_one(\'$gid\')>$g</span><br>";
+        $i++;
+        if ($i >= 4) {
+            print_html "</td><td>";
+            $i = 0;
+        }
+    }
+    print_html "</td></tr></table></font>";
+    print_html "</td></tr></table><br>";
+
+}
+
 sub print_page
 {
     my ($gname, $fadd, $sort_by) = @_;
 
     page_start($gname, $fadd);
 
+    if ($opt_js) {
+        genre_filter;
+        print_html "<font size=-1><i id=STATUS>",
+                scalar keys %{$pmlist},
+                " Movies</i></font><br><br>";
+    }
+
+    print_html "<table id=MTABLE cellspacing=0 cellpadding=0>";
     for my $id (sort $sort_by keys %{$pmlist}) {
+        print_html "<tr><td>";
         format_movie($pmlist->{$id}->{movie}, keys %{$pmlist->{$id}->{location}});
+        print_html "</td></tr>";
     }
-    if (!%{$pmlist}) {
-        print_html "<br><br><ul><i>* No Movies *</i></ul><br><br>";
-    }
+    print_html "</table>";
 
     page_end;
 }
@@ -1128,25 +1190,96 @@ sub print_page_miss
     page_end;
 }
 
+sub xml_quote
+{
+    my $text = shift;
+    $text =~ s/&/&amp;/g;
+    $text =~ s/</&lt;/g;
+    $text =~ s/>/&gt;/g;
+    $text =~ s/'/&apos;/g;
+    $text =~ s/"/&quot;/g;
+    return $text;
+}
+
+sub format_movie_xml
+{
+    my ($m, @location) = @_;
+
+    my $img;
+    if ($m->img) {
+        my $img_file = img_name($m->id);
+        $img = $image_dir ."/". $img_file;
+        if ( ! -e $image_cache ."/". $img_file ) { $img = $m->img; }
+    }
+    print_html "  <movie>";
+    print_html "    <image>$img</image>";
+    print_html "    <id>", $m->id, "</id>";
+    print_html "    <title>", xml_quote($m->title), "</title>";
+    print_html "    <year>", $m->year, "</year>";
+    print_html "    <type>", $m->type, "</type>";
+    print_html "    <rating>", $m->user_rating, "</rating>";
+    print_html "    <runtime>", $m->runtime, "</runtime>";
+    print_html "    <genre>", join(',',@{$m->genres}), "</genre>";
+    print_html "    <plot>", xml_quote($m->plot), "</plot>";
+    print_html "    <location>", xml_quote(join(',',@location)), "</location>";
+    print_html "  </movie>";
+}
+
+sub print_xml
+{
+    my ($gname) = @_;
+    my $gfname = get_gfname($gname);
+    my $fname = $base_path . $gfname . ".xml";
+
+    open $F_HTML, ">", $fname  or  abort "Can't write $fname\n";
+    print_note "Writing $fname\n";
+
+    print_html '<?xml version="1.0" ?>';
+    print_html '<?xml-stylesheet type="text/xsl" href="movie.xsl"?>';
+    print_html "<movielist>";
+    for my $id (sort by_title keys %{$pmlist}) {
+        format_movie_xml($pmlist->{$id}->{movie}, keys %{$pmlist->{$id}->{location}});
+    }
+    print_html "</movielist>";
+
+    close $F_HTML;
+}
+
+
 sub print_report
 {
     # if no missing, disable opt_miss
     if (count_missing == 0) { $opt_miss = 0; }
+    # if no title, assign a default one
+    if (!$group[0]->{title} and $opt_miss) {
+        $group[0]->{title} = "Movies";
+    }
 
     print_info "Generating catalog...\n";
     for my $g (@group) {
         my $gname = $g->{title};
         $pmlist = \%{$g->{mlist}};
         print_page $gname, "", \&by_title;
-        print_page $gname, "-rating", \&by_rating;
-        print_page $gname, "-runtime", \&by_runtime;
-        print_page_genre $gname;
-        if ($opt_miss and scalar @group == 1) {
-            print_page_miss $gname, "-missinfo";
+        if (!$opt_js) {
+            print_page $gname, "-rating", \&by_rating;
+            print_page $gname, "-runtime", \&by_runtime;
+            print_page_genre $gname;
+            if ($opt_miss and scalar @group == 1) {
+                print_page_miss $gname, "-missinfo";
+            }
+        }
+        if ($opt_xml) {
+            print_xml $gname;
         }
     }
-    if ($opt_miss and scalar @group > 1) {
+    if ($opt_miss and (scalar @group > 1 or $opt_js)) {
         print_page_miss "Missing Info", "";
+    }
+    if ($opt_js) {
+        my $jssrc = "$prog_dir/lib/$jsname";
+        my $jsdest = $base_dir . $jsname;
+        print_note "Writing $jsdest\n";
+        copy($jssrc, $jsdest) or abort "Copy $jssrc -> $jsdest Failed!";
     }
 }
 
@@ -1733,6 +1866,15 @@ sub set_opt
     } elsif ($opt eq "-nosubs") {
         @subsearch = ();
 
+    } elsif ($opt eq "-js") {
+        $opt_js = 1;
+
+    } elsif ($opt eq "-nojs") {
+        $opt_js = 0;
+
+    } elsif ($opt eq "-xml") {
+        $opt_xml = 1;
+
     } elsif ($opt =~ /^-/) {
         abort "Unknown option: $opt\n";
 
@@ -1815,6 +1957,9 @@ USAGE
         print_info << "USAGE_LONG";
 
   More Options:
+    -js                     Use javascript for sorting [default]
+    -nojs                   Use static html for sorting
+    -xml                    Export catalog to .xml files
     -subs URL               Add subtitle search site
     -nosubs                 Clear subtitle search site list
     -a|-automatch           Auto guess and report exact matches [default]

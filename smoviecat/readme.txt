@@ -1,5 +1,5 @@
 
-Simple Movie Catalog 1.1.2
+Simple Movie Catalog 1.2.0
 Copyright (C) 2008 damien.langg@gmail.com
 
 Simple Movie Catalog will scan a given directory for movies,
@@ -103,6 +103,9 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
     DIRECTORY               Directory to scan
 
   More Options:
+    -js                     Use javascript for sorting [default]
+    -nojs                   Use static html for sorting
+    -xml                    Export catalog to .xml files
     -subs URL               Add subtitle search site
     -nosubs                 Clear subtitle search site list
     -a|-automatch           Auto guess and report exact matches [default]
