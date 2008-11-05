@@ -1,6 +1,10 @@
 Changelog:
 
 
+2008-11-05 Release 1.2.1
+ * more sorting and filtering options
+
+
 2008-10-25 Release 1.2.0
  * javascript dynamic sort and filter
  * xml export

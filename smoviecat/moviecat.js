@@ -8,6 +8,7 @@ var initialized = false;
 var debug_enabled = false;
 var debug_obj = new Object();
 var current_sort;
+var current_dir = 1;
 var sort_steps = 0;
 
 window.onload = moviecat_init;
@@ -15,8 +16,9 @@ window.onload = moviecat_init;
 function moviecat_init()
 {
     if (debug_enabled) enable_debug();
-    active_sort("SORT_TITLE");
+    active_sort("SORT_TITLE", 1);
     genre_set_all(true);
+    init_filter();
     initialized = true;
 }
 
@@ -165,48 +167,67 @@ function table_sort(table, classname, datatype, direction, class2)
     debug_add("steps: " + sort_steps);
 }
 
-function active_sort(id)
+function active_sort(id, dir)
 {
+    var new_sort = document.getElementById(id);
     if (current_sort) {
+        if (current_sort == new_sort) {
+            dir = -current_dir;
+        }
         current_sort.style.fontWeight = "normal";
         current_sort.style.backgroundColor = "transparent";
         current_sort.style.border = "thin none black";
         current_sort.style.textDecoration = "underline";
     }
-    current_sort = document.getElementById(id);
+    current_sort = new_sort;
+    current_dir = dir;
     current_sort.style.fontWeight = "bold";
     current_sort.style.backgroundColor = "silver";
     current_sort.style.border = "thin solid black";
     current_sort.style.textDecoration = "none";
+    var sort_dir = document.getElementById("SORT_DIRECTION");
+    if (sort_dir) sort_dir.parentNode.removeChild(sort_dir);
+    sort_dir = document.createElement('span');
+    sort_dir.id = "SORT_DIRECTION";
+    //sort_dir.innerHTML = (dir > 0) ? "&uarr;" : "&darr;";
+    sort_dir.innerHTML = (dir > 0) ? "<small>&#9650;</small>" : "<small>&#9660;</small>";
+
+    current_sort.appendChild(sort_dir);
+    return dir;
+}
+
+function do_sort(name, dtype, dir)
+{
+    if (!initialized) return;
+    debug("");
+    var mtable = document.getElementById("MTABLE");
+    var sname = "SORT_" + name;
+    var cname = "M" + name;
+    dir = active_sort(sname, dir);
+    table_sort(mtable, cname, dtype, dir, "MTITLE")
 }
 
 function sort_title()
 {
-    if (!initialized) return;
-    var mtable = document.getElementById("MTABLE");
-    debug("");
-    active_sort("SORT_TITLE");
-    table_sort(mtable, "MTITLE", "text")
+    do_sort("TITLE", "text", +1)
 }
 
 function sort_rating()
 {
-    if (!initialized) return;
-    var mtable = document.getElementById("MTABLE");
-    debug("");
-    active_sort("SORT_RATING");
-    table_sort(mtable, "MRATING", "number", -1, "MTITLE")
+    do_sort("RATING", "number", -1)
 }
 
 function sort_runtime()
 {
-    if (!initialized) return;
-    var mtable = document.getElementById("MTABLE");
-    debug("");
-    active_sort("SORT_RUNTIME");
-    table_sort(mtable, "MRUNTIME", "number", +1, "MTITLE")
+    do_sort("RUNTIME", "number", +1)
 }
 
+function sort_year()
+{
+    do_sort("YEAR", "number", -1)
+}
+
+// genre filter
 
 function genre_set_all(x)
 {
@@ -270,6 +291,17 @@ function genre_match(garray, gstring)
     return false;
 }
 
+function getNumValue(obj, cname)
+{
+    var e = getElementsByClassName(obj, cname);
+    if (!e) return 0;
+    var v = Number(e[0].innerHTML);
+    if (!v || isNaN(v)) return 0;
+    return v;
+}
+
+var filter_count = 0;
+
 function do_filter()
 {
     if (!initialized) return;
@@ -277,9 +309,28 @@ function do_filter()
     var mtable = document.getElementById("MTABLE");
     var rows = mtable.tBodies[0].rows;
     var i, mg, count = 0;
+    var ymin, ymax, rmin, rmax, tmin, tmax;
+    var my, mr, mt;
+    var show;
+    filter_count++;
+    ymin = document.getElementById("YMIN").value;
+    ymax = document.getElementById("YMAX").value;
+    rmin = document.getElementById("RMIN").value;
+    rmax = document.getElementById("RMAX").value;
+    tmin = document.getElementById("TMIN").value;
+    tmax = document.getElementById("TMAX").value;
+    debug("F["+filter_count+"]");
+    debug_add(" Y:"+ymin+"-"+ymax+" R:"+rmin+"-"+rmax+" T:"+tmin+"-"+tmax);
     for (i=0; i<rows.length; i++) {
         mg = getElementsByClassName(rows[i], "MGENRE")[0].innerHTML;
-        if (genre_match(genres, mg.toUpperCase())) {
+        show = genre_match(genres, mg.toUpperCase());
+        my = getNumValue(rows[i], "MYEAR");
+        if (my < ymin || my > ymax) show = false;
+        mr = getNumValue(rows[i], "MRATING");
+        if (mr < rmin || mr > rmax) show = false;
+        mt = getNumValue(rows[i], "MRUNTIME");
+        if (mt < tmin || mt > tmax) show = false;
+        if (show) {
             //debug_add(i + mg + "<br>");
             rows[i].style.display = '';
             count++;
@@ -288,13 +339,53 @@ function do_filter()
         }
     }
     var status = document.getElementById("STATUS");
-    var stat = rows.length + " Movies";
+    var stat = "";
     if (count < rows.length) {
-        stat = count + " selected out of " + stat;
-    }
+        stat = count + " / ";
+    } // else { stat = "All "; }
+    stat += rows.length + " Movies";
     status.innerHTML = stat;
 }
 
+function numbersOnly(obj)
+{
+    obj.value = obj.value.replace(/[^0-9]/g, '');
+}
+
+function filter_reset()
+{
+    document.getElementById('FORM_FILTER').reset();
+    do_filter()
+}
+
+function sh_filter(x, show)
+{
+    var showf = document.getElementById('SHOW_FILTER' + x);
+    var hidef = document.getElementById('HIDE_FILTER' + x);
+    if (show) {
+        showf.style.display = 'none';
+        hidef.style.display = '';
+    } else {
+        showf.style.display = '';
+        hidef.style.display = 'none';
+    }
+}
+
+function show_filter(x)
+{
+    sh_filter(x, true);
+}
+
+function hide_filter(x)
+{
+    sh_filter(x, false);
+}
+
+function init_filter()
+{
+    sh_filter(1, true);
+    sh_filter(2, false);
+}
 
 
 

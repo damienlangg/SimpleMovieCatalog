@@ -2,8 +2,7 @@
 TODO:
 
  - Nicer formatting
- - Use CSS for HTML formatting
- - javascript sort & filter - especially for genre
+ - Theming
  - better help
  - ?
 
