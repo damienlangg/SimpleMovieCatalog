@@ -1,6 +1,10 @@
 Changelog:
 
 
+2008-11-20 Release 1.2.2
+ * added User Votes, specified with the -user option
+
+
 2008-11-05 Release 1.2.1
  * more sorting and filtering options
 

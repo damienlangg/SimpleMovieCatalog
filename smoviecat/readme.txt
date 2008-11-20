@@ -1,5 +1,5 @@
 
-Simple Movie Catalog 1.2.1
+Simple Movie Catalog 1.2.2
 Copyright (C) 2008 damien.langg@gmail.com
 
 Simple Movie Catalog will scan a given directory for movies,
@@ -16,6 +16,7 @@ Install Instructions:
    1. Install Perl
       Simple Movie Catalog is written in perl so you'll have to install it first.
       Download from: http://www.activestate.com/Products/activeperl/
+      or from: http://strawberryperl.com/
       Or install cygwin, which includes perl (http://www.cygwin.com/)
       Make sure to have perl in PATH!
 
@@ -103,6 +104,7 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
     DIRECTORY               Directory to scan
 
   More Options:
+    -user VOTES_URL         Add user's votes from imdb user's vote history url
     -js                     Use javascript for sorting [default]
     -nojs                   Use static html for sorting
     -xml                    Export catalog to .xml files
@@ -123,6 +125,17 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
     cache dir: [imdb_cache]
     output: [report/movies]
 
+
+Option Notes:
+
+    -user VOTES_URL         Add user's votes from imdb user's vote history url
+
+    VOTES_URL has the following format: [Name=]{URL|ID|FILE}
+    Examples:
+    -user http://www.imdb.com/mymovies/list?l=12345678
+    -user 12345678
+    -user Johnny=12345678
+    -user George=myvotes.html
 
 
 Config file:

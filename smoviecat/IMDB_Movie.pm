@@ -8,7 +8,7 @@ use LWP::Simple;
 use HTML::TokeParser;
 use Data::Dumper;
 
-$VERSION = '0.25';
+$VERSION = '0.26';
 $ERROR = "";
 
 sub error {
@@ -139,6 +139,48 @@ sub AUTOLOAD {
 }
 
 sub DESTROY {}
+
+
+sub get_vote_history {
+    my $url = shift;
+    if (not $url =~ /^http:/i) {
+        $url = "http://www.imdb.com/mymovies/list?l=" . $url;
+    }
+    my $content = get($url);
+    return undef unless ($content);
+    my $uv = parse_vote_history(\$content);
+    if ($uv) {
+        $uv->{'url'} = $url;
+    }
+    return $uv;
+}
+
+sub parse_vote_history {
+    my $html = shift;
+    my $parser = _get_toker_html($html);
+    my $tag;
+    my $user;
+    my %vote;
+    # user name
+    while ($tag = $parser->get_tag('a')) {
+        if ($tag->[1]{href} =~ /\/user\//) {
+            $user = $parser->get_text();
+            last;
+        }
+    }
+    #print "Vote User: $user\n";
+    # vote table
+    while ($tag = $parser->get_tag('a')) {
+        if ($tag->[1]{href} =~ /\/title\/\D*(\d+)/) {
+            my $id = $1;
+            $parser->get_tag('td');
+            $vote{$id} = $parser->get_text();
+            #print "Vote $id: ", $vote{$id}, "\n";
+        }
+    }
+    return {'user'=>$user, 'vote'=>\%vote};
+}
+
 
 ############################################################################
 
@@ -303,6 +345,8 @@ sub _person {
     return {%name};
 }
 
+# found = _jump_attr(parser, attr_name, @tag_list)
+
 sub _jump_attr {
     my ($parser, $attr, @tags) = @_;
     while ($parser->get_tag(@tags)) {
@@ -311,6 +355,8 @@ sub _jump_attr {
     }
     return 0;
 }
+
+# val = _get_info(parser, attr_name, start_tag, end_tag)
 
 sub _get_info {
     my $parser = shift;
