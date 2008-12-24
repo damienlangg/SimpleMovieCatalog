@@ -1,5 +1,5 @@
 
-Simple Movie Catalog 1.2.2
+Simple Movie Catalog 1.2.3
 Copyright (C) 2008 damien.langg@gmail.com
 
 Simple Movie Catalog will scan a given directory for movies,
@@ -17,7 +17,7 @@ Install Instructions:
       Simple Movie Catalog is written in perl so you'll have to install it first.
       Download from: http://www.activestate.com/Products/activeperl/
       or from: http://strawberryperl.com/
-      Or install cygwin, which includes perl (http://www.cygwin.com/)
+      or install cygwin, which includes perl (http://www.cygwin.com/)
       Make sure to have perl in PATH!
 
    2. Install Simple Movie Catalog
@@ -29,7 +29,7 @@ Install Instructions:
       The directory will be scanned, html report generated and opened using your
       favorite web browser.
 
-* Linux:
+* Linux / BSD / Mac OS X:
 
       Unpack, edit config.txt and run:
       $ perl moviecat.pl -c config.txt
@@ -115,6 +115,8 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
     -m|-missing             Report folders with missing info [default]
     -nm|-nomissing          Don't report missing info
     -mm|-missmatch          Report guessed exact matches as missing
+    -mf|-matchfirst         Match first if multiple matches exists
+    -my|-matchyear          Match also folders with missing year
     -as|-autosave           Save auto guessed exact matches
 
   Presets:

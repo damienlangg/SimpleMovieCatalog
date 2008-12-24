@@ -1,6 +1,12 @@
 Changelog:
 
 
+2008-12-24 Release 1.2.3
+ * Sort by user vote, dir time
+ * More subtitles searches
+ * Added options: match first, match missing year
+
+
 2008-11-20 Release 1.2.2
  * added User Votes, specified with the -user option
 

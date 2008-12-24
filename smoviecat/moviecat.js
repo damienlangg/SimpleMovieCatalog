@@ -78,6 +78,21 @@ function getElementsByClassName(node, classname) {
     }
 }
 
+function getValue(obj, cname)
+{
+    var e = getElementsByClassName(obj, cname);
+    if (!e || !e[0]) return undefined;
+    return e[0].innerHTML;
+}
+
+function getNumValue(obj, cname)
+{
+    var v = Number(getValue(obj, cname));
+    if (!v || isNaN(v)) return 0;
+    return v;
+}
+
+
 function cmp_number(a,b)
 {
     if (isNaN(a)) a = 0;
@@ -134,12 +149,13 @@ function table_sort(table, classname, datatype, direction, class2)
     var t0, t1, t2;
     var sort_fun;
     t0 = t1 = new Date().getTime();
+    debug_add("table_sort("+classname+") ");
     for(i=0; i<tbrows.length; i++) {
         r = tbrows[i];
         rows[i] = new Object();
-        rows[i].val = getElementsByClassName(r, classname)[0].innerHTML;
+        rows[i].val = getValue(r, classname);
         if (class2) {
-            rows[i].val2 = getElementsByClassName(r, class2)[0].innerHTML;
+            rows[i].val2 = getValue(r, class2);
         }
         rows[i].row = r;
     }
@@ -227,6 +243,16 @@ function sort_year()
     do_sort("YEAR", "number", -1)
 }
 
+function sort_dirtime()
+{
+    do_sort("DIRTIME", "number", -1)
+}
+
+function sort_user(x)
+{
+    do_sort("UV"+x, "number", -1)
+}
+
 // genre filter
 
 function genre_set_all(x)
@@ -291,15 +317,6 @@ function genre_match(garray, gstring)
     return false;
 }
 
-function getNumValue(obj, cname)
-{
-    var e = getElementsByClassName(obj, cname);
-    if (!e) return 0;
-    var v = Number(e[0].innerHTML);
-    if (!v || isNaN(v)) return 0;
-    return v;
-}
-
 var filter_count = 0;
 
 function do_filter()
@@ -322,7 +339,7 @@ function do_filter()
     debug("F["+filter_count+"]");
     debug_add(" Y:"+ymin+"-"+ymax+" R:"+rmin+"-"+rmax+" T:"+tmin+"-"+tmax);
     for (i=0; i<rows.length; i++) {
-        mg = getElementsByClassName(rows[i], "MGENRE")[0].innerHTML;
+        mg = getValue(rows[i], "MGENRE");
         show = genre_match(genres, mg.toUpperCase());
         my = getNumValue(rows[i], "MYEAR");
         if (my < ymin || my > ymax) show = false;

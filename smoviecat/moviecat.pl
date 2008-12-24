@@ -2,7 +2,7 @@
 
 =copyright
 
-    Simple Movie Catalog 1.2.2
+    Simple Movie Catalog 1.2.3
     Copyright (C) 2008 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -27,6 +27,7 @@ use FindBin;
 use File::Find;
 use File::Basename;
 use File::Copy;
+use File::stat qw(); # no-override
 use LWP::Simple;
 use Term::ReadKey;
 #use IMDB_Movie;
@@ -36,7 +37,7 @@ require "IMDB_Movie.pm";
 
 ### Globals
 
-my $progver = "1.2.2";
+my $progver = "1.2.3";
 my $progbin = "moviecat.pl";
 my $progname = "Simple Movie Catalog";
 my $progurl = "http://smoviecat.sf.net/";
@@ -71,7 +72,9 @@ my @subsearch = (
         "http://opensubtitles.org/en/search2/sublanguageid-eng/moviename-",
         "http://subscene.com/filmsearch.aspx?q=",
         "http://podnapisi.net/ppodnapisi/search?tbsl=1&asdp=0&sJ=2&sY=&sAKA=1&sK=",
-        "http://divxtitles.com/%TITLE%/English/any/1"
+        "http://divxtitles.com/%TITLE%/English/any/1",
+        #"http://www.subtitlesource.org/search/%TITLE%",
+        "http://www.subtitlesource.org/title/tt%ID%",
         );
 
 my @opt_user; # list of users vote history urls
@@ -81,6 +84,8 @@ my $opt_i = 0; # interactive
 my $opt_auto = 1;       # Auto guess and report exact matches
 my $opt_miss = 1;       # Report folders with missing info
 my $opt_miss_match = 0; # Report guessed exact matches as missing
+my $opt_match_first = 0;# Match first if multiple matches exists
+my $opt_match_year = 0; # Match also folders with missing year
 my $opt_auto_save = 0;  # Save auto guessed exact matches
 my $opt_group_table = 1;# use table for groups
 my $opt_xml = 0;        # xml export
@@ -240,9 +245,10 @@ sub valid_cache
     my $fname = shift;
     $last_cache_valid = 0;
     return 0 unless -e $fname;
-    my $age = -M $fname; # age in days
+    my $age = -M _; # age in days
     my $valid = $age <= $max_cache_days;
-    print_debug "Cache age: ", sprintf("%.1f ", $age),
+    print_debug "Cache age: ",
+                sprintf("%.0f ", $age), #sprintf("%.1f ", $age),
                 ($valid?"(ok)":"(too old)"), " '$fname'";
     $last_cache_valid = $valid;
     return $valid;
@@ -258,13 +264,21 @@ sub cache_imdb_id
         print_debug "Using Cached: $html_file\n";
         print_note " ";
     } else {
-        print_debug "Connecting to IMDB...\n";
+        print_debug "Connecting to IMDB... ($id)\n";
         print_note ".";
+        unlink $html_file if -e $html_file;
         $html = IMDB::Movie::get_page_id($id);
-        if ($html and open HTML_F, "> $html_file") {
+        if (!$html) {
+            print_debug "Error getting page: $id\n";
+            return undef;
+        }
+        my $F_CACHE;
+        if (open $F_CACHE, ">", $html_file) {
             print_debug "Write Cache: $html_file\n";
-            print HTML_F $$html;
-            close HTML_F;
+            print $F_CACHE $$html;
+            close $F_CACHE;
+        } else {
+            print_log "Error Writing Cache: $html_file\n";
         }
     }
 
@@ -285,11 +299,19 @@ sub cache_imdb_find
     } else {
         print_debug "Connecting to IMDB...\n";
         print_note ".";
+        unlink $html_file if -e $html_file;
         $html = IMDB::Movie::get_page_find($title, $year);
-        if ($html and open HTML_F, "> $html_file") {
+        if (!$html) {
+            print_debug "Error getting page: $title ($year)\n";
+            return undef;
+        }
+        my $F_CACHE;
+        if (open $F_CACHE, "> $html_file") {
             print_debug "Write Cache: $html_file\n";
-            print HTML_F $$html;
-            close HTML_F;
+            print $F_CACHE $$html;
+            close $F_CACHE;
+        } else {
+            print_log "Error Writing Cache: $html_file\n";
         }
     }
 
@@ -473,6 +495,12 @@ sub dir_assign_movie
     my $id = $movie->id;
     $all_dirs{$dir}->{info} = 1;
     $all_dirs{$dir}->{id}{$id} = 1; # $movie
+    if ($all_dirs{$dir}->{dirtime}) {
+        print_debug "Existing dirtime: $dir, ", $all_dirs{$dir}->{dirtime};
+    } else {
+        $all_dirs{$dir}->{dirtime} = File::stat::stat($dir)->mtime;
+        print_debug "dirtime: $dir, ", $all_dirs{$dir}->{dirtime};
+    }
 }
 
 sub group_assign_movie
@@ -661,6 +689,7 @@ sub inherit
     print_note shorten("$dir/"), ": Inherit\n";
     $all_dirs{$dir}->{info} = $all_dirs{$parent}->{info};
     $all_dirs{$dir}->{id} = $all_dirs{$parent}->{id};
+    $all_dirs{$dir}->{dirtime} = $all_dirs{$parent}->{dirtime};
     for my $id (keys %{$all_dirs{$parent}->{id}}) {
         if ($pmlist->{$id}) {
             # inherit only if present in current group
@@ -673,29 +702,32 @@ sub automatch
 {
     my $path = shift;
     my ($title, $year) = path_to_guess($path);
-    if ($title and $year) {
-        print_note shorten($path ."/"), ": GUESS\n";
-        print_note shorten(" ??? Guess: '".$title."' (".$year.")"), ": ";
-        my $msearch = findmovie($title, $year);
-        if ($msearch and $msearch->id and $msearch->direct_hit) {
-            print_note $msearch->id, " MATCH\n";
-            dir_assign_movie($path, $msearch);
-            if (!$opt_miss_match) {
-                group_assign_movie($path, $msearch);
-            }
-            if ($opt_auto_save) {
-                save_movie($path, $msearch);
-            } else {
-                $all_dirs{$path}->{guess} = 1;
-            }
-
-        } elsif ($msearch) {
-            my $nmatch = scalar @{$msearch->matches};
-            print_note "Matches: $nmatch\n";
-            $all_dirs{$path}->{matches} = $nmatch;
-        } else {
-            print_note "No Match\n";
+    return if (!$title); 
+    return if (!$opt_match_year and !$year); 
+    print_note shorten($path ."/"), ": GUESS\n";
+    print_note shorten(" ??? Guess: '".$title."' (".$year.")"), ": ";
+    my $msearch = findmovie($title, $year);
+    if ($msearch and $msearch->id and
+           ($msearch->direct_hit or $opt_match_first))
+    {
+        print_note $msearch->id, " MATCH\n";
+        dir_assign_movie($path, $msearch);
+        if (!$opt_miss_match) {
+            group_assign_movie($path, $msearch);
         }
+        if ($opt_auto_save) {
+            save_movie($path, $msearch);
+        } else {
+            $all_dirs{$path}->{guess} = 1;
+        }
+
+    } elsif ($msearch) {
+        my $nmatch = scalar @{$msearch->matches};
+        print_note "Matches: $nmatch\n";
+        $all_dirs{$path}->{matches} = $nmatch;
+        $all_dirs{$path}->{matchlist} = $msearch->matches;
+    } else {
+        print_note "No Match\n";
     }
 }
 
@@ -844,6 +876,7 @@ sub html_head
     print_html "input[type=text] {font-size: small; height: 1em;}";
     # print_html "table {border: outset;}";
     print_html "input[type=checkbox] {margin: 0px; width:13px; height:13px;}";
+    print_html "span.MDIRTIME {display: none}";
     print_html "--></style>";
 
     print_html "</head>";
@@ -898,14 +931,17 @@ sub format_movie
             " &nbsp;&nbsp; <i class=MGENRE>(", join(' / ',@{$m->genres}), ")</i>";
     # user votes
     my $found_vote = 0;
+    my $uid;
     for my $uv (@user_vote) {
+        $uid++;
         my $vote = $uv->{'vote'}{$m->id};
         if ($vote) {
             if (!$found_vote) {
                 $found_vote = 1;
                 print_html "<br><small>"; #"User: ";
             }
-            print_html " ", $uv->{'name'}, ": ", $vote, " ";
+            print_html " ", $uv->{'name'}, ": ",
+                      "<span class=MUV$uid>",  $vote, "</span> ";
             $uv->{'count'}++;
         }
     }
@@ -922,6 +958,7 @@ sub format_movie
     print_html "<tr><td height=1*><font size=-2>Location: ";
     my $i = 0;
     my $nloc = scalar @location;
+    my $dirtime = 0;
     for my $loc (sort by_alpha @location) {
         $i++;
         if ($nloc > 1) {
@@ -931,20 +968,31 @@ sub format_movie
             print_html "<b>(GUESSED)</b> ";
         }
         print_html format_html_path($loc);
+        # print_html "dt: ", $all_dirs{$loc}->{dirtime};
+        if ($dirtime < $all_dirs{$loc}->{dirtime}) {
+            $dirtime = $all_dirs{$loc}->{dirtime};
+        }
     }
+    # print_html "<br>dirtime: ";
+    print_html "<span class=MDIRTIME>$dirtime</span>";
     if (@subsearch) {
         print_html "<br>Search Subtitles: ";
+        my $id = $m->id;
         my $title = $m->title;
         my $year = $m->year;
         $title =~ s/ /+/g;
         for my $subs (@subsearch) {
             my $subsite = $subs;
-            if ($subs =~ /^http:\/\/([^\/]+)/) {
-                $subsite = $1;
+            if ($subs =~ /^http:\/\/(www\.)?([^\/]+)/) {
+                $subsite = $2;
             }
             my $subsurl = $subs;
+            my $match = 0;
             $subsurl =~ s/%YEAR%/$year/;
-            if (!($subsurl =~ s/%TITLE%/$title/)) {
+            $match ||= ($subsurl =~ s/%ID%/$id/);
+            $match ||= ($subsurl =~ s/%TITLE%/$title/);
+            if (!$match) {
+                # only append title to url if no %ID% or %TITLE% substition was done
                 $subsurl .= $title;
             }
             print_html "[<a href=\"", $subsurl, "\">$subsite</a>]&nbsp;";
@@ -999,10 +1047,11 @@ sub report_missing
         print_html "<br> Guessed title: ";
         print_html "<a href=\"", IMDB::Movie::get_url_find($title,$year), "\">";
         print_html "$title</a> (", $year?$year:"?", ")<br>";
-        if ($opt_auto and $title and $year) {
+        #if ($opt_auto and $title and $year) {
+        if ($opt_auto) {
             if ($all_dirs{$dir}->{info} and $all_dirs{$dir}->{guess}) {
-                my @ids = keys %{$all_dirs{$dir}->{id}};
-                my $movie = getmovie($ids[0]);
+                my $id = (keys %{$all_dirs{$dir}->{id}})[0];
+                my $movie = getmovie($id);
                 print_html "Exact Match:";
                 format_movie($movie, $dir);
                 $perf_match++;
@@ -1010,6 +1059,10 @@ sub report_missing
                 my $nmatch = $all_dirs{$dir}->{matches};
                 if ($nmatch) {
                     print_html "Matches: ", $nmatch;
+                    print_html "<br>First Match: ";
+                    my $id = $all_dirs{$dir}->{matchlist}->[0]{id};
+                    my $movie = getmovie($id);
+                    format_movie($movie, $dir);
                 } else {
                     print_html "No Match.";
                 }
@@ -1072,11 +1125,22 @@ sub page_head_group {
     }
 }
 
+sub page_head_jsort {
+    my ($sname) = @_;
+    print_html "<a id=\"SORT_", uc($sname), "\"",
+                " href=javascript:sort_", lc($sname), "()>$sname</a> ";
+}
+
+sub page_head_jsort_user {
+    my ($uid, $uname) = @_;
+    print_html "<a id=\"SORT_UV", $uid , "\"",
+                " href=javascript:sort_user('", $uid, "')>$uname</a> ";
+}
+
 sub page_head_sort {
     my ($fbase, $this_fadd, $add, $sname) = @_;
     if ($opt_js) {
-        print_html "<a id=\"SORT_", uc($sname), "\"",
-                   " href=javascript:sort_", lc($sname), "()>$sname</a> ";
+        page_head_jsort($sname);
     } else {
         if ($this_fadd eq $add) {
             print_html "<b>[$sname]</b>";
@@ -1131,6 +1195,17 @@ sub page_start
         page_head_sort $fbase, $fadd, "-runtime", "Runtime";
         if ($opt_js) {
             page_head_sort $fbase, $fadd, "-year", "Year";
+            print_html "<small>";
+            page_head_sort $fbase, $fadd, "-dirtime", "DirTime";
+            if (@opt_user) {
+                print_html "User Votes: ";
+                my $uid;
+                for my $uv (@user_vote) {
+                    $uid++;
+                    page_head_jsort_user $uid, $uv->{'name'};
+                }
+            }
+            print_html "</small>";
         } else {
             page_head_sort $fbase, $fadd, "-genre", "Genre";
             if ($opt_miss and scalar @group == 1) {
@@ -2013,6 +2088,12 @@ sub set_opt
     } elsif ($opt eq "-mm" or $opt eq "-missmatch") {
         $opt_miss_match = 1;
 
+    } elsif ($opt eq "-mf" or $opt eq "-matchfirst") {
+        $opt_match_first = 1;
+
+    } elsif ($opt eq "-my" or $opt eq "-matchyear") {
+        $opt_match_year = 1;
+
     } elsif ($opt eq "-as" or $opt eq "-autosave") {
         $opt_auto_save = 1;
 
@@ -2133,6 +2214,8 @@ USAGE
     -m|-missing             Report folders with missing info [default]
     -nm|-nomissing          Don't report missing info
     -mm|-missmatch          Report guessed exact matches as missing
+    -mf|-matchfirst         Match first if multiple matches exists
+    -my|-matchyear          Match also folders with missing year
     -as|-autosave           Save auto guessed exact matches
 
   Presets:
