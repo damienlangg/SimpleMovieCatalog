@@ -1,7 +1,8 @@
 
 set -x
 RELDIR=SimpleMovieCatalog
-VER=1.2.3
+#VER=1.2.4
+VER=`sed -n 's/^.*progver.*"\(.*\)".*$/\1/p' < moviecat.pl`
 ZIP=$RELDIR-$VER.zip
 
 rm -rf $RELDIR $ZIP

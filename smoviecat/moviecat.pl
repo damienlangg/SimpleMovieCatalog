@@ -2,7 +2,7 @@
 
 =copyright
 
-    Simple Movie Catalog 1.2.3
+    Simple Movie Catalog 1.2.4
     Copyright (C) 2008 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -37,7 +37,7 @@ require "IMDB_Movie.pm";
 
 ### Globals
 
-my $progver = "1.2.3";
+my $progver = "1.2.4";
 my $progbin = "moviecat.pl";
 my $progname = "Simple Movie Catalog";
 my $progurl = "http://smoviecat.sf.net/";
@@ -56,9 +56,9 @@ my $jsname = "moviecat.js";
 
 my @parse_ext = qw( nfo txt url desktop );
 
-my @media_ext = qw( mpg mpeg mpe mp4 avi mov qt wmv mkv vob
-        nfo rar iso bin cue srt sub );
-        # VIDEO_TS
+my @video_ext = qw( mpg mpeg mpe mp4 avi mov qt wmv mkv );
+
+my @media_ext = (@video_ext, qw( vob nfo rar iso bin cue srt sub ));
 
 my @codec = qw(
         cam ts r5 dvdscr dvdrip dvd dvd9 cd1 cd2
@@ -86,6 +86,7 @@ my $opt_miss = 1;       # Report folders with missing info
 my $opt_miss_match = 0; # Report guessed exact matches as missing
 my $opt_match_first = 0;# Match first if multiple matches exists
 my $opt_match_year = 0; # Match also folders with missing year
+my $opt_match_fname = 1;# Match file names
 my $opt_auto_save = 0;  # Save auto guessed exact matches
 my $opt_group_table = 1;# use table for groups
 my $opt_xml = 0;        # xml export
@@ -417,7 +418,7 @@ sub findmovie
             $m->{matches} = \@matches;
             # not a direct hit! unless title matches (almost) exactly
             if (match_title($title, $m->title)) {
-                # print_debug "\nTITLE EXACT MATCH: $title\n";
+                print_debug("Search '$title' ($year) Exact Match: ".$m->id." ".$m->title);
                 $m->{direct_hit} = 1;
             } else {
                 $m->{direct_hit} = 0;
@@ -431,6 +432,8 @@ sub findmovie
         print_log "*** Error: parse imdb '$title' ($year)\n";
         return undef;
     }
+    print_debug("Search '$title' ($year) Direct Hit: "
+            .$m->{direct_hit}." ".$m->id." ".$m->title);
     cache_image($m);
     $movie{$m->id} = $m;
     return $m;
@@ -471,7 +474,7 @@ sub shorten
     } else {
         $name = sprintf("%-".$max."s", $name);
     }
-    return $name;
+    return "$name ";
 }
 
 sub open_bom
@@ -489,17 +492,49 @@ sub open_bom
     return $FH;
 }
 
+
+sub get_dirent
+{
+    my ($dir, $fname) = @_;
+    my $dirent = $fname ? \%{$all_dirs{$dir}->{file}{$fname}} : \%{$all_dirs{$dir}};
+    return $dirent;
+}
+
+sub split_location
+{
+    my $path = shift;
+    if ($path =~ /[\/\\]$/) {
+        chop $path;
+        return ($path);
+    }
+    if (exists $all_dirs{$path}) {
+        return ($path);
+    }
+    my $dir = dirname($path);
+    my $fname = basename($path);
+    return ($dir, $fname);
+}
+
+sub get_dirent_location
+{
+    my $path = shift;
+    my ($dir, $fname) = split_location($path);
+    return get_dirent($dir, $fname);
+}
+
 sub dir_assign_movie
 {
-    my ($dir, $movie) = @_;
+    my ($dir, $movie, $fname) = @_;
     my $id = $movie->id;
-    $all_dirs{$dir}->{info} = 1;
-    $all_dirs{$dir}->{id}{$id} = 1; # $movie
-    if ($all_dirs{$dir}->{dirtime}) {
-        print_debug "Existing dirtime: $dir, ", $all_dirs{$dir}->{dirtime};
+    my $dirent = get_dirent($dir, $fname);
+    $dirent->{info} = 1;
+    $dirent->{id}{$id} = 1; # $movie
+    if ($dirent->{mtime}) {
+        print_debug "Existing mtime: $dir/$fname, ", $dirent->{mtime};
     } else {
-        $all_dirs{$dir}->{dirtime} = File::stat::stat($dir)->mtime;
-        print_debug "dirtime: $dir, ", $all_dirs{$dir}->{dirtime};
+        my $path = $fname ? "$dir/$fname" : $dir;
+        $dirent->{mtime} = File::stat::stat($path)->mtime;
+        print_debug "mtime: $dir/$fname, ", $dirent->{mtime};
     }
 }
 
@@ -685,49 +720,77 @@ sub filter_dir
 sub inherit
 {
     my ($dir, $parent) = @_;
-    return unless ($all_dirs{$parent}->{info});
+    return 0 unless ($all_dirs{$parent}->{info});
     print_note shorten("$dir/"), ": Inherit\n";
     $all_dirs{$dir}->{info} = $all_dirs{$parent}->{info};
     $all_dirs{$dir}->{id} = $all_dirs{$parent}->{id};
-    $all_dirs{$dir}->{dirtime} = $all_dirs{$parent}->{dirtime};
+    $all_dirs{$dir}->{mtime} = $all_dirs{$parent}->{mtime};
     for my $id (keys %{$all_dirs{$parent}->{id}}) {
         if ($pmlist->{$id}) {
             # inherit only if present in current group
             $pmlist->{$id}->{location}{$dir}++;
         }
     }
+    return 1;
 }
 
-sub automatch
+
+sub automatch1
 {
-    my $path = shift;
-    my ($title, $year) = path_to_guess($path);
-    return if (!$title); 
-    return if (!$opt_match_year and !$year); 
-    print_note shorten($path ."/"), ": GUESS\n";
+    my ($dir, $fname) = @_;
+    my $path = "$dir/$fname";
+    my ($title, $year) = path_to_guess($fname ? cut_ext($fname) : $dir);
+    return 0 if (!$title); 
+    return 0 if (!$opt_match_year and !$year); 
+    my $dirent = get_dirent($dir, $fname);
+    print_note shorten($path), ": GUESS\n";
     print_note shorten(" ??? Guess: '".$title."' (".$year.")"), ": ";
     my $msearch = findmovie($title, $year);
     if ($msearch and $msearch->id and
            ($msearch->direct_hit or $opt_match_first))
     {
         print_note $msearch->id, " MATCH\n";
-        dir_assign_movie($path, $msearch);
+        dir_assign_movie($dir, $msearch, $fname);
         if (!$opt_miss_match) {
             group_assign_movie($path, $msearch);
         }
         if ($opt_auto_save) {
-            save_movie($path, $msearch);
+            save_movie($dir, $msearch);
         } else {
-            $all_dirs{$path}->{guess} = 1;
+            $dirent->{guess} = 1;
         }
+        return 1 if ($msearch->direct_hit);
+        # return 1 if direct hit
 
     } elsif ($msearch) {
         my $nmatch = scalar @{$msearch->matches};
         print_note "Matches: $nmatch\n";
-        $all_dirs{$path}->{matches} = $nmatch;
-        $all_dirs{$path}->{matchlist} = $msearch->matches;
+        $dirent->{matches} = $nmatch;
+        $dirent->{matchlist} = $msearch->matches;
     } else {
+        $dirent->{matches} = 0;
         print_note "No Match\n";
+    }
+    return 0;
+}
+
+
+
+sub automatch
+{
+    my $dir = shift;
+    print_debug "AUTOMATCH: $dir";
+    return if (automatch1($dir));
+    return unless ($opt_match_fname);
+    # not direct hit and match_fname enabled:
+    # search through relevant files
+    return unless ($all_dirs{$dir}->{relevant});
+    my $fn;
+    for $fn (keys %{$all_dirs{$dir}->{relevant}}) {
+        if (match_ext($fn, @video_ext)) {
+            print_debug("filename guess: $dir/$fn");
+            automatch1($dir, $fn);
+        }
     }
 }
 
@@ -744,25 +807,16 @@ sub check_dir_info
     #if ($all_dirs{$path}->{guess}) { goto AUTOMATCH; }
     return if ($all_dirs{$path}->{info});
     return if (!$all_dirs{$path}->{relevant});
-    # check for rar, nfo
+    # check for rar, nfo, cd1/cd2, VIDEO_TS
     my $rar = "$parent/$dir.rar";
     my $nfo = "$parent/$dir.nfo";
-    if ( -e $rar or -e $nfo ) {
-        inherit($path, $parent);
-        return;
-    }
-    # check for cd1/cd2
-    if ( $dir =~ /^cd\d$/i ) {
-        inherit($path, $parent);
-        return;
-    }
-    # check for VIDEO_TS
-    if ( uc($dir) eq "VIDEO_TS" ) {
-        inherit($path, $parent);
-        return;
+    if ( -e $rar or -e $nfo 
+         or $dir =~ /^cd\d$/i
+         or uc($dir) eq "VIDEO_TS" )
+    {
+        if (inherit($path, $parent)) { return; }
     }
     # automatch
-    #AUTOMATCH:
     if ($opt_auto) {
         automatch($path);
     }
@@ -893,8 +947,10 @@ sub format_html_path
     if ($^O =~ /win/i) {
         $link =~ tr[/][\\];
     }
+    # if file, link to dir
+    my ($dir, $fname) = split_location($path);
     #return "<a href=\"file://$path\" style=word-wrap:break-word>$link</a>";
-    return "<a href=\"file://$path\">$link</a>";
+    return "<a href=\"file://$dir\">$link</a>";
 }
 
 sub format_movie
@@ -964,13 +1020,14 @@ sub format_movie
         if ($nloc > 1) {
             print_html "<br><b>($i)</b> ";
         }
-        if ($all_dirs{$loc}->{guess}) {
+        my $dirent = get_dirent_location($loc);
+        if ($dirent->{guess}) {
             print_html "<b>(GUESSED)</b> ";
         }
         print_html format_html_path($loc);
-        # print_html "dt: ", $all_dirs{$loc}->{dirtime};
-        if ($dirtime < $all_dirs{$loc}->{dirtime}) {
-            $dirtime = $all_dirs{$loc}->{dirtime};
+        # print_html "dt: ", $all_dirs{$loc}->{mtime};
+        if ($dirtime < $dirent->{mtime}) {
+            $dirtime = $dirent->{mtime};
         }
     }
     # print_html "<br>dirtime: ";
@@ -1003,6 +1060,23 @@ sub format_movie
     print_html "</table><br>\n";
 }
 
+sub is_missing_file
+{
+    my ($dir, $fname) = @_;
+    if ($opt_miss_match) {
+        return 0 if ($all_dirs{$dir}->{file}{$fname}->{info}
+                and !$all_dirs{$dir}->{file}{$fname}->{guess});
+    } else {
+        return 0 if ($all_dirs{$dir}->{file}{$fname}->{info});
+    }
+    for my $ign (@ignorelist) {
+        if (match_path($dir, $fname, $ign)) {
+            return 0;        
+        }
+    }
+    return 1;
+}
+
 sub is_missing
 {
     my $dir = shift;
@@ -1017,6 +1091,15 @@ sub is_missing
             return 0;        
         }
     }
+    # if all video files have appropriate matches, don't report as missing
+    my $n_movies = 0;
+    for my $fname (keys %{$all_dirs{$dir}->{relevant}}) {
+        if (match_ext($fname, @video_ext)) {
+            $n_movies++;
+            if (is_missing_file($dir, $fname)) { return 1; }
+        }
+    }
+    if ($n_movies > 0) { return 0; }
     return 1;
 }
 
@@ -1030,6 +1113,41 @@ sub count_missing
     return $nmiss;
 }
 
+sub format_guess
+{
+    my ($dir, $fname) = @_;
+
+    my $dirent = get_dirent($dir, $fname);
+
+    print_html format_html_path("$dir/$fname");
+    my ($title, $year) = path_to_guess($fname ? cut_ext($fname) : $dir);
+    print_html "<br> Guessed title: ";
+    print_html "<a href=\"", IMDB::Movie::get_url_find($title,$year), "\">";
+    print_html "$title</a> (", $year?$year:"?", ")<br>";
+
+    if ($dirent->{info} and $dirent->{guess}) {
+        my $id = (keys %{$dirent->{id}})[0];
+        my $movie = getmovie($id);
+        print_html "Exact Match:";
+        format_movie($movie, "$dir/$fname");
+        return 1; # exact match
+    } else {
+        my $nmatch = $dirent->{matches};
+        if ($nmatch) {
+            print_html "Matches: ", $nmatch;
+            print_html "<br>First Match: ";
+            my $id = $dirent->{matchlist}->[0]{id};
+            my $movie = getmovie($id);
+            format_movie($movie, "$dir/$fname");
+        } elsif ($nmatch eq undef) {
+            print_html "Not Auto-Matching.<br><br>";
+        } else {
+            print_html "No Match.<br><br>";
+        }
+    }
+}
+
+
 sub report_missing
 {
     my @sort_dirs = sort by_alpha keys %all_dirs;
@@ -1041,47 +1159,19 @@ sub report_missing
         my $dir = $sort_dirs[$cur_dir];
         next unless is_missing($dir);
         print_html "<li>[", $cur_dir + 1, "]";
-        # print_html " $dir\n";
-        print_html format_html_path($dir);
-        my ($title, $year) = path_to_guess($dir);
-        print_html "<br> Guessed title: ";
-        print_html "<a href=\"", IMDB::Movie::get_url_find($title,$year), "\">";
-        print_html "$title</a> (", $year?$year:"?", ")<br>";
-        #if ($opt_auto and $title and $year) {
-        if ($opt_auto) {
-            if ($all_dirs{$dir}->{info} and $all_dirs{$dir}->{guess}) {
-                my $id = (keys %{$all_dirs{$dir}->{id}})[0];
-                my $movie = getmovie($id);
-                print_html "Exact Match:";
-                format_movie($movie, $dir);
-                $perf_match++;
-            } else {
-                my $nmatch = $all_dirs{$dir}->{matches};
-                if ($nmatch) {
-                    print_html "Matches: ", $nmatch;
-                    print_html "<br>First Match: ";
-                    my $id = $all_dirs{$dir}->{matchlist}->[0]{id};
-                    my $movie = getmovie($id);
-                    format_movie($movie, $dir);
-                } else {
-                    print_html "No Match.";
-                }
-            }
-            print_html "<br>";
-=com
-        } else {
-            # show also filename matches
-            my @guess = get_guess_list(cut_ext_l(keys %{$all_dirs{$dir}->{relevant}}));
-            for my $g (@guess) {
-                $title = $g->{title};
-                $year = $g->{year};
-                print_html "Guessed title: ";
-                print_html "<a href=\"", IMDB::Movie::get_url_find($title,$year), "\">";
-                print_html "$title</a> (", $year?$year:"?", ")<br>";
-            }
-=cut
+        $perf_match += format_guess($dir);
+        # filename guesses
+        print_html "<ul>";
+        my $fname;
+        for $fname (keys %{$all_dirs{$dir}->{relevant}}) {
+            next unless match_ext($fname, @video_ext);
+            next unless is_missing_file($dir, $fname);
+            print_html "<li>";
+            $perf_match += format_guess($dir, $fname);
         }
-        print_html "<br>";
+        print_html "</ul>";
+        # filename guesses
+        print_html "<br><br>";
     }
     print_html "</ul>";
     print_html "<br>Total ", count_missing, " Directories with missing info<br>";
@@ -1528,8 +1618,8 @@ sub path_to_guess
 {
     my $path = shift;
     my $name = basename($path);
-    if (uc($name) eq "VIDEO_TS") {
-        # if VIDEO_TS get parent dir
+    if (uc($name) eq "VIDEO_TS" or $name =~ /^cd[1-4]$/i) {
+        # if VIDEO_TS or CD1/2 get parent dir
         $name = basename(dirname($path));
     }
     my $title = $name;
@@ -2094,6 +2184,12 @@ sub set_opt
     } elsif ($opt eq "-my" or $opt eq "-matchyear") {
         $opt_match_year = 1;
 
+    } elsif ($opt eq "-mfn" or $opt eq "-matchfilename") {
+        $opt_match_fname = 1;
+
+    } elsif ($opt eq "-nfn" or $opt eq "-nomatchfilename") {
+        $opt_match_fname = 0;
+
     } elsif ($opt eq "-as" or $opt eq "-autosave") {
         $opt_auto_save = 1;
 
@@ -2216,6 +2312,8 @@ USAGE
     -mm|-missmatch          Report guessed exact matches as missing
     -mf|-matchfirst         Match first if multiple matches exists
     -my|-matchyear          Match also folders with missing year
+    -mfn|-matchfilename     Match also by filename [default]
+    -nfn|-nomatchfilename   Don't match by filename
     -as|-autosave           Save auto guessed exact matches
 
   Presets:

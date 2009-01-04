@@ -1,6 +1,10 @@
 Changelog:
 
 
+2009-01-04 Release 1.2.4
+ * Auto-match by filename if other methods fail
+
+
 2008-12-24 Release 1.2.3
  * Sort by user vote, dir time
  * More subtitles searches

@@ -1,5 +1,5 @@
 
-Simple Movie Catalog 1.2.3
+Simple Movie Catalog 1.2.4
 Copyright (C) 2008 damien.langg@gmail.com
 
 Simple Movie Catalog will scan a given directory for movies,
@@ -48,7 +48,7 @@ The directories are scanned for: *.nfo, *.txt, *.url, *.desktop files that
 contain links to imdb info like this: http://www.imdb.com/title/tt0062622/
 
 If no such link is present then the movie title and year is guessed from
-directory name and searched on imdb for an exact match.
+directory or file name and searched on imdb for an exact match.
 
 If none of the above methods produce valid info, then the directory is
 reported in the "Missing Info" group.
@@ -117,6 +117,8 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
     -mm|-missmatch          Report guessed exact matches as missing
     -mf|-matchfirst         Match first if multiple matches exists
     -my|-matchyear          Match also folders with missing year
+    -mfn|-matchfilename     Match also by filename [default]
+    -nfn|-nomatchfilename   Don't match by filename
     -as|-autosave           Save auto guessed exact matches
 
   Presets:
