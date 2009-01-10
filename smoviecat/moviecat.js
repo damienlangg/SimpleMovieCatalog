@@ -17,7 +17,6 @@ function moviecat_init()
 {
     if (debug_enabled) enable_debug();
     active_sort("SORT_TITLE", 1);
-    genre_set_all(true);
     init_filter();
     initialized = true;
 }
@@ -301,10 +300,10 @@ function genre_get()
     var i;
     for (i=0; i<gbox.length; i++) {
         if (gbox[i].type == "checkbox" && gbox[i].checked) {
-            genre.push(gbox[i].id.substr(2));
+            genre.push(gbox[i].id.substr(2)); // strip G_
         }
     }
-    debug(genre.join(" "));
+    debug_add("<br>Genre: " + genre.join(" "));
     return genre;
 }
 
@@ -317,27 +316,105 @@ function genre_match(garray, gstring)
     return false;
 }
 
+// Tags
+
+function tag_all()
+{
+    var table = document.getElementById("TAG_TABLE");
+    var input = table.getElementsByTagName("input");
+    var i;
+    for (i=0; i<input.length; i++) {
+        if (input[i].type == "radio" && input[i].value == "all") {
+            input[i].checked = 1;
+        }
+    }
+    do_filter();
+}
+
+function tag_set(tid, val)
+{
+    if (!initialized) return;
+    debug(tid +"="+ val);
+    var tag = document.getElementById(tid+"_"+val);
+    if (tag.type == "radio") {
+        tag.checked = true;
+        do_filter();
+    }
+}
+
+function get_tags()
+{
+    var table = document.getElementById("TAG_TABLE");
+    var input = table.getElementsByTagName("input");
+    var tags = new Array();
+    var i;
+    debug_add("<br>Tags: ");
+    for (i=0; i<input.length; i++) {
+        if (input[i].type == "radio" && input[i].checked) {
+            var tag = new Object();
+            tag.name = input[i].name.substr(4); // strip TAG_
+            tag.value = input[i].value;
+            tags.push(tag);
+            debug_add(tag.name + "=" + tag.value + " ");
+        }
+    }
+    return tags;
+}
+
+function indexOf(arr, val)
+{
+    if (arr.indexOf) {
+        // FF
+        return arr.indexOf(val);
+    }
+    // MSIE
+    var i;
+    for (i=0; i<arr.length; i++) {
+        if (arr[i] == val) return i;
+    }
+    return -1;
+}
+
+function tag_match(tagstr, tagarray)
+{
+    var tags = tagstr ? tagstr.toUpperCase().split(" ") : [];
+    var i, present;
+    for (i=0; i<tagarray.length; i++) {
+        if (tagarray[i].value == "all") continue;
+        if (indexOf(tags, tagarray[i].name) >= 0) {
+            present = true;
+        } else {
+            present = false;
+        }
+        if (tagarray[i].value == "set" && !present) return false;
+        if (tagarray[i].value == "not" && present) return false;
+    }
+    return true;
+}
+
 var filter_count = 0;
 
 function do_filter()
 {
     if (!initialized) return;
+    filter_count++;
+    debug("Filter["+filter_count+"]");
     var genres = genre_get();
+    var tags = get_tags();
     var mtable = document.getElementById("MTABLE");
     var rows = mtable.tBodies[0].rows;
     var i, mg, count = 0;
     var ymin, ymax, rmin, rmax, tmin, tmax;
-    var my, mr, mt;
+    var my, mr, mrt, mtags;
     var show;
-    filter_count++;
     ymin = document.getElementById("YMIN").value;
     ymax = document.getElementById("YMAX").value;
     rmin = document.getElementById("RMIN").value;
     rmax = document.getElementById("RMAX").value;
     tmin = document.getElementById("TMIN").value;
     tmax = document.getElementById("TMAX").value;
-    debug("F["+filter_count+"]");
-    debug_add(" Y:"+ymin+"-"+ymax+" R:"+rmin+"-"+rmax+" T:"+tmin+"-"+tmax);
+    debug_add("<br>Ranges: Y:"+ymin+"-"+ymax+" R:"+rmin+"-"+rmax+" T:"+tmin+"-"+tmax);
+    var t1 = new Date().getTime();
     for (i=0; i<rows.length; i++) {
         mg = getValue(rows[i], "MGENRE");
         show = genre_match(genres, mg.toUpperCase());
@@ -345,8 +422,10 @@ function do_filter()
         if (my < ymin || my > ymax) show = false;
         mr = getNumValue(rows[i], "MRATING");
         if (mr < rmin || mr > rmax) show = false;
-        mt = getNumValue(rows[i], "MRUNTIME");
-        if (mt < tmin || mt > tmax) show = false;
+        mrt = getNumValue(rows[i], "MRUNTIME");
+        if (mrt < tmin || mrt > tmax) show = false;
+        mtags = getValue(rows[i], "MTAGS");
+        if (!tag_match(mtags, tags)) show = false;
         if (show) {
             //debug_add(i + mg + "<br>");
             rows[i].style.display = '';
@@ -355,13 +434,16 @@ function do_filter()
             rows[i].style.display = "none";
         }
     }
-    var status = document.getElementById("STATUS");
+    var t2 = new Date().getTime();
+    var fstatus = document.getElementById("STATUS");
     var stat = "";
     if (count < rows.length) {
         stat = count + " / ";
     } // else { stat = "All "; }
     stat += rows.length + " Movies";
-    status.innerHTML = stat;
+    debug_add("  Time:" + (t2-t1) + " ms ");
+    //stat += " [" + (t2-t1) + "]";
+    fstatus.innerHTML = stat;
 }
 
 function numbersOnly(obj)
@@ -400,8 +482,11 @@ function hide_filter(x)
 
 function init_filter()
 {
+    genre_set_all(true);
+    tag_all();
     sh_filter(1, true);
-    sh_filter(2, false);
+    sh_filter(2, true);
+    sh_filter(3, false);
 }
 
 

@@ -1,5 +1,5 @@
 
-Simple Movie Catalog 1.2.4
+Simple Movie Catalog 1.3.0
 Copyright (C) 2008 damien.langg@gmail.com
 
 Simple Movie Catalog will scan a given directory for movies,
@@ -96,19 +96,21 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
     -t|-title <TITLE>       Set Title (multiple to define groups)
     -g|-group               Group separator
     -s|-skip <NAME>         Skip file or dir (recursive) 
+    -ignore <DIR>           Ignore dir with missing info (not recursive)
+    -user VOTES_URL         Add user's votes from imdb user's vote history url
+    -subs URL               Add subtitle search site
+    -tag NAME=PATTERN       Add a tag NAME if path matches PATTERN
+    -ext EXT                Add a file extension of recognized media files
+    DIRECTORY               Directory to scan
+
+  More Options:
     -x|-regex <EXPR>        Skip using regular expressions
     -ns|-noskip             Clear preset skip lists
     -gs|-gskip <NAME>       Group Skip file or dir
     -gx|-gregex <EXPR>      Group Skip using regular expressions
-    -ignore <DIR>           Ignore dir with missing info (not recursive)
-    DIRECTORY               Directory to scan
-
-  More Options:
-    -user VOTES_URL         Add user's votes from imdb user's vote history url
     -js                     Use javascript for sorting [default]
     -nojs                   Use static html for sorting
     -xml                    Export catalog to .xml files
-    -subs URL               Add subtitle search site
     -nosubs                 Clear subtitle search site list
     -a|-automatch           Auto guess and report exact matches [default]
     -na|-noautomatch        Disable auto match
@@ -124,22 +126,47 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
   Presets:
     skip list: [sample subs subtitles cover covers]
     regex skip: [/subs-.*/ /\W*sample\W*/]
-    media ext: [mpg mpeg mpe mp4 avi mov qt wmv mkv vob nfo rar iso bin cue srt sub]
-    codec tags: [cam ts r5 dvdscr dvdrip dvd dvd9 cd1 cd2 hdtv hddvdrip hddvd bluray bd5 bd9 vcd xvid divx x264 matroska wmv dts dolby ac3 vorbis mp3 sub 720p 1080p hd hidef]
+    media ext: [mpg mpeg mpe mp4 avi mov qt wmv mkv iso bin cue ratdvd tivo vob nfo rar srt sub]
+    codec tags: [hidef hd hdtv hddvdrip hddvd bluray bd5 bd9 720 720p 1080 1080p cam ts r5 dvdscr dvdrip dvd dvd9 cd1 cd2 vcd xvid divx x264 matroska wmv dts dolby ac3 vorbis mp3 sub]
     cache dir: [imdb_cache]
     output: [report/movies]
 
 
 Option Notes:
 
-    -user VOTES_URL         Add user's votes from imdb user's vote history url
+  User Votes:
 
+    -user VOTES_URL         Add user's votes from imdb user's vote history url
     VOTES_URL has the following format: [Name=]{URL|ID|FILE}
     Examples:
-    -user http://www.imdb.com/mymovies/list?l=12345678
-    -user 12345678
-    -user Johnny=12345678
-    -user George=myvotes.html
+        -user http://www.imdb.com/mymovies/list?l=12345678
+        -user 12345678
+        -user Johnny=12345678
+        -user George=myvotes.html
+
+
+  Movie Tags:
+
+    Movies can be assigned some tags, which allow additional filtering.
+    Tags are assigned based on:
+    - path matching (HiDef)
+    - imdb movie type (TV,Video,Series)
+    - movie match method (Guess)
+    In a way, path matching tags are similar to groups,
+    but offer more flexible filtering.
+    User defined path matching tags are defined with the option:
+    -tag NAME=PATTERN       Add a tag NAME if path matches PATTERN
+    NAME must not contain any spaces.
+    Examples:
+        -tag Seen=seen
+        -tag Downloads=/Downloads/
+    Multiple patterns can be specified, separated with comma, example:
+        -tag HiDef=hidef,720,1080
+    Note: HiDef tag is already predefined, to disable it assign it
+    an empty PATTERN. Example:
+        -tag HiDef=
+    To add patterns to an existing tag, use += instead of = example:
+        -tag HiDef+=hddvd
 
 
 Config file:

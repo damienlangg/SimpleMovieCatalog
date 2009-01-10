@@ -3,11 +3,14 @@
 -t Demo
 demo
 
--t DVD
-demo/dvd
+#-t DVD
+#demo/dvd
 
--t HiDef
-demo/hidef
+#-t HiDef
+#demo/hidef
+
+# use tags instead of groups:
+-tag DVD=/dvd
 
 -o demo/catalog
 

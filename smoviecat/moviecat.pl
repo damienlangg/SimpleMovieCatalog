@@ -2,7 +2,7 @@
 
 =copyright
 
-    Simple Movie Catalog 1.2.4
+    Simple Movie Catalog 1.3.0
     Copyright (C) 2008 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -37,7 +37,7 @@ require "IMDB_Movie.pm";
 
 ### Globals
 
-my $progver = "1.2.4";
+my $progver = "1.3.0";
 my $progbin = "moviecat.pl";
 my $progname = "Simple Movie Catalog";
 my $progurl = "http://smoviecat.sf.net/";
@@ -56,17 +56,17 @@ my $jsname = "moviecat.js";
 
 my @parse_ext = qw( nfo txt url desktop );
 
-my @video_ext = qw( mpg mpeg mpe mp4 avi mov qt wmv mkv );
+my @video_ext = qw( mpg mpeg mpe mp4 avi mov qt wmv mkv iso bin cue ratdvd tivo );
 
-my @media_ext = (@video_ext, qw( vob nfo rar iso bin cue srt sub ));
+my @media_ext = (@video_ext, qw( vob nfo rar srt sub ));
 
-my @codec = qw(
+my @hidef = qw( hidef hd hdtv hddvdrip hddvd bluray bd5 bd9 720 720p 1080 1080p );
+
+my @codec = (@hidef, qw(
         cam ts r5 dvdscr dvdrip dvd dvd9 cd1 cd2
-        hdtv hddvdrip hddvd bluray bd5 bd9
         vcd xvid divx x264 matroska wmv
         dts dolby ac3 vorbis mp3 sub
-        720p 1080p hd hidef
-        );
+        ));
 
 my @subsearch = (
         "http://opensubtitles.org/en/search2/sublanguageid-eng/moviename-",
@@ -105,6 +105,9 @@ my $ndirs;
 my @skiplist = qw( sample subs subtitles cover covers );
 my @rxskiplist = qw( /subs-.*/ /\W*sample\W*/ );
 my @ignorelist; # ignore dir with missing info, not recursive 
+my %gbl_tags;
+
+@{$gbl_tags{"HiDef"}{pattern}} = @hidef;
 
 my $F_HTML;
 my $F_LOG;
@@ -538,13 +541,47 @@ sub dir_assign_movie
     }
 }
 
+sub group_assign_tag
+{
+    my ($id, $tag, $ord) = @_;
+    if (!$pmlist->{$id}->{tag}{$tag}) {
+        $pmlist->{$id}->{tag}{$tag} = 1;
+        $pgroup->{tag}{$tag}++;
+    }
+    $gbl_tags{$tag}{order} = $ord;
+}
+
 sub group_assign_movie
 {
-    my ($dir, $movie) = @_;
+    my ($path, $movie) = @_;
     my $id = $movie->id;
     $pmlist->{$id}->{movie} = $movie;
-    $pmlist->{$id}->{location}{$dir}++;
+    $pmlist->{$id}->{location}{$path}++;
+    # match path tags
+    my $lcpath = lc(normal_path($path));
+    for my $tag (keys %gbl_tags) {
+        for my $pat (@{$gbl_tags{$tag}{pattern}}) {
+            $pat = lc(normal_path($pat));
+            if (index($lcpath, $pat) >= 0) {
+                group_assign_tag($id, "$tag");
+                last;
+            }
+        }
+    }
+    # imdb movie type to tag
+    if ($movie->type =~ /series/i) {
+        group_assign_tag($id, "Series", 10);
+    } elsif ($movie->type =~ /vg/i) {
+        group_assign_tag($id, "VideoGame", 10);
+    } elsif ($movie->type =~ /tv/i) {
+        group_assign_tag($id, "TV/Video", 10);
+    } elsif ($movie->type =~ /\bv\b/i) { # \b = word boundary
+        group_assign_tag($id, "TV/Video", 10);
+    } elsif ($movie->type) {
+        group_assign_tag($id, $movie->type, 10);
+    }
 }
+
 
 sub count_loc
 {
@@ -758,6 +795,7 @@ sub automatch1
             save_movie($dir, $msearch);
         } else {
             $dirent->{guess} = 1;
+            group_assign_tag($msearch->id, "Guess", 20);
         }
         return 1 if ($msearch->direct_hit);
         # return 1 if direct hit
@@ -831,6 +869,7 @@ sub do_scan
 {
     for my $g (@group) {
         $pgroup = $g; # set current group
+        $pmlist = \%{$g->{mlist}}; # current group mlist
         for my $dir (@{$g->{dirs}}) {
             print_note "\n";
             print_info "[ ", $g->{title}, " ] Searching ... $dir\n";
@@ -838,7 +877,6 @@ sub do_scan
                 print_error "Directory not found: '$dir'\n";
                 exit_cfg;
             }
-            $pmlist = \%{$g->{mlist}};
             find( { preprocess  => \&filter_dir,
                     wanted      => \&process_file,
                     # postprocess => \&postprocess_dir,
@@ -926,10 +964,11 @@ sub html_head
     }
     # CSS style
     print_html "<style type=text/css><!--";
-    print_html "span.GENRE_NAME:hover {text-decoration: underline}";
+    print_html "span.HOVER_ULN:hover {text-decoration: underline}";
     print_html "input[type=text] {font-size: small; height: 1em;}";
     # print_html "table {border: outset;}";
     print_html "input[type=checkbox] {margin: 0px; width:13px; height:13px;}";
+    print_html "input[type=radio] {margin: 0px; width:13px; height:13px;}";
     print_html "span.MDIRTIME {display: none}";
     print_html "--></style>";
 
@@ -953,9 +992,20 @@ sub format_html_path
     return "<a href=\"file://$dir\">$link</a>";
 }
 
+sub format_movie_id
+{
+    my $id = shift;
+    format_movie($pmlist->{$id}->{movie},
+            [ keys %{$pmlist->{$id}->{location}} ],
+            [ keys %{$pmlist->{$id}->{tag}} ] );
+}
+
 sub format_movie
 {
-    my ($m, @location) = @_;
+    my ($m, $loc_ref, $tag_ref) = @_;
+
+    my @location = $loc_ref ? @{$loc_ref} : ();
+    my @tags     = $tag_ref ? @{$tag_ref} : ();
 
     #print_debug "LOC: ", join ("\n+++", @location), "\n";
 
@@ -1011,7 +1061,12 @@ sub format_movie
     #print_html "</font>";
     print_html "</td></tr>";
 
-    print_html "<tr><td height=1*><font size=-2>Location: ";
+    print_html "<tr><td height=1*><font size=-2>";
+    if (@tags) {
+        print_html "Tags: <span class=MTAGS>", join(' ', @tags), "</span><br>";
+    }
+
+    print_html "Location: ";
     my $i = 0;
     my $nloc = scalar @location;
     my $dirtime = 0;
@@ -1129,7 +1184,7 @@ sub format_guess
         my $id = (keys %{$dirent->{id}})[0];
         my $movie = getmovie($id);
         print_html "Exact Match:";
-        format_movie($movie, "$dir/$fname");
+        format_movie($movie, [ "$dir/$fname" ] );
         return 1; # exact match
     } else {
         my $nmatch = $dirent->{matches};
@@ -1138,7 +1193,7 @@ sub format_guess
             print_html "<br>First Match: ";
             my $id = $dirent->{matchlist}->[0]{id};
             my $movie = getmovie($id);
-            format_movie($movie, "$dir/$fname");
+            format_movie($movie, [ "$dir/$fname" ] );
         } elsif ($nmatch eq undef) {
             print_html "Not Auto-Matching.<br><br>";
         } else {
@@ -1370,6 +1425,12 @@ sub get_max_runtime
     return $maxrun;
 }
 
+sub by_tag
+{
+    my $order = $gbl_tags{$a}{order} <=> $gbl_tags{$b}{order};
+    return $order ? $order : by_alpha;
+}
+
 sub page_filter
 {
     my @genres = sort by_alpha get_all_genres;
@@ -1380,8 +1441,10 @@ sub page_filter
     print_html "<i id=STATUS>", scalar keys %{$pmlist},
                " Movies</i> ";
     print_html "&nbsp; <a id=SHOW_FILTER1 href=javascript:show_filter(1)>",
-               "show genre</a>";
+               "show tags</a>";
     print_html "&nbsp; <a id=SHOW_FILTER2 href=javascript:show_filter(2)>",
+               "show genre</a>";
+    print_html "&nbsp; <a id=SHOW_FILTER3 href=javascript:show_filter(3)>",
                "more options</a>";
     print_html "</small>";
 
@@ -1392,18 +1455,47 @@ sub page_filter
     print_html "<tr valign=top>";
 
     print_html "<td id=HIDE_FILTER1>";
+    print_html "<table id=TAG_TABLE cellspacing=0 cellpadding=0>";
+    print_html "<tr valign=top>";
+    print_html "<td>Tags:&nbsp;<br><small>";
+    print_html "<a href=javascript:tag_all()>all</a><br>";
+    print_html "<a href=javascript:hide_filter(1)>hide</a><br>";
+    print_html "</small></td>";
+    print_html "<td><small>";
+    print_html "<table cellspacing=0 cellpadding=0>";
+    my @tags = sort by_tag keys %{$pgroup->{tag}};
+    for my $tag (@tags) {
+        my $tid = "TAG_" . uc($tag);
+        print_html "<tr>";
+        print_html "<td><input type=radio id=$tid"."_ALL name=$tid value=all ",
+                   "checked=checked onclick=do_filter()>",
+                   "<span class=HOVER_ULN onclick=tag_set(\'$tid\','ALL')>all</span>&nbsp;";
+        print_html "<td><input type=radio id=$tid"."_NOT name=$tid value=not onclick=do_filter()>",
+                   "<span class=HOVER_ULN onclick=tag_set(\'$tid\','NOT')>not</span>&nbsp;";
+        print_html "<td><input type=radio id=$tid"."_SET name=$tid value=set onclick=do_filter()>",
+                   "<span class=HOVER_ULN onclick=tag_set(\'$tid\','SET')>$tag (",
+                   $pgroup->{tag}{$tag}, ")</span>&nbsp;";
+        print_html "</tr>"
+    }
+    print_html "</table>";
+    print_html "</small></td>";
+    print_html "<td style='width:1em'></td>";
+    print_html "</tr></table></td>";
+
+
+    print_html "<td id=HIDE_FILTER2>";
     print_html "<table id=GENRE_TABLE cellspacing=0 cellpadding=0>";
     print_html "<tr valign=top>";
     print_html "<td>Genre:&nbsp;<br><small>";
     print_html "<a href=javascript:genre_all()>all</a><br>";
     print_html "<a href=javascript:genre_none()>none</a><br>";
-    print_html "<a href=javascript:hide_filter(1)>hide</a><br>";
+    print_html "<a href=javascript:hide_filter(2)>hide</a><br>";
     print_html "</small></td>";
     print_html "<td><small>";
     for my $g (@genres) {
         my $gid = "G_" . uc($g);
         print_html "<input type=checkbox id=$gid checked=checked onclick=do_filter()>",
-                   "<span class=GENRE_NAME onclick=genre_one(\'$gid\')>$g</span><br>";
+                   "<span class=HOVER_ULN onclick=genre_one(\'$gid\')>$g</span>&nbsp;<br>";
         $i++;
         if ($i >= 5) {
             print_html "</small></td><td><small>";
@@ -1414,7 +1506,7 @@ sub page_filter
     print_html "<td style='width:1em'></td>";
     print_html "</tr></table></td>";
 
-    print_html "<td id=HIDE_FILTER2>";
+    print_html "<td id=HIDE_FILTER3>";
     print_html "<table id=RANGE_TABLE cellspacing=0 cellpadding=0>";
 
     print_html "<tr><td>Year: <td>";
@@ -1437,7 +1529,7 @@ sub page_filter
     print_html "<tr><td colspan=2><small>";
     print_html " <input type=button value=Filter style='height: 1.6em' onclick=do_filter()>";
     print_html "&nbsp; <a href=javascript:filter_reset()>reset</a>";
-    print_html "&nbsp; <a href=javascript:hide_filter(2)>hide</a>";
+    print_html "&nbsp; <a href=javascript:hide_filter(3)>hide</a>";
     print_html "</small></tr></table></td>";
 
     print_html "</tr></table>";
@@ -1460,7 +1552,7 @@ sub print_page
     print_html "<table id=MTABLE cellspacing=0 cellpadding=0>";
     for my $id (sort $sort_by keys %{$pmlist}) {
         print_html "<tr><td>";
-        format_movie($pmlist->{$id}->{movie}, keys %{$pmlist->{$id}->{location}});
+        format_movie_id($id);
         print_html "</td></tr>";
     }
     print_html "</table>";
@@ -1499,7 +1591,7 @@ sub print_page_genre
         for $g (@glist) {
             print_html "<a name=$g><br><hr><h2><center>$g</center></h2><hr></a><br>";
             for my $id (sort by_rating keys %{$genres{$g}}) {
-                format_movie($pmlist->{$id}->{movie}, keys %{$pmlist->{$id}->{location}});
+                format_movie_id($id);
             }
         }
     }
@@ -1584,6 +1676,7 @@ sub print_report
     print_info "Generating catalog...\n";
     for my $g (@group) {
         my $gname = $g->{title};
+        $pgroup = $g; # set current group
         $pmlist = \%{$g->{mlist}};
         print_page $gname, "", \&by_title;
         if (!$opt_js) {
@@ -2217,6 +2310,20 @@ sub set_opt
         $arg_used = required_arg($opt, $arg);
         push @opt_user, $arg;
 
+    } elsif ($opt eq "-ext") {
+        $arg_used = required_arg($opt, $arg);
+        $arg = s/^\.//; # strip optional leading .
+        push @media_ext, $arg;
+        push @video_ext, $arg;
+
+    } elsif ($opt eq "-tag") {
+        $arg_used = required_arg($opt, $arg);
+        my ($name,$pattern) = split('=', $arg, 2);
+        if ($name =~ /\s/) { abort "Invalid tag name: '$name'"; }
+        my $plus = ($name =~ s/\+$//);
+        if (!$plus) { @{$gbl_tags{$name}{pattern}} = (); }
+        push @{$gbl_tags{$name}{pattern}}, split(',', $pattern);
+
     } elsif ($opt =~ /^-/) {
         abort "Unknown option: $opt\n";
 
@@ -2285,11 +2392,11 @@ Usage: perl $progbin [OPTIONS] [DIRECTORY ...]
     -t|-title <TITLE>       Set Title (multiple to define groups)
     -g|-group               Group separator
     -s|-skip <NAME>         Skip file or dir (recursive) 
-    -x|-regex <EXPR>        Skip using regular expressions
-    -ns|-noskip             Clear preset skip lists
-    -gs|-gskip <NAME>       Group Skip file or dir
-    -gx|-gregex <EXPR>      Group Skip using regular expressions
     -ignore <DIR>           Ignore dir with missing info (not recursive)
+    -user VOTES_URL         Add user's votes from imdb user's vote history url
+    -subs URL               Add subtitle search site
+    -tag NAME=PATTERN       Add a tag NAME if path matches PATTERN
+    -ext EXT                Add a file extension of recognized media files
     DIRECTORY               Directory to scan
 USAGE
 
@@ -2299,11 +2406,13 @@ USAGE
         print_info << "USAGE_LONG";
 
   More Options:
-    -user VOTES_URL         Add user's votes from imdb user's vote history url
+    -x|-regex <EXPR>        Skip using regular expressions
+    -ns|-noskip             Clear preset skip lists
+    -gs|-gskip <NAME>       Group Skip file or dir
+    -gx|-gregex <EXPR>      Group Skip using regular expressions
     -js                     Use javascript for sorting [default]
     -nojs                   Use static html for sorting
     -xml                    Export catalog to .xml files
-    -subs URL               Add subtitle search site
     -nosubs                 Clear subtitle search site list
     -a|-automatch           Auto guess and report exact matches [default]
     -na|-noautomatch        Disable auto match
