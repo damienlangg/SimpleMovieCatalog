@@ -15,10 +15,11 @@ window.onload = moviecat_init;
 
 function moviecat_init()
 {
+    if (get_url_param("debug")) debug_enabled = true;
     if (debug_enabled) enable_debug();
+    initialized = true;
     active_sort("SORT_TITLE", 1);
     init_filter();
-    initialized = true;
 }
 
 function enable_debug()
@@ -50,6 +51,18 @@ function debug_add(x)
     debug_obj.innerHTML += x;
 }
 
+
+function get_url_param(name)
+{
+    name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+    var regexS = "[\\?&]"+name+"=([^&#]*)";
+    var regex = new RegExp( regexS );
+    var results = regex.exec( window.location.href );
+    if( results == null )
+        return "";
+    else
+        return results[1];
+}
 
 
 function getElementsByClassNameX(className, tag, elm){
@@ -454,7 +467,7 @@ function numbersOnly(obj)
 function filter_reset()
 {
     document.getElementById('FORM_FILTER').reset();
-    do_filter()
+    do_filter();
 }
 
 function sh_filter(x, show)
@@ -482,11 +495,12 @@ function hide_filter(x)
 
 function init_filter()
 {
-    genre_set_all(true);
-    tag_all();
+    //genre_set_all(true);
+    //tag_all();
     sh_filter(1, true);
     sh_filter(2, true);
     sh_filter(3, false);
+    filter_reset();
 }
 
 

@@ -1,5 +1,5 @@
 
-Simple Movie Catalog 1.3.0
+Simple Movie Catalog 1.3.1
 Copyright (C) 2008 damien.langg@gmail.com
 
 Simple Movie Catalog will scan a given directory for movies,
@@ -99,11 +99,14 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
     -ignore <DIR>           Ignore dir with missing info (not recursive)
     -user VOTES_URL         Add user's votes from imdb user's vote history url
     -subs URL               Add subtitle search site
+    -link URL               Add a custom link
     -tag NAME=PATTERN       Add a tag NAME if path matches PATTERN
     -ext EXT                Add a file extension of recognized media files
     DIRECTORY               Directory to scan
 
   More Options:
+    -tagorder TAGLIST       Specify tag order: TAG1,TAG2,TAG3,...
+    -tagstate NAME=VAL      Specify default tag state: all, not, set, hide
     -x|-regex <EXPR>        Skip using regular expressions
     -ns|-noskip             Clear preset skip lists
     -gs|-gskip <NAME>       Group Skip file or dir
@@ -112,6 +115,7 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
     -nojs                   Use static html for sorting
     -xml                    Export catalog to .xml files
     -nosubs                 Clear subtitle search site list
+    -nolink                 Clear custom links list
     -a|-automatch           Auto guess and report exact matches [default]
     -na|-noautomatch        Disable auto match
     -m|-missing             Report folders with missing info [default]
@@ -137,6 +141,7 @@ Option Notes:
   User Votes:
 
     -user VOTES_URL         Add user's votes from imdb user's vote history url
+
     VOTES_URL has the following format: [Name=]{URL|ID|FILE}
     Examples:
         -user http://www.imdb.com/mymovies/list?l=12345678
@@ -147,16 +152,16 @@ Option Notes:
 
   Movie Tags:
 
+    -tag NAME=PATTERN       Add a tag NAME if path matches PATTERN
+
     Movies can be assigned some tags, which allow additional filtering.
     Tags are assigned based on:
     - path matching (HiDef)
     - imdb movie type (TV,Video,Series)
     - movie match method (Guess)
-    In a way, path matching tags are similar to groups,
-    but offer more flexible filtering.
-    User defined path matching tags are defined with the option:
-    -tag NAME=PATTERN       Add a tag NAME if path matches PATTERN
-    NAME must not contain any spaces.
+    In a way, path matching tags are similar to groups, but
+    offer more flexible filtering.
+    
     Examples:
         -tag Seen=seen
         -tag Downloads=/Downloads/
@@ -167,6 +172,27 @@ Option Notes:
         -tag HiDef=
     To add patterns to an existing tag, use += instead of = example:
         -tag HiDef+=hddvd
+    Note: NAME must not contain any spaces or commas (,).
+
+
+  Subtitles and Links:
+
+    -subs URL               Add subtitle search site
+    -link URL               Add a custom link
+
+    The following patterns can be used in the URL:
+        %ID%    -   Movie ID
+        %TITLE% -   Movie Title
+        %YEAR%  -   Movie Year
+    And a custom name can be specified like this: NAME=URL
+
+    Examples:
+        -subs http://www.subtitlesource.org/title/tt%ID%
+        -subs http://divxtitles.com/%TITLE%/English/any/1
+        -link Trailers=http://www.imdb.com/title/tt%ID%/trailers
+        -link http://www.google.com/search?q=%TITLE%
+        -link http://en.wikipedia.org/wiki/Special:Search?search=%TITLE%
+        
 
 
 Config file:
