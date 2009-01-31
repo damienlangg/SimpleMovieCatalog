@@ -305,28 +305,52 @@ function genre_one(x)
     }
 }
 
+var gmatch_mode = 0;
+
 function genre_get()
 {
     var gtable = document.getElementById("GENRE_TABLE");
     var gbox = gtable.getElementsByTagName("input");
     var genre = new Array();
     var i;
+    var all_g = 0;
     for (i=0; i<gbox.length; i++) {
-        if (gbox[i].type == "checkbox" && gbox[i].checked) {
+        if (gbox[i].type != "checkbox") continue;
+        all_g++;
+        if (gbox[i].checked) {
             genre.push(gbox[i].id.substr(2)); // strip G_
         }
+    }
+    if (genre.length > all_g/2) {
+        // more than half genres selected
+        // match all in movie mode
+        gmatch_mode = 1;
+    } else {
+        // match any
+        gmatch_mode = 0;
     }
     debug_add("<br>Genre: " + genre.join(" "));
     return genre;
 }
 
-function genre_match(garray, gstring)
+function genre_match(mgstring, garray)
 {
+    mgstring = mgstring.replace(/[ \/]+/g, " ").replace(/[()]/g, "");
+    var mgarr = mgstring ? mgstring.split(" ") : [];
     var i;
-    for (i=0; i<garray.length; i++) {
-        if (gstring.match(garray[i])) return true;
+    if (gmatch_mode == 0) {
+        // match any
+        for (i=0; i<mgarr.length; i++) {
+            if (indexOf(garray, mgarr[i]) != -1) return true;
+        }
+        return false;
+    } else {
+        // match all in movie
+        for (i=0; i<mgarr.length; i++) {
+            if (indexOf(garray, mgarr[i]) == -1) return false;
+        }
+        return true;
     }
-    return false;
 }
 
 // Tags
@@ -430,7 +454,7 @@ function do_filter()
     var t1 = new Date().getTime();
     for (i=0; i<rows.length; i++) {
         mg = getValue(rows[i], "MGENRE");
-        show = genre_match(genres, mg.toUpperCase());
+        show = genre_match(mg.toUpperCase(), genres);
         my = getNumValue(rows[i], "MYEAR");
         if (my < ymin || my > ymax) show = false;
         mr = getNumValue(rows[i], "MRATING");

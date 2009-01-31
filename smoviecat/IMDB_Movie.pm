@@ -1,15 +1,17 @@
 package IMDB::Movie;
 
 use strict;
-use vars qw($VERSION $AUTOLOAD @MATCH $ERROR);
+use vars qw($VERSION $AUTOLOAD @MATCH $ERROR $FIND_OPT);
 
 use Carp;
 use LWP::Simple;
 use HTML::TokeParser;
 use Data::Dumper;
 
-$VERSION = '0.26';
+$VERSION = '0.27';
 $ERROR = "";
+@MATCH = ();
+$FIND_OPT = ""; # "&site=aka"
 
 sub error {
     my $preverr = $ERROR;
@@ -497,6 +499,7 @@ sub get_url_find {
     #my $url  = "http://$site.imdb.com/find?s=all&q=$key";
     my $url  = "http://$site.imdb.com/find?s=tt&q=$key";
     if ($year) { $url .= "&tyear=$year"; }
+    $url .= $FIND_OPT;
     return $url;
 }
 

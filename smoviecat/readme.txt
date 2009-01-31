@@ -1,12 +1,22 @@
 
-Simple Movie Catalog 1.3.1
+Simple Movie Catalog 1.3.2
 Copyright (C) 2008 damien.langg@gmail.com
 
 Simple Movie Catalog will scan a given directory for movies,
 query imdb for info and generate a catalog in html which offers
 sorting and grouping of found movies by different criteria.
 
+Contents:
+=========
 
+ - Install Instructions
+ - How does it work?
+ - Command Line Options
+ - Config file
+ - Interactive mode
+ - The Catalog Page
+
+ 
 
 Install Instructions:
 =====================
@@ -64,6 +74,13 @@ the following methods:
    "Title (Year) [optional additional info]"
    Guessing will only use Title and Year. Year is mandatory and anything
    following year is ignored.
+
+ - Try playing with some options to relax the search:
+        -my (search also if missing year in dir or file name)
+        -mf (match first if multiple results)
+        -aka (match AKA titles - in other language than original).
+   The matching will not be so strict so you might get more hits,
+   but the results might not be as accurate.
 
  - Manually create a .nfo or .txt file in the directory and put
    the imdb link inside.
@@ -125,6 +142,8 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
     -my|-matchyear          Match also folders with missing year
     -mfn|-matchfilename     Match also by filename [default]
     -nfn|-nomatchfilename   Don't match by filename
+    -aka                    Match AKA titles (other language,..)
+    -noaka                  Disable AKA titles [default]
     -as|-autosave           Save auto guessed exact matches
 
   Presets:
@@ -235,6 +254,43 @@ ignoredir       -  Add dir to ignore.txt
 r               -  Recreate Report
 ? / h / help    -  Print Help
 q / quit        -  Quit
+
+
+
+The Catalog Page:
+=================
+
+The created catalog is an interactive html + javascript page, which lists
+all the found movies and offers sorting and filtering of them. The interface
+should mostly be self explaining and intuitive, but here are a few details
+worth mentioning:
+
+Tag filtering:
+
+Each tag can be in one of the 3 states: "all", "not", "selected".
+ - "all" state: no filtering is done for this specific tag,
+    so all movies are shown regardles if they contain the tag or not.
+ - "not" state: only movies that don't contain the tag are matched and shown.
+ - "selected" state: only movies that contain the tag are matched and shown.
+
+This logic is then applied for each tag, and the intersection of movies
+that match the set tag states is shown.
+
+Genre filtering:
+
+The genre filtering behaves in two different ways, depending if more than half or
+less than half of the genres are selected.
+- less than half genres selected:
+  All movies that contain at least one of the selected genre is matched and shown. 
+- more than half genres selected:
+  Only movies whose all genres are selected are matched. In other words,
+  movie that contains an unselected genre is not shown.
+Example:
+- Only "Comdey" is selected: all movies that contain comedy are shown.
+- Everything but "Comedy" selected: all movies except those that
+  contain comedy are shown.
+
+To quickly select just one genre, you can just click on the genre name.
 
 
 

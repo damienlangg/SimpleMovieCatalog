@@ -2,7 +2,7 @@
 
 =copyright
 
-    Simple Movie Catalog 1.3.1
+    Simple Movie Catalog 1.3.2
     Copyright (C) 2008 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -37,7 +37,7 @@ require "IMDB_Movie.pm";
 
 ### Globals
 
-my $progver = "1.3.1";
+my $progver = "1.3.2";
 my $progbin = "moviecat.pl";
 my $progname = "Simple Movie Catalog";
 my $progurl = "http://smoviecat.sf.net/";
@@ -99,6 +99,7 @@ my $opt_auto_save = 0;  # Save auto guessed exact matches
 my $opt_group_table = 1;# use table for groups
 my $opt_xml = 0;        # xml export
 my $opt_js = 1;         # javascript sort & filter
+my $opt_aka = 0;        # search AKA titles
 my $verbose = 1;
 my $columns = 80;
 
@@ -306,7 +307,7 @@ sub cache_imdb_find
 
     my $fname = lc("$title ($year)");
     $fname =~ tr[:/\\][-];
-    my $html_file = $imdb_cache . "/imdb_find-$fname.html";
+    my $html_file = $imdb_cache . "/imdb_find".($opt_aka?"_aka":"")."-$fname.html";
     my $html;
     if (valid_cache($html_file) and $html = getfile($html_file)) {
         print_debug "Using Cached: $html_file\n";
@@ -2380,6 +2381,12 @@ sub set_opt
         if (! ($val =~ /^(all|not|set|hide)$/i)) { abort "Invalid tag state: $val"; }
         $gbl_tags{$name}{state} = lc($val);
 
+    } elsif ($opt eq "-aka") {
+        $opt_aka = 1;
+
+    } elsif ($opt eq "-noaka") {
+        $opt_aka = 0;
+
     } elsif ($opt =~ /^-/) {
         abort "Unknown option: $opt";
 
@@ -2483,6 +2490,8 @@ USAGE
     -my|-matchyear          Match also folders with missing year
     -mfn|-matchfilename     Match also by filename [default]
     -nfn|-nomatchfilename   Don't match by filename
+    -aka                    Match AKA titles (other language,..)
+    -noaka                  Disable AKA titles [default]
     -as|-autosave           Save auto guessed exact matches
 
   Presets:
@@ -2562,6 +2571,10 @@ sub init
     print_debug "Cache IMDB: '$imdb_cache' Image: '$image_cache'";
     print_debug "Cache age: $max_cache_days";
     print_debug "Terminal width: $columns";
+    if ($opt_aka) {
+        $IMDB::Movie::FIND_OPT = "&site=aka";
+    }
+    print_debug "AKA: '", $IMDB::Movie::FIND_OPT, "'";
 }
 
 sub open_log {
