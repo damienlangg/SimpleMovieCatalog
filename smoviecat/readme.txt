@@ -10,10 +10,10 @@ Contents:
 =========
 
  - Install
- - How does it work?
+ - Usage
  - Command Line Options
- - Config file
- - Interactive mode
+ - Config File
+ - Interactive Mode
  - The Catalog Page
 
  
@@ -51,8 +51,8 @@ Install:
 
 
 
-How does it work?
-=================
+Usage:
+======
 
 The directories are scanned for: *.nfo, *.txt, *.url, *.desktop files that
 contain links to imdb info like this: http://www.imdb.com/title/tt0062622/
@@ -214,7 +214,7 @@ Option Notes:
         
 
 
-Config file:
+Config File:
 ============
 
 All command line options can be used in a config file.
@@ -227,7 +227,7 @@ See doc/sample-cfg.txt for an example.
 
 
 
-Interactive mode:
+Interactive Mode:
 =================
 
 Start with -i option or run interactive.cmd to enter interactive mode.
