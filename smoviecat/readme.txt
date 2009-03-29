@@ -1,6 +1,6 @@
 
-Simple Movie Catalog 1.3.2
-Copyright (C) 2008 damien.langg@gmail.com
+Simple Movie Catalog 1.3.3
+Copyright (C) 2008-2009 damien.langg@gmail.com
 
 Simple Movie Catalog will scan a given directory for movies,
 query imdb for info and generate a catalog in html which offers
@@ -9,7 +9,7 @@ sorting and grouping of found movies by different criteria.
 Contents:
 =========
 
- - Install Instructions
+ - Install
  - How does it work?
  - Command Line Options
  - Config file
@@ -18,8 +18,8 @@ Contents:
 
  
 
-Install Instructions:
-=====================
+Install:
+========
 
 * Windows:
 
@@ -149,8 +149,8 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
   Presets:
     skip list: [sample subs subtitles cover covers]
     regex skip: [/subs-.*/ /\W*sample\W*/]
-    media ext: [mpg mpeg mpe mp4 avi mov qt wmv mkv iso bin cue ratdvd tivo vob nfo rar srt sub]
-    codec tags: [hidef hd hdtv hddvdrip hddvd bluray bd5 bd9 720 720p 1080 1080p cam ts r5 dvdscr dvdrip dvd dvd9 cd1 cd2 vcd xvid divx x264 matroska wmv dts dolby ac3 vorbis mp3 sub]
+    media ext: [mpg mpeg mpe mp4 avi mov qt wmv mkv iso bin cue ratdvd tivo ts vob nfo rar srt sub]
+    codec tags: [hidef hd hdtv hddvdrip hddvd bluray bd5 bd9 720 720p 720i 1080 1080p 1080i cam ts r5 dvdscr dvdrip dvd dvd9 cd1 cd2 vcd xvid divx x264 matroska wmv dts dolby ac3 vorbis mp3 sub]
     cache dir: [imdb_cache]
     output: [report/movies]
 

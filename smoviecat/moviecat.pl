@@ -2,8 +2,8 @@
 
 =copyright
 
-    Simple Movie Catalog 1.3.2
-    Copyright (C) 2008 damien.langg@gmail.com
+    Simple Movie Catalog 1.3.3
+    Copyright (C) 2008-2009 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -37,11 +37,12 @@ require "IMDB_Movie.pm";
 
 ### Globals
 
-my $progver = "1.3.2";
+my $progver = "1.3.3";
 my $progbin = "moviecat.pl";
 my $progname = "Simple Movie Catalog";
 my $progurl = "http://smoviecat.sf.net/";
 my $author = 'damien.langg@gmail.com';
+my $copyright = "Copyright 2008-2009, $author";
 
 my $prog_dir = $FindBin::Bin;
 my $imdb_cache = "$prog_dir/imdb_cache";
@@ -56,11 +57,12 @@ my $jsname = "moviecat.js";
 
 my @parse_ext = qw( nfo txt url desktop );
 
-my @video_ext = qw( mpg mpeg mpe mp4 avi mov qt wmv mkv iso bin cue ratdvd tivo );
+my @video_ext = qw( mpg mpeg mpe mp4 avi mov qt wmv mkv iso bin cue ratdvd tivo ts );
 
 my @media_ext = (@video_ext, qw( vob nfo rar srt sub ));
 
-my @hidef = qw( hidef hd hdtv hddvdrip hddvd bluray bd5 bd9 720 720p 1080 1080p );
+my @hidef = qw( hidef hd hdtv hddvdrip hddvd bluray bd5 bd9
+                720 720p 720i 1080 1080p 1080i );
 
 my @codec = (@hidef, qw(
         cam ts r5 dvdscr dvdrip dvd dvd9 cd1 cd2
@@ -2355,7 +2357,7 @@ sub set_opt
 
     } elsif ($opt eq "-ext") {
         $arg_used = required_arg($opt, $arg);
-        $arg = s/^\.//; # strip optional leading .
+        $arg =~ s/^\.//; # strip optional leading .
         push @media_ext, $arg;
         push @video_ext, $arg;
 
@@ -2436,7 +2438,7 @@ sub version
 {
     print_info "$progname $progver\n";
     print_level 2, "IMDB::Movie ", $IMDB::Movie::VERSION, "\n";
-    print_info "Copyright 2008, $author\n";
+    print_info "$copyright\n";
 }
 
 sub usage
