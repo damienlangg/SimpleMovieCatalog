@@ -1,6 +1,12 @@
 Changelog:
 
 
+2010-03-18 Release 1.4.0
+ * Bugfix: updated parsing of new imdb html (plot, runtime, genre)
+ * New option:
+    -cachedays <NUM>   Number of days to cache pages [default: 30]
+
+
 2009-03-29 Release 1.3.3
  * Fixed problem if perl path contained spaces
  * Recognize .ts media files

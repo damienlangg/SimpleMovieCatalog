@@ -8,7 +8,7 @@ use LWP::Simple;
 use HTML::TokeParser;
 use Data::Dumper;
 
-$VERSION = '0.27';
+$VERSION = '0.28';
 $ERROR = "";
 @MATCH = ();
 $FIND_OPT = ""; # "&site=aka"
@@ -364,12 +364,12 @@ sub _get_info {
     my $parser = shift;
     my $attr = shift;
     my $stag = shift || "h5";
-    my $etag = shift;
+    my @etag = @_; #shift;
     my $val;
     _jump_attr($parser, $attr, $stag);
     $parser->get_tag('/'.$stag);
-    if ($etag) {
-        $val = $parser->get_text($etag);
+    if (@etag) {
+        $val = $parser->get_text(@etag);
     } else {
         $val = $parser->get_text();
     }
@@ -406,7 +406,9 @@ sub _genre {
     my ($tag,@genre);
 
     my $genre = _get_info($parser, "genre", "h5", "/div");
-    $genre =~ s/more//i;
+	# print "\nGENRE: '$genre'\n";
+    $genre =~ s/ see more.*$//i;
+    $genre =~ s/ more.*$//i;
     $genre =~ s/[^\w|-]//g;
     @genre = split(/\|/, $genre);
 
@@ -462,13 +464,13 @@ sub _cast {
 }
 
 sub _plot {
-    my $plot = _get_info(shift, "plot");
+    my $plot = _get_info(shift, "plot", "h5", "a", "/div");
     $plot =~ s/[ |]*$//;
     return $plot;
 }
 
 sub _runtime {
-    my $runstr = _get_info(shift, "runtime");
+    my $runstr = _get_info(shift, "runtime", "h5", "/div");
     my $runtime;
     if ($runstr =~ /([\d]+)/) { $runtime = $1; }
     return $runtime;

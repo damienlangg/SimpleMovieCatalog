@@ -1,6 +1,6 @@
 
-Simple Movie Catalog 1.3.3
-Copyright (C) 2008-2009 damien.langg@gmail.com
+Simple Movie Catalog 1.4.0
+Copyright (C) 2008-2010 damien.langg@gmail.com
 
 Simple Movie Catalog will scan a given directory for movies,
 query imdb for info and generate a catalog in html which offers
@@ -145,6 +145,7 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
     -aka                    Match AKA titles (other language,..)
     -noaka                  Disable AKA titles [default]
     -as|-autosave           Save auto guessed exact matches
+    -cachedays <NUM>        Number of days to cache pages [default: 30]
 
   Presets:
     skip list: [sample subs subtitles cover covers]

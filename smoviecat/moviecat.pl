@@ -2,7 +2,7 @@
 
 =copyright
 
-    Simple Movie Catalog 1.3.3
+    Simple Movie Catalog 1.4.0
     Copyright (C) 2008-2009 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -37,7 +37,7 @@ require "IMDB_Movie.pm";
 
 ### Globals
 
-my $progver = "1.3.3";
+my $progver = "1.4.0";
 my $progbin = "moviecat.pl";
 my $progname = "Simple Movie Catalog";
 my $progurl = "http://smoviecat.sf.net/";
@@ -2236,7 +2236,7 @@ sub interactive
 
 sub required_arg {
     my ($opt, $arg) = @_;
-    if (!$arg) { abort "Missing arg for $opt"; }
+    if (!defined($arg)) { abort "Missing arg for $opt"; }
     return 1;
 }
 
@@ -2389,6 +2389,10 @@ sub set_opt
     } elsif ($opt eq "-noaka") {
         $opt_aka = 0;
 
+    } elsif ($opt eq "-cachedays") {
+        $arg_used = required_arg($opt, $arg);
+        $max_cache_days = $arg;
+
     } elsif ($opt =~ /^-/) {
         abort "Unknown option: $opt";
 
@@ -2495,6 +2499,7 @@ USAGE
     -aka                    Match AKA titles (other language,..)
     -noaka                  Disable AKA titles [default]
     -as|-autosave           Save auto guessed exact matches
+    -cachedays <NUM>        Number of days to cache pages [default: 30]
 
   Presets:
     skip list: [@skiplist]
@@ -2502,6 +2507,7 @@ USAGE
     media ext: [@media_ext]
     codec tags: [@codec]
     cache dir: [$imdb_cache]
+    cache days: [$max_cache_days]
     output: [$base_path]
 USAGE_LONG
     }
