@@ -2,7 +2,7 @@
 
 =copyright
 
-    Simple Movie Catalog 1.4.0
+    Simple Movie Catalog 1.5.0
     Copyright (C) 2008-2009 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -37,19 +37,19 @@ require "IMDB_Movie.pm";
 
 ### Globals
 
-my $progver = "1.4.0";
+my $progver = "1.5.0";
 my $progbin = "moviecat.pl";
 my $progname = "Simple Movie Catalog";
 my $progurl = "http://smoviecat.sf.net/";
 my $author = 'damien.langg@gmail.com';
-my $copyright = "Copyright 2008-2009, $author";
+my $copyright = "Copyright 2008-2010, $author";
 
 my $prog_dir = $FindBin::Bin;
 my $imdb_cache = "$prog_dir/imdb_cache";
 my $scan_log = "$prog_dir/scan.log";
 my $image_dir = "images";
 my $image_cache;
-my $max_cache_days = 30; # keep cache for up to 1 month
+my $max_cache_days = 90; # keep cache for up to 3 months
 my $base_path = "report/movies";
 my $base_name;
 my $base_dir;
@@ -57,7 +57,7 @@ my $jsname = "moviecat.js";
 
 my @parse_ext = qw( nfo txt url desktop );
 
-my @video_ext = qw( mpg mpeg mpe mp4 avi mov qt wmv mkv iso bin cue ratdvd tivo ts );
+my @video_ext = qw( mpg mpeg mpe mp4 avi mov qt wmv mkv iso bin cue ratdvd tivo ts divx );
 
 my @media_ext = (@video_ext, qw( vob nfo rar srt sub ));
 
@@ -69,6 +69,9 @@ my @codec = (@hidef, qw(
         vcd xvid divx x264 matroska wmv
         dts dolby ac3 vorbis mp3 sub
         ));
+
+# series: s01e02 / season 1 / episode 2 / 1x2
+my @series_tag = ( 's\d{1,2}e\d{1,2}', 'season\W+\d+', 'episode\W+\d+', '\d+x\d+' );
 
 my @subsearch = (
         "http://opensubtitles.org/en/search2/sublanguageid-eng/moviename-%TITLE%",
@@ -388,13 +391,13 @@ sub getmovie
     my $html = cache_imdb_id($id);
     if (!$html) {
         print_log "*** Error: get imdb $id\n";
-        print_note " FAIL";
+        print_note " FAIL1";
         return undef;
     }
     $m = IMDB::Movie->new_html($id, $html);
     if (!$m) {
         print_log "*** Error: parse imdb $id\n";
-        print_note " FAIL";
+        print_note " FAIL2";
         return undef;
     }
     cache_image($m);
@@ -418,7 +421,7 @@ sub match_title
 
 sub findmovie
 {
-    my ($title, $year) = @_;
+    my ($title, $year, $type) = @_;
     my $html = cache_imdb_find($title, $year);
     if (!$html) {
         print_log "*** Error: find imdb '$title' ($year)\n";
@@ -431,17 +434,26 @@ sub findmovie
         # search result - cache first hit
         if ($matches[0]->{id}) {
             $m = getmovie($matches[0]->{id});
-            # add match list
-            $m->{matches} = \@matches;
-            # not a direct hit! unless title matches (almost) exactly
-            if (match_title($title, $m->title)) {
-                print_debug("Search '$title' ($year) Exact Match: ".$m->id." ".$m->title);
-                $m->{direct_hit} = 1;
+            if ($m) {
+                # add match list
+                $m->{matches} = \@matches;
+                # not a direct hit! unless title matches (almost) exactly
+                if (match_title($title, $m->title)) {
+                    print_debug("Search '$title' ($year) Exact Match: ".$m->id." ".$m->title);
+                    $m->{direct_hit} = 1;
+                } else {
+                    # if query is series and 1st match is series then accept
+                    if ($type and $m->type =~ /series/i) {
+                        $m->{direct_hit} = 1;
+                    } else {
+                        $m->{direct_hit} = 0;
+                    }
+                }
+                return $m;
             } else {
-                $m->{direct_hit} = 0;
+                print_log "ERR: ", $matches[0]->{id}, "\n";
             }
         }
-        return $m;
     }
     # direct hit or no match
     $m = IMDB::Movie->new_html(0, $html);
@@ -450,7 +462,7 @@ sub findmovie
         return undef;
     }
     print_debug("Search '$title' ($year) Direct Hit: "
-            .$m->{direct_hit}." ".$m->id." ".$m->title);
+            .$m->{direct_hit}." id:".$m->id." t:".$m->title);
     cache_image($m);
     $movie{$m->id} = $m;
     return $m;
@@ -589,10 +601,12 @@ sub group_assign_movie
         group_assign_tag($id, "Series", 100);
     } elsif ($movie->type =~ /vg/i) {
         group_assign_tag($id, "VideoGame", 100);
+    } elsif ($movie->type =~ /video/i) {
+        group_assign_tag($id, "Video", 100);
     } elsif ($movie->type =~ /tv/i) {
-        group_assign_tag($id, "TV/Video", 100);
+        group_assign_tag($id, "TV", 100);
     } elsif ($movie->type =~ /\bv\b/i) { # \b = word boundary
-        group_assign_tag($id, "TV/Video", 100);
+        group_assign_tag($id, "Video", 100);
     } elsif ($movie->type) {
         group_assign_tag($id, $movie->type, 100);
     }
@@ -792,13 +806,13 @@ sub automatch1
 {
     my ($dir, $fname) = @_;
     my $path = "$dir/$fname";
-    my ($title, $year) = path_to_guess($fname ? cut_ext($fname) : $dir);
+    my ($title, $year, $type, $ccount) = path_to_guess($fname ? cut_ext($fname) : $dir);
     return 0 if (!$title); 
-    return 0 if (!$opt_match_year and !$year); 
+    return 0 if (!$opt_match_year and !$year and !$type and ($ccount < 2)); 
     my $dirent = get_dirent($dir, $fname);
     print_note shorten($path), ": GUESS\n";
-    print_note shorten(" ??? Guess: '".$title."' (".$year.")"), ": ";
-    my $msearch = findmovie($title, $year);
+    print_note shorten(" ??? Guess: '".$title."' (".$year.")".($type?"[series]":"")), ": ";
+    my $msearch = findmovie($title, $year, $type);
     if ($msearch and $msearch->id and
            ($msearch->direct_hit or $opt_match_first))
     {
@@ -1140,6 +1154,7 @@ sub format_movie
         print_html "<br>Links: ";
         format_links $m, 1, @opt_links;
     }
+    # print_html "<br><a href=../imdb_cache/imdb-",$m->id,".html>cache</a>";
     print_html "</font></td></tr>";
 
     print_html "</table><br>\n";
@@ -1755,6 +1770,8 @@ sub path_to_guess
     }
     my $title = $name;
     my $year;
+    my $type;
+    my $ccount;
     # search for year
     # (get last 4 digit num and preceding text, strip the rest)
     if ($name =~ /^(.+)(\b\d{4}\b)/) {
@@ -1769,14 +1786,25 @@ sub path_to_guess
     #print_debug "YEAR: $year : $title\n";
     #remove codec info
     $title =~ s/_/ /g; # treat _ as space (\w includes _)
-    for my $c (@codec) {
-        $title =~ s/\W$c\b.*$//i;
+    for my $c (@codec, @series_tag) {
+        if ($title =~ s/\W$c\b.*$//i) {
+            $ccount++;
+        }
     }
     $title =~ s/[^\w']/ /g; # replace non alphanum to space, keep '
     $title =~ s/^ +//;   # strip leading space
     $title =~ s/ +$//;   # strip trailing space
     $title =~ s/ +/ /g;   # strip duplicate space
-    return ($title, $year);
+    # check if series
+    for my $x (@series_tag) {
+        if ($name =~ /\W$x\b/i) {
+            $type = 1;
+            last;
+        }
+    }
+    print_debug "path_to_guess: '$title' ($year) [$type] <$ccount>\n";
+
+    return ($title, $year, $type, $ccount);
 }
 
 sub get_guess_list

@@ -1,17 +1,19 @@
 package IMDB::Movie;
 
 use strict;
-use vars qw($VERSION $AUTOLOAD @MATCH $ERROR $FIND_OPT);
+use vars qw($VERSION $AUTOLOAD @MATCH $ERROR $FIND_OPT $old_html);
 
 use Carp;
 use LWP::Simple;
 use HTML::TokeParser;
 use Data::Dumper;
 
-$VERSION = '0.28';
+$VERSION = '0.29';
 $ERROR = "";
 @MATCH = ();
 $FIND_OPT = ""; # "&site=aka"
+
+$old_html = 0;
 
 sub error {
     my $preverr = $ERROR;
@@ -48,14 +50,18 @@ sub new_html {
     chomp($id);
     carp "can't instantiate $class without html" unless ($html);
     my $parser = _get_toker_html($html);
-    my ($title, $year, $newid, $newhtml);
+    my ($title, $type, $year, $newid, $newhtml);
 
+    $old_html = 0; # assume it's new html formatting
+    
     # get the ball rolling here
-    ($parser, $title, $year, $newid, $newhtml) = _title_year_search($parser);
+    ($parser, $title, $type, $year, $newid, $newhtml) = _title_year_search($parser);
 
     # need better way to handle errors, maybe?
     if (!$parser) {
         error "$id turned up no matches";
+        # print "$id turned up no matches";
+        # exit if ($id);
         return undef;
     }
     if ($newid) {
@@ -74,18 +80,24 @@ sub new_html {
         title       => $title,
         year        => $year,
     };
-    $self->{img}         = _get(\&_image, \$parser, $html);
-    if (!$id) { $id      = _get(\&_id, \$parser, $html); }
-    $self->{id}          = $id;
-    $self->{type}        = _get(\&_type, \$parser, $html);
-    $self->{photos}      = _get(\&_photos, \$parser, $html) || [];
-    $self->{user_rating} = _get(\&_user_rating, \$parser, $html);
-    $self->{directors}   = _get(\&_person, \$parser, $html) || {};
-    $self->{writers}     = _get(\&_person, \$parser, $html) || {};
-    $self->{genres}      = _get(\&_genre, \$parser, $html) || [];
-    $self->{plot}        = _get(\&_plot, \$parser, $html);
-    $self->{cast}        = _get(\&_cast, \$parser, $html) || {};
-    $self->{runtime}     = _get(\&_runtime, \$parser, $html);
+    if (!$id) { $id      = _get($html, \$parser, "id", \&_id, \&_id_old); }
+    $self->{id}          = $id;                      
+    $self->{runtime}     = _get($html, \$parser, "runtime", \&_runtime, \&_runtime_old);
+    $self->{img}         = _get($html, \$parser, "img", \&_image);
+    $self->{user_rating} = _get($html, \$parser, "rating", \&_user_rating, \&_user_rating_old);
+    $self->{photos}      = _get($html, \$parser, "photos", \&_photos, \&_photos_old) || [];
+    $self->{plot}        = _get($html, \$parser, "story", \&_storyline);
+    if (!$self->{plot}) {
+        $self->{plot}    = _get($html, \$parser, "plot", \&_plot, \&_plot_old);
+    }
+    $self->{genres}      = _get($html, \$parser, "genre", \&_genre) || [];
+    #$self->{directors}   = _get($html, \$parser, "direct", \&_person) || {};
+    #$self->{writers}     = _get($html, \$parser, "writer", \&_person) || {};
+    #$self->{cast}        = _get($html, \$parser, "cast", \&_cast) || {};
+    if (!$type && $old_html) {
+        $type            = _get($html, \$parser, "type", \&_type_old);
+    }
+    $self->{type}        = $type;
     $self->{direct_hit}  = !$newid;
     $self->{matches}     = \@MATCH;
     # note: [] = ref to empty array
@@ -96,12 +108,26 @@ sub new_html {
 
 sub _get
 {
-    my ($func, $parse_r, $html) = @_;
+    my ($html, $parse_r, $name, $func, $func_old) = @_;
     my $val = &$func($$parse_r);
     if (!defined $val) {
         # if func returns undef then rewind parser and retry
+        # print "\nRETRY: $name\n";
         $$parse_r = _get_toker_html($html);
         $val = &$func($$parse_r);
+        if (!defined $val) {
+            if ($func_old) {
+                # print "OLD: $name\n";
+                $$parse_r = _get_toker_html($html);
+                $val = &$func_old($$parse_r);
+                if ($val) {
+                    # looks like old style html format
+                    $old_html = 1;
+                }
+            }
+        }
+        # if (!defined $val) { print "FAIL: $name\n"; }
+        # print "RET: $val\n";
     }
     return $val;
 }
@@ -205,10 +231,10 @@ sub get_matches
 
 sub _title_year_search {
     my ($parser) = @_;
-    my ($pagetitle, $title, $year, $id, $html);
+    my ($pagetitle, $title, $type, $year, $id, $html);
 
-    $parser->get_tag('title');
-    $pagetitle = $parser->get_text();
+    $parser->get_tag('title') or return undef;
+    $pagetitle = $parser->get_text() or return undef;
 
     if ($pagetitle =~ /imdb.*search/i) {
         # this is a search result!
@@ -223,10 +249,30 @@ sub _title_year_search {
         $pagetitle = $parser->get_text();
     }
 
-    return undef unless $pagetitle =~ /([^\(]+)\s+\((\d{4})/;
+    # old:
+    # The Plan (2009/I) (V)
+    # "Supernatural" (2005)
+    # (500) Days of Summer (2009)
+    # LOL (Laughing Out Loud) ® (2008)
+    # new:
+    # The Plan (Video 2009) - IMDb
+    # Supernatural (TV Series 2005- ) - IMDb
+    # LOL (Laughing Out Loud) ® (2008) - IMDb
+
+    # title: everything till first ( that contains a year
+    # but include ( if the title starts with it
+    $pagetitle =~ /^([(]*[^(]+.*)(\([^(]*\d{4}.*)$/ or return undef;
     $title = $1;
-    $year = $2;
-    return ($parser, $title, $year, $id, $html);
+    my $rest = $2;
+    # year: any 4-digit number inside ()
+    $rest =~ /\(.*(\d{4}).*\)/ or return undef;
+    $year = $1;
+    # optional type: any text following a (
+    # stopping at ) or number
+    if ($rest =~ /\(([[:alpha:]\s]+).*\)/) {
+        $type = $1;
+    }
+    return ($parser, $title, $type, $year, $id, $html);
 }
 
 
@@ -264,7 +310,7 @@ sub _get_lucky {
 }
 
 
-sub _id {
+sub _id_old {
     my $parser = shift;
     my ($id,$tag);
     # http://pro.imdb.com/title/tt0000001/
@@ -278,14 +324,32 @@ sub _id {
     return undef;
 }
 
+sub _id {
+    my $parser = shift;
+    my ($id,$tag);
+    # <link rel="canonical" href="http://www.imdb.com/title/tt0000001/" />
+    while ($tag = $parser->get_tag('link')) {
+        if ($tag->[1]{href} =~ /imdb.com\/title\/tt(\d{7})/i) {
+            $id = $1;
+            # print STDERR "FOUND IMDB _ID: $id\n";
+            return $id;
+        }
+    }
+    return undef;
+}
+
 
 sub _image {
     my $parser = shift;
     my ($tag,$image);
 
-    while ($tag = $parser->get_tag('a')) {
-        $tag->[1]->{name} ||= '';
-        if ($tag->[1]->{name} =~ /poster/i) {
+    # old:
+    # while ($tag = $parser->get_tag('a')) {
+    # if ($tag->[1]->{name} =~ /poster/i) {
+
+    while ($tag = $parser->get_tag('td')) {
+        $tag->[1]->{id} ||= '';
+        if ($tag->[1]->{id} =~ /img_primary/i) {
             $tag = $parser->get_tag('img');
             $image = $tag->[1]->{src};
             last;
@@ -294,12 +358,15 @@ sub _image {
             last;
         }
     }
+    if ($image =~ /\/nopicture\//i) {
+        return "";
+    }
 
     return $image;
 }
 
 
-sub _photos
+sub _photos_old
 {
     my $parser = shift;
     my ($tag, @photos);
@@ -307,6 +374,21 @@ sub _photos
     while ($tag = $parser->get_tag()) {
         last if ($tag->[0] eq "hr");
         if ($tag->[0] eq "img" and $tag->[1]->{src}) {
+            push @photos, $tag->[1]->{src};
+        }
+    }
+    return [ @photos ];
+}
+
+sub _photos
+{
+    my $parser = shift;
+    my ($tag, @photos);
+    _jump_attr($parser, "photos", "h2") or return undef;
+    while ($tag = $parser->get_tag()) {
+        last if ($tag->[0] eq "/div");
+        if ($tag->[0] eq "img" and $tag->[1]->{src}) {
+            # print "photo: ", $tag->[1]->{src}, "\n";
             push @photos, $tag->[1]->{src};
         }
     }
@@ -351,9 +433,22 @@ sub _person {
 
 sub _jump_attr {
     my ($parser, $attr, @tags) = @_;
-    while ($parser->get_tag(@tags)) {
-        # return 1 if ($parser->get_text('/'.$stag) =~ /$attr/i);
-        return 1 if ($parser->get_text() =~ /$attr/i);
+    my $tag;
+    my $val;
+    while ($tag = $parser->get_tag(@tags)) {
+        $val = $parser->get_text();
+        # print "jump($attr,",@tags,") : ", $tag->[0], " : ", $val, "\n";
+        # print "FOUND\n" if ($val =~ /$attr/i);
+        return $tag if ($val =~ /$attr/i);
+    }
+    return 0;
+}
+
+sub _jump_class {
+    my ($parser, $class, @tags) = @_;
+    my $tag;
+    while ($tag = $parser->get_tag(@tags)) {
+        return $tag if ($tag->[1]->{class} =~ /$class/i);
     }
     return 0;
 }
@@ -363,21 +458,25 @@ sub _jump_attr {
 sub _get_info {
     my $parser = shift;
     my $attr = shift;
-    my $stag = shift || "h5";
+    my @stags = split(/\|/,(shift || "h5"));
     my @etag = @_; #shift;
+    my $stag;
+    my $tag;
     my $val;
-    _jump_attr($parser, $attr, $stag);
-    $parser->get_tag('/'.$stag);
+    # print "get_info(@stags, $attr)\n";
+    $tag = _jump_attr($parser, $attr, @stags) or return undef;
+    $stag = $tag->[0];
+    $parser->get_tag('/'.$stag) or return undef;
     if (@etag) {
-        $val = $parser->get_text(@etag);
+        $val = $parser->get_text(@etag) or return undef;
     } else {
-        $val = $parser->get_text();
+        $val = $parser->get_text() or return undef;
     }
     $val =~ tr/\n//d;
     return $val;
 }
 
-sub _type {
+sub _type_old {
     my $parser = shift;
     my $tag;
     my $val;
@@ -401,12 +500,17 @@ sub _type {
     return "";
 }
 
+sub _type {
+    # not used, type is returned by _title_year_search
+}
+
 sub _genre {
     my $parser = shift;
     my ($tag,@genre);
 
-    my $genre = _get_info($parser, "genre", "h5", "/div");
-	# print "\nGENRE: '$genre'\n";
+    # OLD: my $genre = _get_info($parser, "genre", "h5", "/div");
+    my $genre = _get_info($parser, "genres:|genre:", "h4|h5", "/div") or return undef;
+    # print "\nGENRE: '$genre'\n";
     $genre =~ s/ see more.*$//i;
     $genre =~ s/ more.*$//i;
     $genre =~ s/[^\w|-]//g;
@@ -417,15 +521,29 @@ sub _genre {
 }
 
 
-sub _user_rating {
+sub _user_rating_old {
     my $parser = shift;
     my $tag;
     my $rating;
 
     _jump_attr($parser, "rating", "h5", "b") or return undef;
-    $parser->get_tag("b");
-    $rating = $parser->get_text();
+    $parser->get_tag("b") or return undef;
+    $rating = $parser->get_text() or return undef;
     if ($rating =~ /([\d.]+) *\/ *10/) {
+        return $1;
+    }
+    # no rating
+    return "";
+}
+
+sub _user_rating {
+    my $parser = shift;
+    my $tag;
+    my $rating;
+
+    _jump_class($parser, "rating-rating", "span") or return undef;
+    $rating = $parser->get_text() or return undef;
+    if ($rating =~ /([\d.]+)/) {
         return $1;
     }
     # no rating
@@ -463,17 +581,54 @@ sub _cast {
     return {%name};
 }
 
-sub _plot {
-    my $plot = _get_info(shift, "plot", "h5", "a", "/div");
+sub _plot_old {
+    my $plot = _get_info(shift, "plot", "h5", "a", "/div") or return undef;
     $plot =~ s/[ |]*$//;
     return $plot;
 }
 
-sub _runtime {
-    my $runstr = _get_info(shift, "runtime", "h5", "/div");
+sub _plot {
+    my $parser = shift;
+    my $tag = _jump_attr($parser, "critics:", "span") or return undef;
+    $parser->get_tag("p") or return undef;
+    my $plot = $parser->get_text("div") or return undef;
+    $plot =~ s/ *\|.*$//;
+    # trim whitespace
+    $plot =~ s/^\s*//; # leading
+    $plot =~ s/\s*$//; # trailing
+    # print "\nplot: $plot\n";
+    return $plot;
+}
+
+sub _storyline {
+    # storyline is longer than plot
+    my $plot = _get_info(shift, "storyline", "h2", "/p", "em", "span") or return undef;
+    $plot =~ s/ *\|.*$//;
+    # print "\nstory: $plot\n";
+    return $plot;
+}
+
+sub _runtime_old {
+    # runtime from technical info section
+    # new: h4 old: h5
+    my $runstr = _get_info(shift, "runtime", "h4|h5", "/div") or return undef;
     my $runtime;
     if ($runstr =~ /([\d]+)/) { $runtime = $1; }
     return $runtime;
+}
+
+sub _runtime {
+    # runtime from below title
+    # some movies don't have technical info, but have the runtime below title
+    # so this is preferred method now
+    my $parser = shift;
+    my $tag = _jump_class($parser, "infobar", "div") or return undef;
+    my $val = $parser->get_text("/div") or return undef;
+    if ($val =~ /(\d+) *min/) {
+        my $runtime = $1;
+        return $runtime;
+    }
+    return undef;
 }
 
 
