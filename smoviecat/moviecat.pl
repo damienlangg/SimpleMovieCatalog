@@ -2,8 +2,8 @@
 
 =copyright
 
-    Simple Movie Catalog 1.5.0
-    Copyright (C) 2008-2009 damien.langg@gmail.com
+    Simple Movie Catalog 1.6.0
+    Copyright (C) 2008-2010 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ require "IMDB_Movie.pm";
 
 ### Globals
 
-my $progver = "1.5.0";
+my $progver = "1.6.0";
 my $progbin = "moviecat.pl";
 my $progname = "Simple Movie Catalog";
 my $progurl = "http://smoviecat.sf.net/";
@@ -105,6 +105,7 @@ my $opt_group_table = 1;# use table for groups
 my $opt_xml = 0;        # xml export
 my $opt_js = 1;         # javascript sort & filter
 my $opt_aka = 0;        # search AKA titles
+my $opt_theme = 'white'; # default theme
 my $verbose = 1;
 my $columns = 80;
 
@@ -993,6 +994,18 @@ sub html_head
         print_html "<script src=\"$jsname\" type=\"text/javascript\"></script>";
     }
     # CSS style
+    for my $tfile (glob "$prog_dir/lib/*.css") {
+        my $theme;
+        if ($tfile =~ /^.*[\/\\](.*)\.css$/) {
+            $theme = $1;
+        } else {
+            next;
+        }
+        my $sel = ($theme eq $opt_theme);
+        print_html '<link type="text/css" rel="'
+            . ($sel?'':'alternate ') . 'stylesheet" '
+            . 'href="'.$theme.'.css" title="'.$theme.'">';
+    }
     print_html "<style type=text/css><!--";
     print_html "span.HOVER_ULN:hover {text-decoration: underline}";
     print_html "a.HOVER_BOLD:hover {font-weight: bold}";
@@ -1068,7 +1081,7 @@ sub format_movie
 
     #print_debug "LOC: ", join ("\n+++", @location), "\n";
 
-    print_html "<table width=100% cellspacing=0 bgcolor=whitesmoke>";
+    print_html "<table width=100% cellspacing=0 class=movietable>";
         # border=1 frame=border rules=all
 
     print_html "<tr>";
@@ -1076,13 +1089,15 @@ sub format_movie
         my $img_file = img_name($m->id);
         my $img_link = $image_dir ."/". $img_file;
         if ( ! -e $image_cache ."/". $img_file ) { $img_link = $m->img; }
-        print_html "<td rowspan=4 width=95><img src=\"", $img_link, "\"></td>";
+        print_html "<td class=poster rowspan=4 width=95>".
+            "<img src=\"", $img_link, "\"></td>";
     } else {
-        print_html "<td rowspan=4 width=95 height=110 bgcolor=gray align=center>?</td>";
+        print_html "<td class=noposter rowspan=4 width=95 height=110 align=center>".
+            "<span>?</span></td>";
     }
 
     # style=\"padding-left: 10px\"
-    print_html "<td bgcolor=lightblue height=1*><b>&nbsp;";
+    print_html "<td class=title height=1*><b>&nbsp;";
     print_html "<a class=MTITLE href=http://www.imdb.com/title/tt",
                $m->id, ">", $m->title, "</a></b>";
     print_html " (<span class=MYEAR>", $m->year, "</span>)",
@@ -1090,7 +1105,7 @@ sub format_movie
     print_html "</td></tr>";
 
     my ($runtime) = $m->runtime; #split '\|', $m->runtime;
-    print_html "<tr><td height=1*>"; #"<font size=-1>";
+    print_html "<tr class=moviedesc><td height=1*>"; #"<font size=-1>";
     print_html "Rating: <b class=MRATING>", $m->user_rating, "</b> &nbsp;&nbsp; ",
             "Runtime: <b class=MRUNTIME>", $runtime ? $runtime : "?" , "</b> min",
             " &nbsp;&nbsp; <i class=MGENRE>(", join(' / ',@{$m->genres}), ")</i>";
@@ -1115,12 +1130,12 @@ sub format_movie
     }
     print_html "</td></tr>";
 
-    print_html "<tr><td><font size=-1>";
+    print_html "<tr class=moviedesc><td class=plot><font size=-1>";
     print_html $m->plot ? $m->plot : "&nbsp;?";
     #print_html "</font>";
     print_html "</td></tr>";
 
-    print_html "<tr><td height=1*><font size=-2>";
+    print_html "<tr class=moviemeta><td height=1*><font size=-2>";
     if (@tags) {
         print_html "Tags: <span class=MTAGS>", join(' ', @tags), "</span><br>";
     }
@@ -1351,8 +1366,24 @@ sub page_start
     html_start;
     html_head("Movie Catalog" . ($gname ? ": $gname" : ""));
 
+    print_html
+        '<form style="position: absolute; top: 2pt; right: 2pt;" name="ThemeForm">'.
+        'Theme:'.
+        '<select name="ThemeList" size="1" onChange="switchTheme(this.form)">';
+    for my $tfile (glob "$prog_dir/lib/*.css") {
+        my $theme;
+        if ($tfile =~ /^.*[\/\\](.*)\.css$/) {
+            $theme = $1;
+        } else {
+            next;
+        }
+        my $sel = ($theme eq $opt_theme);
+        print_html '<option ' . ($sel?'selected ':'')
+            . 'value="' . $theme . '">' . $theme . '</option>';
+    }
+    print_html '</select></form>';
+
     if (scalar @group > 1 or ($opt_js and $opt_miss)) { 
-        #print_html "Group:";
         print_html "<table><tr><td valign=top>Group:<td>";
         print_html "<table cellpadding=0 cellspacing=0><tr>" if ($opt_group_table);
         for my $g (@group) {
@@ -1482,7 +1513,7 @@ sub page_filter
     my $maxyear = get_max_year();
     my $maxrunt = get_max_runtime();
     my $i = 0;
-    print_html "Filter: <small>";
+    print_html "<span id=FILTER_HEAD>Filter: <small>";
     print_html "<i id=STATUS>", scalar keys %{$pmlist},
                " Movies</i> ";
     print_html "&nbsp; <a href=javascript:filter_reset()>reset</a>";
@@ -1492,7 +1523,7 @@ sub page_filter
                "show genre</a>";
     print_html "&nbsp; <a id=SHOW_FILTER3 href=javascript:show_filter(3)>",
                "more options</a>";
-    print_html "</small>";
+    print_html "</small></span>";
 
     print_html "<form id=FORM_FILTER style='display:inline'",
                " onsubmit=do_filter();return(false)>";
@@ -1752,6 +1783,23 @@ sub print_report
         my $jsdest = $base_dir . $jsname;
         print_note "Writing $jsdest\n";
         copy($jssrc, $jsdest) or abort "Copy $jssrc -> $jsdest Failed!";
+        my $theme_found = 0;
+        for my $tfile (glob "$prog_dir/lib/*.css") {
+            my $theme;
+            my $tdest;
+            if ($tfile =~ /^.*[\/\\](.*)\.css$/) {
+                $theme = $1;
+                $tdest = $base_dir . $1 . ".css";
+            } else {
+                next;
+            }
+            if ($theme eq $opt_theme) { $theme_found = 1; }
+            print_note "Writing $tdest\n";
+            copy($tfile, $tdest) or abort "Copy $tfile -> $tdest Failed!";
+        }
+        if (!$theme_found) {
+            print_error "Theme not found: $opt_theme";
+        }
     }
 }
 
@@ -2421,6 +2469,10 @@ sub set_opt
         $arg_used = required_arg($opt, $arg);
         $max_cache_days = $arg;
 
+    } elsif ($opt eq "-theme") {
+        $arg_used = required_arg($opt, $arg);
+        $opt_theme = $arg;
+
     } elsif ($opt =~ /^-/) {
         abort "Unknown option: $opt";
 
@@ -2527,7 +2579,8 @@ USAGE
     -aka                    Match AKA titles (other language,..)
     -noaka                  Disable AKA titles [default]
     -as|-autosave           Save auto guessed exact matches
-    -cachedays <NUM>        Number of days to cache pages [default: 30]
+    -cachedays <NUM>        Number of days to cache pages [default: $max_cache_days]
+    -theme <NAME>           Select theme name [default: $opt_theme]
 
   Presets:
     skip list: [@skiplist]

@@ -14,7 +14,7 @@ mkdir $RELDIR/demo
 
 cp moviecat.pl interactive.cmd run_scan.cmd $RELDIR
 
-cp moviecat.js IMDB_Movie.pm  $RELDIR/lib
+cp moviecat.js IMDB_Movie.pm *.css  $RELDIR/lib
 
 if [ -e default-cfg.txt ]; then
     cp default-cfg.txt $RELDIR/config.txt

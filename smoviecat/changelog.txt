@@ -1,6 +1,12 @@
 Changelog:
 
 
+2010-11-11 Release 1.6.0
+ * Added theming support (thanks to Roni Laukkarinen)
+ * Added -theme <NAME> option to select the default theme
+ * A new theme can be added to lib/name.css
+
+	
 2010-10-25 Release 1.5.0
  * Bugfix: updated parsing of new imdb html formatting (thanks to tomislav ceraj)
    (old formatting is still supported so that the existing cache can be reused)

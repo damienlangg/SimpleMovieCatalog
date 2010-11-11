@@ -1,5 +1,5 @@
 
-Simple Movie Catalog 1.5.0
+Simple Movie Catalog 1.6.0
 Copyright (C) 2008-2010 damien.langg@gmail.com
 
 Simple Movie Catalog will scan a given directory for movies,
@@ -145,14 +145,16 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
     -aka                    Match AKA titles (other language,..)
     -noaka                  Disable AKA titles [default]
     -as|-autosave           Save auto guessed exact matches
-    -cachedays <NUM>        Number of days to cache pages [default: 30]
+    -cachedays <NUM>        Number of days to cache pages [default: 90]
+    -theme <NAME>           Select theme name [default: white]
 
   Presets:
     skip list: [sample subs subtitles cover covers]
     regex skip: [/subs-.*/ /\W*sample\W*/]
-    media ext: [mpg mpeg mpe mp4 avi mov qt wmv mkv iso bin cue ratdvd tivo ts vob nfo rar srt sub]
+    media ext: [mpg mpeg mpe mp4 avi mov qt wmv mkv iso bin cue ratdvd tivo ts divx vob nfo rar srt sub]
     codec tags: [hidef hd hdtv hddvdrip hddvd bluray bd5 bd9 720 720p 720i 1080 1080p 1080i cam ts r5 dvdscr dvdrip dvd dvd9 cd1 cd2 vcd xvid divx x264 matroska wmv dts dolby ac3 vorbis mp3 sub]
     cache dir: [imdb_cache]
+    cache days: [90]
     output: [report/movies]
 
 
@@ -213,6 +215,9 @@ Option Notes:
         -link http://www.google.com/search?q=%TITLE%
         -link http://en.wikipedia.org/wiki/Special:Search?search=%TITLE%
         
+  Themes:
+    -theme <NAME> option will select the default theme
+    A new theme can be added to lib/name.css
 
 
 Config File:
@@ -300,6 +305,7 @@ License:
 
 Covered by the GPL License.
 Read doc/license.txt and doc/gpl.txt for details.
+
 
 
 

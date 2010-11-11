@@ -1,6 +1,6 @@
 /*
     Simple Movie Catalog (javascript)
-    Copyright (C) 2008 damien.langg@gmail.com
+    Copyright (C) 2008-2010 damien.langg@gmail.com
     License: GPL <http://www.gnu.org/licenses/>
 */
 
@@ -527,5 +527,22 @@ function init_filter()
     filter_reset();
 }
 
+function setActiveStyleSheet(title)
+{
+    var i, a, main;
+    for(i=0; (a = document.getElementsByTagName("link")[i]); i++) {
+        if(a.getAttribute("rel").indexOf("style") != -1
+                && a.getAttribute("title")) {
+            a.disabled = true;
+            if(a.getAttribute("title") == title) a.disabled = false;
+        }
+    }
+}
+
+function switchTheme(form)
+{
+    var OptionIndex=form.ThemeList.selectedIndex;
+    setActiveStyleSheet(form.ThemeList.options[OptionIndex].value);
+}
 
 

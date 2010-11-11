@@ -1,0 +1,101 @@
+@import url(http://fonts.googleapis.com/css?family=Crimson+Text);
+@import url(http://fonts.googleapis.com/css?family=Droid+Sans);
+@import url(http://fonts.googleapis.com/css?family=Droid+Serif);
+@import url(http://fonts.googleapis.com/css?family=Cardo);
+
+#SORT_TITLE, #SORT_RATING, #SORT_RUNTIME, #SORT_YEAR, #SORT_DIRTIME {
+font-weight:normal !important;
+border:0 !important;
+background:none !important;
+text-decoration:none !important;
+margin:0 10px 0 0 !important;
+}
+body {
+background:#111111 !important;
+color:#777777;
+font-family:arial;
+font-size:12px;
+padding:15px;
+margin:0;
+}
+a, a:link, a:visited {
+color:#A2B340;
+text-decoration:none;
+font-size:13px !important;
+}
+a:hover {
+text-decoration:underline;
+font-weight:normal !important;
+font-size:13px !important;
+color:#BC8B40;
+}
+#FILTER_TABLE {
+background:#191919 !important;
+color:#777777 !important;
+padding:10px;
+border:1px solid #222222;
+border-radius:8px;
+-moz-border-radius:8px;
+-khtml-border-radius:8px;
+-webkit-border-radius:8px;
+margin:10px 0 10px 0;
+}
+#FILTER_TABLE input {
+margin:2px 6px 0 0;
+}
+.movietable {
+font-family: Georgia, serif;
+font-size: 20px;
+font-weight: normal;
+text-transform: normal;
+letter-spacing: normal;
+line-height: 1.1em;
+color:#777777;
+margin:0;
+padding:0;
+background:#080808;
+filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#111111', endColorstr='#090909'); /* for IE */
+background: -webkit-gradient(linear, left top, left bottom, from(#111), to(#090909)); /* for webkit browsers */
+background: -moz-linear-gradient(top,  #111,  #090909); /* for firefox 3.6+ */
+}
+.movietable img {
+min-width:214px !important;
+max-width:214px !important;
+min-height:314px !important;
+margin:0 0 15px 0;
+}
+.poster {
+}
+.noposter {
+background-image:url("noposter.png");
+background-repeat:no-repeat;
+min-width:214px !important;
+max-width:214px !important;
+min-height:314px !important;
+height:314px !important;
+}
+.noposter span {
+display:none;
+}
+.title {
+padding:5px 0 0 16px;
+}
+.title a {
+font-family:"Droid Sans";
+font-size:22px !important;
+font-weight:bolder !important;
+}
+.moviedesc td{
+padding:5px 0 0 25px;
+}
+.plot {
+}
+.tags {
+}
+.moviemeta td {
+padding:25px 0 0 25px !important;
+}
+.moviemeta, .moviemeta a {
+font-size:11px !important;
+}
+

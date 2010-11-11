@@ -40,16 +40,17 @@ details and download.</a>
 
 <h3><a name=news>News:</a></h3>
 <pre>
+2010-10-25 Release 1.5.0
+ * Bugfix: updated parsing of new imdb html formatting (thanks to tomislav ceraj)
+   (old formatting is still supported so that the existing cache can be reused)
+ * Improved support for series: recognize tags: S01E02, 1x02, season 1, episode 2
+ * Improved auto matching when no year is present in the filename
+ * Increased cache time to 90 days
+
 2010-03-18 Release 1.4.0
  * Bugfix: updated parsing of new imdb html (plot, runtime, genre)
  * New option:
     -cachedays <NUM>   Number of days to cache pages [default: 30]
-
-2009-03-29 Release 1.3.3
- * Fixed problem if perl path contained spaces
- * Recognize .ts media files
- * Better HiDef detection
- * Fixed -ext option
 </pre>
 
 <h3><a name=demo>Demo:</a></h3>
