@@ -1,8 +1,6 @@
 
 TODO:
 
- - Nicer formatting
- - Theming
  - better help
  - ?
 

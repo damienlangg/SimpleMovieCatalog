@@ -2,7 +2,7 @@
 
 =copyright
 
-    Simple Movie Catalog 1.6.0
+    Simple Movie Catalog 1.6.1
     Copyright (C) 2008-2010 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -37,7 +37,7 @@ require "IMDB_Movie.pm";
 
 ### Globals
 
-my $progver = "1.6.0";
+my $progver = "1.6.1";
 my $progbin = "moviecat.pl";
 my $progname = "Simple Movie Catalog";
 my $progurl = "http://smoviecat.sf.net/";
@@ -976,7 +976,7 @@ sub html_start
 print_html << 'HTML_START';
 <!DOCTYPE html
 	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-	 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
 HTML_START
 }
@@ -1093,7 +1093,7 @@ sub format_movie
             "<img src=\"", $img_link, "\"></td>";
     } else {
         print_html "<td class=noposter rowspan=4 width=95 height=110 align=center>".
-            "<span>?</span></td>";
+            '<img src="noposter.png"><span style="display:none">?</span></td>';
     }
 
     # style=\"padding-left: 10px\"
@@ -1747,6 +1747,14 @@ sub print_xml
     close $F_HTML;
 }
 
+sub copy_lib
+{
+    my $name = shift;
+    my $src = "$prog_dir/lib/$name";
+    my $dest = $base_dir . $name;
+    print_note "Writing $dest\n";
+    copy($src, $dest) or abort "Copy $src -> $dest Failed!";
+}
 
 sub print_report
 {
@@ -1779,23 +1787,19 @@ sub print_report
         print_page_miss "Missing Info", "";
     }
     if ($opt_js) {
-        my $jssrc = "$prog_dir/lib/$jsname";
-        my $jsdest = $base_dir . $jsname;
-        print_note "Writing $jsdest\n";
-        copy($jssrc, $jsdest) or abort "Copy $jssrc -> $jsdest Failed!";
+        copy_lib $jsname;
+        copy_lib "noposter.png";
+        # theme.css
         my $theme_found = 0;
         for my $tfile (glob "$prog_dir/lib/*.css") {
             my $theme;
-            my $tdest;
             if ($tfile =~ /^.*[\/\\](.*)\.css$/) {
                 $theme = $1;
-                $tdest = $base_dir . $1 . ".css";
             } else {
                 next;
             }
             if ($theme eq $opt_theme) { $theme_found = 1; }
-            print_note "Writing $tdest\n";
-            copy($tfile, $tdest) or abort "Copy $tfile -> $tdest Failed!";
+            copy_lib $theme . ".css";
         }
         if (!$theme_found) {
             print_error "Theme not found: $opt_theme";
@@ -2699,3 +2703,4 @@ if ($opt_i) {
 close $F_LOG;
 
 
+# vim:expandtab

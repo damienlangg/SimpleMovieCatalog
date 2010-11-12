@@ -1,6 +1,11 @@
 Changelog:
 
 
+2010-11-12 Release 1.6.1
+ * Added noposter.png that was missing in 1.6.0
+ * Minor theme .css update
+
+
 2010-11-11 Release 1.6.0
  * Added theming support (thanks to Roni Laukkarinen)
  * Added -theme <NAME> option to select the default theme

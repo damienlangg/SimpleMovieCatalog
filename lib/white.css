@@ -71,12 +71,6 @@ min-height:314px !important;
 padding:0 !important;*/
 }
 .noposter {
-background-image:url("noposter.png");
-background-repeat:no-repeat;
-min-width:214px !important;
-max-width:214px !important;
-min-height:314px !important;
-height:314px !important;
 }
 .noposter span {
 display:none;

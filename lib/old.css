@@ -5,6 +5,12 @@ background: whitesmoke;
 .noposter {
 background: gray;
 }
+.noposter img {
+display: none;
+}
+.noposter span {
+display: inline !important; 
+}
 
 .title {
 background: lightblue;
