@@ -438,6 +438,24 @@ sub findmovie
     my @matches = IMDB::Movie::get_matches($html);
     my $m;
     if (@matches) {
+        # if type specified, find first matching type
+        if ($type) {
+            my $i;
+            for $i (0 .. $#matches) {
+                print_log "match[$i] = ", $matches[$i]->{id},
+                          " ", $matches[$i]->{title},
+                          " (", $matches[$i]->{year},
+                          ") [", $matches[$i]->{type}, "]\n";
+                # if year known it has to match too
+                if ($year and ($year != $matches[$i]->{year})) { next; }
+                if ($matches[$i]->{type} =~ /$type/) {
+                    print_log "match type: $title ($year) [$type]\n";
+                    # move $i to first place
+                    @matches = ($matches[$i], splice(@matches, $i, 1));
+                    last;
+                }
+            }
+        }
         # search result - cache first hit
         if ($matches[0]->{id}) {
             $m = getmovie($matches[0]->{id});
@@ -449,8 +467,8 @@ sub findmovie
                     print_debug("Search '$title' ($year) Exact Match: ".$m->id." ".$m->title);
                     $m->{direct_hit} = 1;
                 } else {
-                    # if query is series and 1st match is series then accept
-                    if ($type and $m->type =~ /series/i) {
+                    # if type matches then accept
+                    if ($type and $m->type =~ /$type/i) {
                         $m->{direct_hit} = 1;
                     } else {
                         $m->{direct_hit} = 0;
@@ -818,7 +836,7 @@ sub automatch1
     return 0 if (!$opt_match_year and !$year and !$type and ($ccount < 2)); 
     my $dirent = get_dirent($dir, $fname);
     print_note shorten($path), ": GUESS\n";
-    print_note shorten(" ??? Guess: '".$title."' (".$year.")".($type?"[series]":"")), ": ";
+    print_note shorten(" ??? Guess: '".$title."' (".$year.")".($type?" [$type]":"")), ": ";
     my $msearch = findmovie($title, $year, $type);
     if ($msearch and $msearch->id and
            ($msearch->direct_hit or $opt_match_first))
@@ -1856,7 +1874,7 @@ sub path_to_guess
     # check if series
     for my $x (@series_tag) {
         if ($name =~ /\W$x\b/i) {
-            $type = 1;
+            $type = "series";
             last;
         }
     }
