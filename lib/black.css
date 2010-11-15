@@ -49,8 +49,8 @@ font-size: 20px;
 font-weight: normal;
 text-transform: normal;
 letter-spacing: normal;
-line-height: 1.1em;
-color:#777777;
+line-height: 1.2em;
+color:#666;
 margin:0;
 padding:0;
 background:#080808;
@@ -71,12 +71,22 @@ margin:0 0 15px 0;
 .noposter span {
 display:none;
 }
+.title, .title a {
+text-shadow:0px 3px 3px #000 !important;
+text-decoration:none !important;
+color:#768520 !important;
+}
+.title a:hover {
+text-shadow:0px 6px 6px #000 !important;
+text-decoration:none !important;
+color:#9FB42B !important;
+}
 .title {
-padding:5px 0 0 16px;
+padding:15px 0 15px 16px;
 }
 .title a {
 font-family:"Droid Sans";
-font-size:22px !important;
+font-size:30px !important;
 font-weight:bolder !important;
 }
 .moviedesc td{
@@ -91,5 +101,8 @@ padding:25px 0 0 25px !important;
 }
 .moviemeta, .moviemeta a {
 font-size:11px !important;
+}
+.moviemeta b {
+font-size:smaller !important;
 }
 

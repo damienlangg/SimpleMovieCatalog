@@ -48,8 +48,8 @@ font-size: 20px;
 font-weight: normal;
 text-transform: normal;
 letter-spacing: normal;
-line-height: 1.1em;
-color:#222222;
+line-height: 1.2em;
+color:#333;
 margin:10px 0 10px 0;
 padding:0 0 30px 10px;
 border-bottom:10px solid #ededed;
@@ -76,12 +76,29 @@ padding:0 !important;*/
 display:none;
 }
 .title {
-padding:0 0 0 16px;
+padding:15px 0 15px 10px;
+font-family:"Droid Sans"; 
+/*font-size:20px !important;*/
+font-weight:bolder !important;
+background-color: rgba(82,96,117,0.7);
+-webkit-background-clip: text;
+color: transparent;
+text-shadow: rgba(255,255,255,0.5) 0 5px 6px;
 }
 .title a {
 font-family:"Droid Sans";
-font-size:22px !important;
+/*font-size:30px !important;*/
+font-size:150% !important;
 font-weight:bolder !important;
+padding-right:10px;
+background-color: rgba(82,96,117,0.8);
+-webkit-background-clip: text;
+color: transparent;
+text-shadow: rgba(255,255,255,0.5) 0 5px 6px;
+}
+.title a:hover {
+color:#777 !important;
+text-decoration:none !important;
 }
 .moviedesc td{
 padding:5px 0 0 25px;
@@ -95,5 +112,8 @@ padding:25px 0 0 25px !important;
 }
 .moviemeta, .moviemeta a {
 font-size:11px !important;
+}
+.moviemeta b {
+font-size:smaller !important;
 }
 
