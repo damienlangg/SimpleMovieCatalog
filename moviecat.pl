@@ -1867,7 +1867,9 @@ sub path_to_guess
             $ccount++;
         }
     }
-    $title =~ s/[^\w']/ /g; # replace non alphanum to space, keep '
+    # $title =~ s/[^\w']/ /g; # replace non alphanum to space, keep '
+    $title =~ s/[^\w'()]/ /g; # replace non alphanum to space, keep '()
+    $title =~ s/\(+$//;   # strip trailing ( - remains of (year)
     $title =~ s/^ +//;   # strip leading space
     $title =~ s/ +$//;   # strip trailing space
     $title =~ s/ +/ /g;   # strip duplicate space
