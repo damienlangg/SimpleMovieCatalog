@@ -7,8 +7,9 @@ use Carp;
 use LWP::Simple;
 use HTML::TokeParser;
 use Data::Dumper;
+use HTML::Tagset ();
 
-$VERSION = '0.29';
+$VERSION = '0.30';
 $ERROR = "";
 @MATCH = ();
 $FIND_OPT = ""; # "&site=aka"
@@ -82,6 +83,7 @@ sub new_html {
     };
     if (!$id) { $id      = _get($html, \$parser, "id", \&_id, \&_id_old); }
     $self->{id}          = $id;                      
+    $self->{otitle}      = _get($html, \$parser, "header", \&_header);
     $self->{runtime}     = _get($html, \$parser, "runtime", \&_runtime, \&_runtime_old);
     $self->{img}         = _get($html, \$parser, "img", \&_image);
     $self->{user_rating} = _get($html, \$parser, "rating", \&_user_rating, \&_user_rating_old);
@@ -234,7 +236,8 @@ sub _title_year_search {
     my ($pagetitle, $title, $type, $year, $id, $html);
 
     $parser->get_tag('title') or return undef;
-    $pagetitle = $parser->get_text() or return undef;
+    # $pagetitle = $parser->get_text() or return undef;
+    $pagetitle = get_text_html($parser) or return undef;
 
     if ($pagetitle =~ /imdb.*search/i) {
         # this is a search result!
@@ -333,6 +336,28 @@ sub _id {
             $id = $1;
             # print STDERR "FOUND IMDB _ID: $id\n";
             return $id;
+        }
+    }
+    return undef;
+}
+
+sub _header {
+    my $parser = shift;
+    my $tag;
+    my $stag;
+    my $otitle;
+
+    # $tag = _jump_class($parser, "header", "h1") or return undef;
+    $tag = _jump_class($parser, "header") or return undef;
+    $stag = $tag->[0]; # h1
+    while ($tag = $parser->get_tag) {
+        if ($tag->[0] =~ /^\/$stag/) {
+            return "";
+        }
+        if ($tag->[0] eq "span" and $tag->[1]->{"class"} eq "title-extra") {
+            $otitle = get_text_html($parser);
+            # print "\nOT: $otitle\n";
+            return $otitle;
         }
     }
     return undef;
@@ -448,7 +473,11 @@ sub _jump_class {
     my ($parser, $class, @tags) = @_;
     my $tag;
     while ($tag = $parser->get_tag(@tags)) {
-        return $tag if ($tag->[1]->{class} =~ /$class/i);
+        # print "\nTAG[", scalar @{$tag}, "]: ", join(' ',@{$tag}), "\n";
+        # is a start tag?
+        if (scalar @{$tag} > 2) {
+            return $tag if ($tag->[1]->{class} =~ /$class/i);
+        }
     }
     return 0;
 }
@@ -467,11 +496,8 @@ sub _get_info {
     $tag = _jump_attr($parser, $attr, @stags) or return undef;
     $stag = $tag->[0];
     $parser->get_tag('/'.$stag) or return undef;
-    if (@etag) {
-        $val = $parser->get_text(@etag) or return undef;
-    } else {
-        $val = $parser->get_text() or return undef;
-    }
+    # $val = $parser->get_text(@etag) or return undef;
+    $val = get_text_html($parser, @etag) or return undef;
     $val =~ tr/\n//d;
     return $val;
 }
@@ -591,11 +617,9 @@ sub _plot {
     my $parser = shift;
     my $tag = _jump_attr($parser, "critics:", "span") or return undef;
     $parser->get_tag("p") or return undef;
-    my $plot = $parser->get_text("div") or return undef;
+    # my $plot = $parser->get_text("div") or return undef;
+    my $plot = get_text_html($parser, "div") or return undef;
     $plot =~ s/ *\|.*$//;
-    # trim whitespace
-    $plot =~ s/^\s*//; # leading
-    $plot =~ s/\s*$//; # trailing
     # print "\nplot: $plot\n";
     return $plot;
 }
@@ -618,7 +642,7 @@ sub _runtime_old {
 }
 
 sub _runtime {
-    # runtime from below title
+    # runtime from below title ("infobar" class)
     # some movies don't have technical info, but have the runtime below title
     # so this is preferred method now
     my $parser = shift;
@@ -691,6 +715,46 @@ sub _get_toker_find {
 sub unique {
     my %seen;
     grep(!$seen{$_}++, @_);
+}
+
+# modified get_text to not decode html unicode entries and trim whitespace
+
+sub get_text_html {
+    my $self = shift;
+    my @text;
+    while (my $token = $self->get_token) {
+	my $type = $token->[0];
+	if ($type eq "T") {
+	    my $text = $token->[1];
+	    # decode_entities($text) unless $token->[2];
+	    push(@text, $text);
+	} elsif ($type =~ /^[SE]$/) {
+	    my $tag = $token->[1];
+	    if ($type eq "S") {
+		# if (defined(my $text = _textify($self, $token))) {
+		if (defined(my $text = HTML::TokeParser::_textify($self, $token))) {
+		    push(@text, $text);
+		    next;
+		}
+	    } else {
+		$tag = "/$tag";
+	    }
+	    if (!@_ || grep $_ eq $tag, @_) {
+		 $self->unget_token($token);
+		 last;
+	    }
+	    push(@text, " ")
+		if $tag eq "br" || !$HTML::Tagset::isPhraseMarkup{$token->[1]};
+	}
+    }
+    my $t = join("", @text);
+    # only decode &nbsp;
+    $t =~ s/&nbsp;/ /g;
+    # trim whitespace
+    $t =~ s/^\s+//;
+    $t =~ s/\s+$//;
+    $t =~ s/\s+/ /g;
+    return $t;
 }
 
 1;
@@ -938,3 +1002,19 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 =cut
+
+=tokeparser quick reference
+
+$p->get_tag
+$p->get_tag( @tags )
+
+returns:
+start tag: [$tag, $attr, $attrseq, $text]
+end tag:   ["/$tag", $text]
+not found: undef
+
+where $attr is a hash reference, $attrseq is an array reference and the rest are plain scalars.
+
+=cut
+
+# vim:expandtab

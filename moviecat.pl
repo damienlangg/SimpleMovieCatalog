@@ -2,7 +2,7 @@
 
 =copyright
 
-    Simple Movie Catalog 1.6.1
+    Simple Movie Catalog 1.6.2
     Copyright (C) 2008-2010 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -37,7 +37,7 @@ require "IMDB_Movie.pm";
 
 ### Globals
 
-my $progver = "1.6.1";
+my $progver = "1.6.2";
 my $progbin = "moviecat.pl";
 my $progname = "Simple Movie Catalog";
 my $progurl = "http://smoviecat.sf.net/";
@@ -106,6 +106,7 @@ my $opt_xml = 0;        # xml export
 my $opt_js = 1;         # javascript sort & filter
 my $opt_aka = 0;        # search AKA titles
 my $opt_theme = 'white'; # default theme
+my $opt_otitle = 0;     # original title
 my $verbose = 1;
 my $columns = 80;
 
@@ -400,6 +401,11 @@ sub getmovie
         print_log "*** Error: parse imdb $id\n";
         print_note " FAIL2";
         return undef;
+    }
+    if ($opt_otitle) {
+        if ($m->{otitle}) {
+            $m->{title} = $m->{otitle};
+        }
     }
     cache_image($m);
     return $movie{$id} = $m;
@@ -2477,6 +2483,12 @@ sub set_opt
         $arg_used = required_arg($opt, $arg);
         $opt_theme = $arg;
 
+    } elsif ($opt eq "-origtitle") {
+        $opt_otitle = 1;
+
+    } elsif ($opt eq "-deftitle") {
+        $opt_otitle = 0;
+
     } elsif ($opt =~ /^-/) {
         abort "Unknown option: $opt";
 
@@ -2585,6 +2597,8 @@ USAGE
     -as|-autosave           Save auto guessed exact matches
     -cachedays <NUM>        Number of days to cache pages [default: $max_cache_days]
     -theme <NAME>           Select theme name [default: $opt_theme]
+    -origtitle              Use original movie title
+    -deftitle               Use default (regional) movie title [default]
 
   Presets:
     skip list: [@skiplist]
