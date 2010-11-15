@@ -1,6 +1,15 @@
 Changelog:
 
 
+2010-11-15 Release 1.7.0
+ * new options: -origtitle and -deftitle
+   -origtitle will use the original instead of the regional title
+ * better unicode handling
+ * improved search for series
+ * minor search improvement for movies with () in title
+ * minor black and white theme update (by Roni Laukkarinen)
+
+
 2010-11-12 Release 1.6.1
  * Added noposter.png that was missing in 1.6.0
  * Minor theme .css update

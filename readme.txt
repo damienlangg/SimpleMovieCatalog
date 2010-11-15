@@ -1,5 +1,5 @@
 
-Simple Movie Catalog 1.6.0
+Simple Movie Catalog 1.7.0
 Copyright (C) 2008-2010 damien.langg@gmail.com
 
 Simple Movie Catalog will scan a given directory for movies,
@@ -147,6 +147,8 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
     -as|-autosave           Save auto guessed exact matches
     -cachedays <NUM>        Number of days to cache pages [default: 90]
     -theme <NAME>           Select theme name [default: white]
+    -origtitle              Use original movie title
+    -deftitle               Use default (regional) movie title [default]
 
   Presets:
     skip list: [sample subs subtitles cover covers]
