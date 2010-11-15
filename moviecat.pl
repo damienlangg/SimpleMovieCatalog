@@ -383,6 +383,19 @@ sub cache_image
     return 1;
 }
 
+sub cache_movie
+{
+    my $m = shift;
+    if ($opt_otitle) {
+        if ($m->{otitle} and !defined($m->{rtitle})) {
+            $m->{rtitle} = $m->{title}; # save regional title
+            $m->{title} = $m->{otitle}; # use original title
+        }
+    }
+    $movie{$m->id} = $m;
+    cache_image($m);
+}
+
 sub getmovie
 {
     my $id = shift;
@@ -402,13 +415,8 @@ sub getmovie
         print_note " FAIL2";
         return undef;
     }
-    if ($opt_otitle) {
-        if ($m->{otitle}) {
-            $m->{title} = $m->{otitle};
-        }
-    }
-    cache_image($m);
-    return $movie{$id} = $m;
+    cache_movie($m);
+    return $m;
 }
 
 sub match_title
@@ -424,6 +432,14 @@ sub match_title
     $t2 =~ s/\W//g;
     #print_debug "\nT1: $t1 T2: $t2\n";
     return $t1 eq $t2;
+}
+
+sub match_m_title
+{
+    my ($title, $m) = @_;
+    if ($m->{otitle} and match_title($title, $m->{otitle})) { return 1; }
+    if ($m->{rtitle} and match_title($title, $m->{rtitle})) { return 1; }
+    return match_title($title, $m->{title});
 }
 
 sub findmovie
@@ -463,7 +479,7 @@ sub findmovie
                 # add match list
                 $m->{matches} = \@matches;
                 # not a direct hit! unless title matches (almost) exactly
-                if (match_title($title, $m->title)) {
+                if (match_m_title($title, $m)) {
                     print_debug("Search '$title' ($year) Exact Match: ".$m->id." ".$m->title);
                     $m->{direct_hit} = 1;
                 } else {
@@ -488,8 +504,7 @@ sub findmovie
     }
     print_debug("Search '$title' ($year) Direct Hit: "
             .$m->{direct_hit}." id:".$m->id." t:".$m->title);
-    cache_image($m);
-    $movie{$m->id} = $m;
+    cache_movie($m);
     return $m;
 }
 
