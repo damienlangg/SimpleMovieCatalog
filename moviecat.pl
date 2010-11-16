@@ -2,7 +2,7 @@
 
 =copyright
 
-    Simple Movie Catalog 1.7.0
+    Simple Movie Catalog 1.7.1
     Copyright (C) 2008-2010 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -37,7 +37,7 @@ require "IMDB_Movie.pm";
 
 ### Globals
 
-my $progver = "1.7.0";
+my $progver = "1.7.1";
 my $progbin = "moviecat.pl";
 my $progname = "Simple Movie Catalog";
 my $progurl = "http://smoviecat.sf.net/";

@@ -1,6 +1,12 @@
 Changelog:
 
 
+2010-11-16 Release 1.7.1
+ * Fixed -origtitle when movie is guessed
+ * Added theme "grey" which is now the default (by Roni Laukkarinen)
+ * Updated white theme (better compatibility with firefox and ie)
+
+
 2010-11-15 Release 1.7.0
  * new options: -origtitle and -deftitle
    -origtitle will use the original instead of the regional title
