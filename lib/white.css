@@ -78,23 +78,17 @@ display:none;
 .title {
 padding:15px 0 15px 10px;
 font-family:"Droid Sans"; 
-/*font-size:20px !important;*/
 font-weight:bolder !important;
-background-color: rgba(82,96,117,0.7);
--webkit-background-clip: text;
-color: transparent;
-text-shadow: rgba(255,255,255,0.5) 0 5px 6px;
+color: rgb(82,96,117);
+text-shadow: rgba(155,155,155,0.5) 0 5px 6px;
 }
 .title a {
 font-family:"Droid Sans";
-/*font-size:30px !important;*/
 font-size:150% !important;
 font-weight:bolder !important;
 padding-right:10px;
-background-color: rgba(82,96,117,0.8);
--webkit-background-clip: text;
-color: transparent;
-text-shadow: rgba(255,255,255,0.5) 0 5px 6px;
+color: rgb(82,96,117);
+text-shadow: rgba(155,155,155,0.5) 0 5px 6px;
 }
 .title a:hover {
 color:#777 !important;
