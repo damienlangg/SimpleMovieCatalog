@@ -1,0 +1,111 @@
+@import url(http://fonts.googleapis.com/css?family=Crimson+Text);
+@import url(http://fonts.googleapis.com/css?family=Droid+Sans);
+@import url(http://fonts.googleapis.com/css?family=Droid+Serif);
+@import url(http://fonts.googleapis.com/css?family=Cardo);
+
+.sort-options {
+padding: 10px;
+margin:30px 20px 20px 20px;
+border: 1px solid #191919;
+background: #272727;
+color:#777777;
+}
+.sort-break {
+display:none;
+}
+#SORT_TITLE, #SORT_RATING, #SORT_RUNTIME, #SORT_YEAR, #SORT_DIRTIME {
+font-weight:normal !important;
+border:0 !important;
+background:none !important;
+text-decoration:none !important;
+margin:0 10px 0 0 !important;
+}
+#FILTER_TABLE {
+margin:20px 0 10px 20px;
+padding:30px 15px 15px 15px;
+font-size:12px;
+padding:8px;
+border-bottom:1px solid #242424;
+background:#1D1D1D;
+width:95%;
+}
+#FILTER_TABLE a {
+color:#5A5A46;
+}
+#FILTER_TABLE a:hover {
+color:#cccccc;
+}
+#FILTER_TABLE input {
+margin:2px 6px 0 0;
+}
+#FILTER_HEAD {
+margin:0 0 0 30px;
+}
+body {
+width:90%;
+height:100% !important;
+margin:0 auto;
+background:#222222 !important;
+color:#555555;
+font-family:sans-serif;
+}
+a, a:link {
+color:#D3D331;
+text-decoration:none;
+}
+a:hover {
+color:#cccccc;
+text-decoration:none;
+}
+td.title {
+padding:20px 0 10px 0 !important;
+}
+.title, .title a {
+color:#517919;
+font-family:'Droid Serif',Cambria, Georgia, courier new, serif;
+font-size: 17px;
+line-height: 1.4em;
+margin:30px 0 10px -9px;
+font-weight:light;
+}
+.title a:hover {
+border:0 !important;
+color:#689727 !important;
+text-decoration:none !important;
+}
+.movietable {
+margin:8px 0 0 0;
+padding: 2px 4px 5px 5px;
+background:#1F1F1F;
+border:1px solid #1F1F1F;
+padding:20px;
+}
+.movietable:hover {
+border:1px solid #292929;
+background:#1D1D1D;
+}
+.moviedesc {
+color:#505050;
+font-size:11px;
+}
+.plot {
+color: #616161;
+font-family:sans-serif;
+font-size:16px !important;
+line-height:1.2em !important;
+font-weight:lighter;
+text-align: left;
+width:80%;
+padding:10px 15px 0 0;
+}
+.moviemeta {
+}
+.movietable img {
+min-width:214px !important;
+max-width:214px !important;
+min-height:314px !important;
+margin:0 14px 15px 0;
+background-image:url("posterbg.png");
+background-repeat:no-repeat;
+padding:18px !important;
+}

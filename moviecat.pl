@@ -105,7 +105,7 @@ my $opt_group_table = 1;# use table for groups
 my $opt_xml = 0;        # xml export
 my $opt_js = 1;         # javascript sort & filter
 my $opt_aka = 0;        # search AKA titles
-my $opt_theme = 'white'; # default theme
+my $opt_theme = 'grey'; # default theme
 my $opt_otitle = 0;     # original title
 my $verbose = 1;
 my $columns = 80;
@@ -1449,7 +1449,7 @@ sub page_start
         # no sort menu
     } else {
         my $fbase = "$base_name$gfname";
-        print_html "Sort by:";
+        print_html '<div class="sort-options">Sort by:';
         page_head_sort $fbase, $fadd, "", "Title";
         page_head_sort $fbase, $fadd, "-rating", "Rating";
         page_head_sort $fbase, $fadd, "-runtime", "Runtime";
@@ -1472,7 +1472,8 @@ sub page_start
                 page_head_sort $fbase, $fadd, "-missinfo", "Missing Info";
             }
         }
-        print_html "<br><br>";
+        print_html "</div>";
+        print_html '<br class="sort-break">';
     }
 }
 
@@ -1827,18 +1828,16 @@ sub print_report
     }
     if ($opt_js) {
         copy_lib $jsname;
-        copy_lib "noposter.png";
-        # theme.css
+        # *.png
+        for my $f (glob "$prog_dir/lib/*.png") {
+            copy_lib basename($f);
+        }
+        # *.css
         my $theme_found = 0;
         for my $tfile (glob "$prog_dir/lib/*.css") {
-            my $theme;
-            if ($tfile =~ /^.*[\/\\](.*)\.css$/) {
-                $theme = $1;
-            } else {
-                next;
-            }
-            if ($theme eq $opt_theme) { $theme_found = 1; }
-            copy_lib $theme . ".css";
+            my $theme = basename($tfile);
+            if ($theme eq "$opt_theme.css") { $theme_found = 1; }
+            copy_lib $theme;
         }
         if (!$theme_found) {
             print_error "Theme not found: $opt_theme";
