@@ -81,24 +81,24 @@ sub new_html {
         title       => $title,
         year        => $year,
     };
-    if (!$id) { $id      = _get($html, \$parser, "id", \&_id, \&_id_old); }
+    if (!$id) { $id      = _get($html, \$parser, "id", \&_id); }
     $self->{id}          = $id;                      
     $self->{otitle}      = _get($html, \$parser, "header", \&_header);
-    $self->{runtime}     = _get($html, \$parser, "runtime", \&_runtime, \&_runtime_old);
+    $self->{runtime}     = _get($html, \$parser, "runtime", \&_runtime);
     $self->{img}         = _get($html, \$parser, "img", \&_image);
     $self->{user_rating} = _get($html, \$parser, "rating", \&_user_rating, \&_user_rating_old);
-    $self->{photos}      = _get($html, \$parser, "photos", \&_photos, \&_photos_old) || [];
+    $self->{photos}      = _get($html, \$parser, "photos", \&_photos) || [];
     $self->{plot}        = _get($html, \$parser, "story", \&_storyline);
     if (!$self->{plot}) {
-        $self->{plot}    = _get($html, \$parser, "plot", \&_plot, \&_plot_old);
+        $self->{plot}    = _get($html, \$parser, "plot", \&_plot);
     }
     $self->{genres}      = _get($html, \$parser, "genre", \&_genre) || [];
     #$self->{directors}   = _get($html, \$parser, "direct", \&_person) || {};
     #$self->{writers}     = _get($html, \$parser, "writer", \&_person) || {};
     #$self->{cast}        = _get($html, \$parser, "cast", \&_cast) || {};
-    if (!$type && $old_html) {
-        $type            = _get($html, \$parser, "type", \&_type_old);
-    }
+    #if (!$type && $old_html) {
+    #    $type            = _get($html, \$parser, "type", \&_type_old);
+    #}
     $self->{type}        = $type;
     $self->{direct_hit}  = !$newid;
     $self->{matches}     = \@MATCH;
@@ -482,6 +482,21 @@ sub _jump_class {
     return 0;
 }
 
+# <span itemprop="ratingValue">8.4</span>
+
+sub _jump_prop {
+    my ($parser, $prop_name, $prop_val, @tags) = @_;
+    my $tag;
+    while ($tag = $parser->get_tag(@tags)) {
+        # print "\nTAG[", scalar @{$tag}, "]: ", join(' ',@{$tag}), "\n";
+        # is a start tag?
+        if (scalar @{$tag} > 2) {
+            return $tag if ($tag->[1]->{$prop_name} =~ /$prop_val/i);
+        }
+    }
+    return 0;
+}
+
 # val = _get_info(parser, attr_name, start_tag, end_tag)
 
 sub _get_info {
@@ -547,7 +562,7 @@ sub _genre {
 }
 
 
-sub _user_rating_old {
+sub _user_rating_old2 {
     my $parser = shift;
     my $tag;
     my $rating;
@@ -562,12 +577,27 @@ sub _user_rating_old {
     return "";
 }
 
-sub _user_rating {
+sub _user_rating_old {
     my $parser = shift;
     my $tag;
     my $rating;
 
     _jump_class($parser, "rating-rating", "span") or return undef;
+    $rating = $parser->get_text() or return undef;
+    if ($rating =~ /([\d.]+)/) {
+        return $1;
+    }
+    # no rating
+    return "";
+}
+
+sub _user_rating {
+    my $parser = shift;
+    my $tag;
+    my $rating;
+
+    # <span itemprop="ratingValue">8.4</span>
+    _jump_prop($parser, "itemprop", "ratingValue", "span") or return undef;
     $rating = $parser->get_text() or return undef;
     if ($rating =~ /([\d.]+)/) {
         return $1;
