@@ -9,7 +9,7 @@ use HTML::TokeParser;
 use Data::Dumper;
 use HTML::Tagset ();
 
-$VERSION = '0.30';
+$VERSION = '0.31';
 $ERROR = "";
 @MATCH = ();
 $FIND_OPT = ""; # "&site=aka"
@@ -261,9 +261,12 @@ sub _title_year_search {
     # The Plan (Video 2009) - IMDb
     # Supernatural (TV Series 2005- ) - IMDb
     # LOL (Laughing Out Loud) ® (2008) - IMDb
+    # IMDb - Crash (2004)  
 
     # title: everything till first ( that contains a year
     # but include ( if the title starts with it
+    $pagetitle =~ s/^imdb - //i;
+    $pagetitle =~ s/ - imdb$//i;
     $pagetitle =~ /^([(]*[^(]+.*)(\([^(]*\d{4}.*)$/ or return undef;
     $title = $1;
     my $rest = $2;

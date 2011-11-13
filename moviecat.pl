@@ -2,8 +2,8 @@
 
 =copyright
 
-    Simple Movie Catalog 1.8.0
-    Copyright (C) 2008-2010 damien.langg@gmail.com
+    Simple Movie Catalog 1.8.1
+    Copyright (C) 2008-2011 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -37,12 +37,12 @@ require "IMDB_Movie.pm";
 
 ### Globals
 
-my $progver = "1.8.0";
+my $progver = "1.8.1";
 my $progbin = "moviecat.pl";
 my $progname = "Simple Movie Catalog";
 my $progurl = "http://smoviecat.sf.net/";
 my $author = 'damien.langg@gmail.com';
-my $copyright = "Copyright 2008-2010, $author";
+my $copyright = "Copyright 2008-2011, $author";
 
 my $prog_dir = $FindBin::Bin;
 my $imdb_cache = "$prog_dir/imdb_cache";
