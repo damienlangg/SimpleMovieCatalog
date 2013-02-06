@@ -216,6 +216,16 @@ sub parse_vote_history {
 
 sub _merge_names { [sort map "$_->{last_name}, $_->{first_name}", values %{shift->{+shift}} ] }
 
+sub _is_search_title {
+    my $pagetitle = shift;
+    # old: imdb.*search
+    # new: find - imdb
+    # advanced: imdb: Most Popular Titles Released In 1999 With Title Matching "TITLE"
+    return ($pagetitle =~ /find - imdb/i
+        || $pagetitle =~ /imdb.*search/i
+        || $pagetitle =~ /imdb:.*title matching/i);
+}
+
 sub get_matches
 {
     my $html = shift;
@@ -224,7 +234,7 @@ sub get_matches
     @MATCH = ();
     $parser->get_tag('title');
     $pagetitle = $parser->get_text();
-    if ($pagetitle =~ /imdb.*search/i) {
+    if (_is_search_title($pagetitle)) {
         # this is a search result!
         _get_lucky($parser);
     }
@@ -239,7 +249,7 @@ sub _title_year_search {
     # $pagetitle = $parser->get_text() or return undef;
     $pagetitle = get_text_html($parser) or return undef;
 
-    if ($pagetitle =~ /imdb.*search/i) {
+    if (_is_search_title($pagetitle)) {
         # this is a search result!
         $id = _get_lucky($parser);
         return undef unless ($id);
@@ -291,7 +301,7 @@ sub _get_lucky {
     while ($tag = $parser->get_tag('a')) {
         my $href = $tag->[1]->{href};
         next unless $href;
-        if (($id) = $href =~ /^\/title\/tt(\d{7})[\/]?$/) {
+        if (($id) = $href =~ /^\/title\/tt(\d{7})[\/]?/) {
             my $title = $parser->get_text;
             next unless ($title);
             next if ($title eq "[IMG]");
@@ -308,6 +318,7 @@ sub _get_lucky {
                 $type .= $parser->get_text;
                 # print "TYPE. $type\n";
             }
+            # print "match: $id $title $year $type\n";
             push @MATCH, {id => $id, title => $title, year => $year, type => $type};
         }
     }
@@ -710,10 +721,19 @@ sub get_page_id {
 sub get_url_find {
     my ($key,$year,$site) = @_;
     $site ||= "www";
+    my $url;
+    # advanced search: http://www.imdb.com/search/title?release_date=1999,1999&title=TITLE
+    #  optional: &view=simple
     #my $url  = "http://$site.imdb.com/find?s=all&q=$key";
-    my $url  = "http://$site.imdb.com/find?s=tt&q=$key";
-    if ($year) { $url .= "&tyear=$year"; }
-    $url .= $FIND_OPT;
+    if ($year) {
+        # use advanced search, release_date=
+        $url = "http://$site.imdb.com/search/title?release_date=$year,$year&title=$key";
+    } else {
+        # simple search &tyear= doesn't work anymore
+        $url = "http://$site.imdb.com/find?s=tt&q=$key";
+        # if ($year) { $url .= "&tyear=$year"; }
+        $url .= $FIND_OPT;
+    }
     return $url;
 }
 

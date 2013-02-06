@@ -853,6 +853,10 @@ sub automatch1
     print_note shorten($path), ": GUESS\n";
     print_note shorten(" ??? Guess: '".$title."' (".$year.")".($type?" [$type]":"")), ": ";
     my $msearch = findmovie($title, $year, $type);
+    if (!$msearch && $year) {
+        # no match found, retry without year
+        $msearch = findmovie($title, 0, $type);
+    }
     if ($msearch and $msearch->id and
            ($msearch->direct_hit or $opt_match_first))
     {
