@@ -9,7 +9,7 @@ use HTML::TokeParser;
 use Data::Dumper;
 use HTML::Tagset ();
 
-$VERSION = '0.31';
+$VERSION = '0.32';
 $ERROR = "";
 @MATCH = ();
 $FIND_OPT = ""; # "&site=aka"
@@ -1017,7 +1017,7 @@ Jeffrey Hayes Anderson
 
 =head1 CREDITS
 
-Heavily reworked to make it usable with 2008 IMDB:
+Heavily reworked to make it usable with 2008-2013 IMDB:
 
    - damien.langg@gmail.com
 

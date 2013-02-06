@@ -1,5 +1,8 @@
 Changelog:
 
+2013-02-06 Release 1.9.0
+ * Updated for IMDB site changes
+ * Removed deprecated use of goto in perl
 
 2011-11-13 Release 1.8.1
  * Updated parsing of movie title
