@@ -916,7 +916,6 @@ sub check_dir_info
     print_debug "CHECK DIR: '$parent' '$dir' $path\n";
     return if (!$parent or $dir eq ".");
     # if already visited, no need to guess again
-    #if ($all_dirs{$path}->{guess}) { goto AUTOMATCH; }
     return if ($all_dirs{$path}->{info});
     return if (!$all_dirs{$path}->{relevant});
     # check for rar, nfo, cd1/cd2, VIDEO_TS
@@ -2188,42 +2187,64 @@ sub interactive
                $nmiss, " / ", scalar @sort_dirs, "\n\n";
     print_info "\n===== Interactive mode =====\n";
 
-    if ($nmiss) {
-        goto NEXT_MISS;
-    }
+    my $dir;
+    my @files;
+    my @guess;
+    my $num_guess;
+
+    my $s_nextmiss = 0;
+    my $s_chdir = 1;
+    my $s_info = 2;
+    my $s_cmd = 3;
+    my $s_search = 4;
+    my $state = $nmiss ? $s_nextmiss : $s_chdir;
 
     while (1) {
-        CHDIR:
-        my $dir = $sort_dirs[$cur_dir];
-        my @files =();
-        if ($all_dirs{$dir}->{relevant}) {
-            @files = keys %{$all_dirs{$dir}->{relevant}};
-        }
-        my @guess = get_guess_list($dir, cut_ext_l(@files));
-        # show max 9 guesses
-        my $num_guess = scalar @guess > 9 ? 9 : scalar @guess;
 
-        INFO:
-        print_info "\n\nDirectory:\n\n";
-        print_dir 2, $cur_dir + 1, $dir;
-        print_info "\nMovies:";
-        if ($all_dirs{$dir}->{id}) {
-            print_info "\n";
-            for my $id (keys %{$all_dirs{$dir}->{id}}) {
-                print_info "  * [$id] ", $movie{$id}->title,
-                          " (", $movie{$id}->year, ")\n";
+        if ($state <= $s_nextmiss) {
+            # NEXT_MISS:
+            while ($cur_dir < scalar @sort_dirs -1) {
+                last if (is_missing($sort_dirs[$cur_dir]));
+                $cur_dir++;
             }
-        } else {
-            print_info " *Missing Info*\n";
         }
-        print_info "\nGuessed titles:\n";
-        for my $n (1 .. $num_guess) {
-            print_info "  $n) ", $guess[$n-1]->{title},
-                       " (", $guess[$n-1]->{year}, ")\n";
-        }
-        print_info "\nSelect [1-",$num_guess,"] or enter title or imdb url\n";
 
-        CMD:
+        if ($state <= $s_chdir) {
+            # CHDIR:
+            $dir = $sort_dirs[$cur_dir];
+            @files = ();
+            if ($all_dirs{$dir}->{relevant}) {
+                @files = keys %{$all_dirs{$dir}->{relevant}};
+            }
+            @guess = get_guess_list($dir, cut_ext_l(@files));
+            # show max 9 guesses
+            $num_guess = scalar @guess > 9 ? 9 : scalar @guess;
+        }
+
+        if ($state <= $s_info) {
+            # INFO:
+            print_info "\n\nDirectory:\n\n";
+            print_dir 2, $cur_dir + 1, $dir;
+            print_info "\nMovies:";
+            if ($all_dirs{$dir}->{id}) {
+                print_info "\n";
+                for my $id (keys %{$all_dirs{$dir}->{id}}) {
+                    print_info "  * [$id] ", $movie{$id}->title,
+                    " (", $movie{$id}->year, ")\n";
+                }
+            } else {
+                print_info " *Missing Info*\n";
+            }
+            print_info "\nGuessed titles:\n";
+            for my $n (1 .. $num_guess) {
+                print_info "  $n) ", $guess[$n-1]->{title},
+                " (", $guess[$n-1]->{year}, ")\n";
+            }
+            print_info "\nSelect [1-",$num_guess,"] or enter title or imdb url\n";
+        }
+
+        # CMD:
+        $state = $s_cmd;
         print_info "[enter=next missing  q=quit  ?=help]\n";
         print_info "> ";
         my $cmd = get_input;
@@ -2231,20 +2252,18 @@ sub interactive
         if ($cmd eq undef) {  # enter
             if ($cur_dir == scalar @sort_dirs -1) {
                 print_info "Last Directory! [", $cur_dir+1, "]\n";
-                goto CMD;
-            }
-            while ($cur_dir < scalar @sort_dirs -1) {
+            } else {
                 $cur_dir++;
-                NEXT_MISS:
-                last if (is_missing($sort_dirs[$cur_dir]));
+                $state = $s_nextmiss;
             }
-            goto CHDIR;
+            next;
 
         } elsif ($cmd eq "?" or $cmd eq "h" or $cmd eq "help") {
             print_ihelp;
 
         } elsif ($cmd eq ".") {
-            goto INFO;
+            $state = $s_info;
+            next;
 
         } elsif ($cmd eq "pwd") {
             print_dir 2, $cur_dir + 1, $dir;
@@ -2267,19 +2286,22 @@ sub interactive
         } elsif ($cmd =~ /^c +(\d+)$/) {
             if ($1 >=1 and $1 <= scalar @sort_dirs) {
                 $cur_dir = $1 - 1;
-                goto NEXT_MISS;
+                $state = $s_nextmiss;
+                next;
             }
 
         } elsif ($cmd =~ /^cd +(.+) *$/) {
             my $arg = $1;
             if (($arg =~ /^\d+$/) and $arg >=1 and $arg <= scalar @sort_dirs) {
                 $cur_dir = $arg - 1;
-                goto CHDIR;
+                $state = $s_chdir;
+                next;
             } else {
                 my $new_dir = find_dir($dir, $arg, @sort_dirs);
                 if ($new_dir >= 0 and $new_dir <= scalar @sort_dirs) {
                     $cur_dir = $new_dir;
-                    goto CHDIR;
+                    $state = $s_chdir;
+                    next;
                 }
                 print_info "Directory '", $arg, "' Not found!\n";
             }
@@ -2287,7 +2309,8 @@ sub interactive
         } elsif ($cmd eq "n") {
             if ($cur_dir < scalar @sort_dirs -1) {
                 $cur_dir++;
-                goto CHDIR;
+                $state = $s_chdir;
+                next;
             } else {
                 print_info "Last Directory! [", $cur_dir+1, "]\n";
             }
@@ -2295,7 +2318,8 @@ sub interactive
         } elsif ($cmd eq "p") {
             if ($cur_dir > 0) {
                 $cur_dir--;
-                goto CHDIR;
+                $state = $s_chdir;
+                next;
             } else {
                 print_info "First Directory! [", $cur_dir+1, "]\n";
             }
@@ -2321,18 +2345,26 @@ sub interactive
 
         } elsif ($cmd =~ /^\d{7}$/) {
             # search by ID            
-            goto GO_SEARCH;
+            $state = $s_search;
 
         } elsif ($cmd >= 1 and $cmd <= $num_guess) {
             do_search($dir, $guess[$cmd - 1]->{title}, $guess[$cmd - 1]->{year});
-            goto INFO;
+            $state = $s_info;
+            next;
 
         } elsif ($cmd =~ /^s +(.+)$/) {
             $cmd = $1;
-            goto GO_SEARCH;
+            $state = $s_search;
 
         } elsif (length $cmd >3) {
-            GO_SEARCH:
+            $state = $s_search;
+
+        } else {
+            print_info "Unknown cmd: '$cmd'\n";
+        }
+
+        if ($state == $s_search) {
+            # SEARCH:
             my $title = $cmd;
             my $year;
             if ($title =~ /^(.+) \((\d{4})\)$/) {
@@ -2342,13 +2374,10 @@ sub interactive
                 $title = $1;
             }
             do_search($dir, $title, $year);
-            goto INFO;
-
-        } else {
-            print_info "Unknown cmd: '$cmd'\n";
+            $state = $s_info;
+            next;
         }
 
-        goto CMD;
     }
 }
 
