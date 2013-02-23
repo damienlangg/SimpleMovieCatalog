@@ -1,7 +1,7 @@
 package IMDB::Movie;
 
 use strict;
-use vars qw($VERSION $AUTOLOAD @MATCH $ERROR $FIND_OPT $old_html);
+use vars qw($VERSION $AUTOLOAD @MATCH $ERROR $FIND_OPT $old_html $download_func);
 
 use Carp;
 use LWP::Simple;
@@ -9,12 +9,12 @@ use HTML::TokeParser;
 use Data::Dumper;
 use HTML::Tagset ();
 
-$VERSION = '0.32';
+$VERSION = '0.33';
 $ERROR = "";
 @MATCH = ();
 $FIND_OPT = ""; # "&site=aka"
-
 $old_html = 0;
+$download_func = \&download_page_id;
 
 sub error {
     my $preverr = $ERROR;
@@ -266,11 +266,11 @@ sub _title_year_search {
     # The Plan (2009/I) (V)
     # "Supernatural" (2005)
     # (500) Days of Summer (2009)
-    # LOL (Laughing Out Loud) ® (2008)
+    # LOL (Laughing Out Loud) ï¿½ (2008)
     # new:
     # The Plan (Video 2009) - IMDb
-    # Supernatural (TV Series 2005- ) - IMDb
-    # LOL (Laughing Out Loud) ® (2008) - IMDb
+    # Supernatural (TV Series 2005-ï¿½) - IMDb
+    # LOL (Laughing Out Loud) ï¿½ (2008) - IMDb
     # IMDb - Crash (2004)  
 
     # title: everything till first ( that contains a year
@@ -496,6 +496,7 @@ sub _jump_class {
     return 0;
 }
 
+# <span class="hidden" itemprop="ratingValue">-</span>
 # <span itemprop="ratingValue">8.4</span>
 
 sub _jump_prop {
@@ -505,6 +506,11 @@ sub _jump_prop {
         # print "\nTAG[", scalar @{$tag}, "]: ", join(' ',@{$tag}), "\n";
         # is a start tag?
         if (scalar @{$tag} > 2) {
+            if ($tag->[1]->{class} =~ /hidden/i) {
+                # skip hidden tags
+                # print ("skip: ", $parser->get_text(), "\n");
+                next;
+            }
             return $tag if ($tag->[1]->{$prop_name} =~ /$prop_val/i);
         }
     }
@@ -707,7 +713,7 @@ sub get_url_id {
     return $url;
 }
 
-sub get_page_id {
+sub download_page_id {
     my ($id,$site) = @_;
     my $url = get_url_id($id, $site);
     my $content = get($url);
@@ -716,6 +722,12 @@ sub get_page_id {
         return undef;
     }
     return \$content;
+}
+
+sub get_page_id {
+    my ($id,$site) = @_;
+    #print "get_page_id($id)\n";
+    return $download_func->($id);
 }
 
 sub get_url_find {

@@ -1,5 +1,5 @@
 
-Simple Movie Catalog 1.9.0
+Simple Movie Catalog 1.9.1
 Copyright (C) 2008-2013 damien.langg@gmail.com
 
 Simple Movie Catalog will scan a given directory for movies,

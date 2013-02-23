@@ -1,5 +1,10 @@
 Changelog:
 
+2013-02-23 Release 1.9.1
+ * Updated IMDB rating
+ * Minor performance fixes of cached files
+ * Make some perl modules optional
+
 2013-02-06 Release 1.9.0
  * Updated for IMDB site changes
  * Removed deprecated use of goto in perl

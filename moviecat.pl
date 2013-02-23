@@ -2,7 +2,7 @@
 
 =copyright
 
-    Simple Movie Catalog 1.9.0
+    Simple Movie Catalog 1.9.1
     Copyright (C) 2008-2013 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -29,7 +29,17 @@ use File::Basename;
 use File::Copy;
 use File::stat qw(); # no-override
 use LWP::Simple;
-use Term::ReadKey;
+
+#use Term::ReadKey qw(GetTerminalSize);
+my $have_term = eval 'use Term::ReadKey; 1';
+
+#use Time::HiRes qw(time);
+my $hires_time = sub { time(); };
+if (eval 'use Time::HiRes; 1') {
+    $hires_time = \&Time::HiRes::time;
+}
+my $g_stime = $hires_time->();
+
 #use IMDB_Movie;
 push @INC, $FindBin::Bin;
 push @INC, $FindBin::Bin . "/lib";
@@ -37,7 +47,10 @@ require "IMDB_Movie.pm";
 
 ### Globals
 
-my $progver = "1.9.0";
+# override download function
+$IMDB::Movie::download_func = \&cache_imdb_id;
+
+my $progver = "1.9.1";
 my $progbin = "moviecat.pl";
 my $progname = "Simple Movie Catalog";
 my $progurl = "http://smoviecat.sf.net/";
@@ -151,7 +164,8 @@ sub print_log {
     my $line = join '', @_;
     chomp $line;
     # print_level 2, $line, "\n";
-    print $F_LOG $line, "\n";
+    my $stamp = sprintf "[ %.6f ] ", ($hires_time->() - $g_stime);
+    print $F_LOG $stamp, $line, "\n";
 }
 
 sub print_error {
@@ -290,7 +304,7 @@ sub cache_imdb_id
         print_debug "Connecting to IMDB... ($id)\n";
         print_note ".";
         unlink $html_file if -e $html_file;
-        $html = IMDB::Movie::get_page_id($id);
+        $html = IMDB::Movie::download_page_id($id);
         if (!$html) {
             print_debug "Error getting page: $id\n";
             return undef;
@@ -2739,8 +2753,10 @@ sub init
     makedir $base_dir;
     makedir $imdb_cache;
     makedir $image_cache;
-    my ($width) = GetTerminalSize();
-    if ($width >= 40 and $width <= 300) { $columns = $width; }
+    if ($have_term) {
+        my ($width) = GetTerminalSize();
+        if ($width >= 40 and $width <= 300) { $columns = $width; }
+    }
     print_debug "Base dir: '$base_dir' name: '$base_name'";
     print_debug "Cache IMDB: '$imdb_cache' Image: '$image_cache'";
     print_debug "Cache age: $max_cache_days";
