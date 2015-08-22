@@ -1,4 +1,5 @@
 *.log
+*DS_Store*
 config.txt
 backup*/*.log
 backup*/config.txt
