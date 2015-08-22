@@ -4,17 +4,11 @@ This is a modified copy of Damine Langg's [Simple Movie Catalog](http://smovieca
 
 **Please note**: This version of SimpleMovieCatalog may not work for you at all. It is incomplete and can look ugly when downloaded, because it is old and constantly under construction and a bit outdated. This repository exists for backup purposes only.
 
-Template screenshots can be also found in [Behance](https://www.behance.net/gallery/1960711/Simple-Movie-Catalog):
+![Screenshot (Subsonic powered by Fluid App)](https://raw.githubusercontent.com/ronilaukkarinen/SimpleMovieCatalog/master/screenshots/template-6.png "Screenshot")
 
-![Screenshot (Subsonic powered by Fluid App)](https://raw.githubusercontent.com/ronilaukkarinen/SimpleMovieCatalog/master/screenshots/template-1.png "Screenshot")
+**webapp2**-template is currently the most complete template. Others are outdated and under constructions and I may suggest not to use them.
 
-![Screenshot (Subsonic powered by Fluid App)](https://raw.githubusercontent.com/ronilaukkarinen/SimpleMovieCatalog/master/screenshots/template-2.png "Screenshot")
-
-![Screenshot (Subsonic powered by Fluid App)](https://raw.githubusercontent.com/ronilaukkarinen/SimpleMovieCatalog/master/screenshots/template-3.png "Screenshot")
-
-![Screenshot (Subsonic powered by Fluid App)](https://raw.githubusercontent.com/ronilaukkarinen/SimpleMovieCatalog/master/screenshots/template-4.png "Screenshot")
-
-![Screenshot (Subsonic powered by Fluid App)](https://raw.githubusercontent.com/ronilaukkarinen/SimpleMovieCatalog/master/screenshots/template-5.jpg "Screenshot")
+More Template screenshots can be  found in [Behance](https://www.behance.net/gallery/1960711/Simple-Movie-Catalog).
 
 ### [Official demo](http://smoviecat.sourceforge.net/demo/catalog.html)
 
