@@ -1,6 +1,6 @@
 # Simple Movie Catalog + templates
 
-This is a modified copy of Damine Langg's [Simple Movie Catalog](http://smoviecat.sourceforge.net/) script by Roni Laukkarinen. White and black themes included by default from version 1.7.0 (see [Changelog here](http://sourceforge.net/p/smoviecat/news/).
+This is a modified copy of Damine Langg's [Simple Movie Catalog](http://smoviecat.sourceforge.net/) script by Roni Laukkarinen. White and black themes included by default from version 1.7.0 (see [Changelog here](http://sourceforge.net/p/smoviecat/news/)).
 
 **Please note**: This version of SimpleMovieCatalog may not work for you at all. It is incomplete and can look ugly when downloaded, because it is old and constantly under construction and a bit outdated. This repository exists for backup purposes only.
 
