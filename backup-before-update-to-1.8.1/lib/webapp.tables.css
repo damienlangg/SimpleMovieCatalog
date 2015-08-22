@@ -1,0 +1,198 @@
+@import url(http://fonts.googleapis.com/css?family=Droid+Serif);
+
+#FILTER_HEAD, #FORM_FILTER, #MTABLE {
+width:600px;
+display:block !important;
+/*margin:0 auto !important;*/
+}
+a {
+-webkit-transition: all 0.22s ease-out;         /* Safari & Chrome */
+-moz-transition: all 0.22s ease-out;            /* Firefox */
+-o-transition: all 0.22s ease-out;                      /* Opera */
+}
+#FORM_FILTER {
+display:inline !important;
+font-size:11px;
+}
+#FILTER_HEAD {
+font-size:12px;
+}
+.sort-options {
+font-size:11px;
+position:absolute;
+background:#282828;
+top:0;
+left:0;
+padding:6px;
+width:100%;
+}
+form {
+display:none;
+}
+#SORT_TITLE, #SORT_RATING, #SORT_RUNTIME, #SORT_YEAR, #SORT_DIRTIME {
+font-weight:normal !important;
+border:0 !important;
+background:none !important;
+text-decoration:none !important;
+margin:0 10px 0 0 !important;
+}
+#STATUS {
+font-size:19px;
+font-weight:900;
+}
+body {
+background:#000000;
+filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#050505', endColorstr='#000000');
+background: -webkit-gradient(linear, left top, left bottom, from(#050505), to(#000000));
+background: -moz-linear-gradient(top,  #050505,  #000000);
+
+color:#777777;
+font-family:arial;
+padding:15px;
+margin:0;
+overflow-x:hidden;
+}
+a, a:link, a:visited {
+color:#aaaaaa;
+text-decoration:none;
+font-size:11px;
+}
+#FILTER_TABLE {
+background:#191919 !important;
+color:#777777 !important;
+padding:10px;
+border:1px solid #222222;
+border-radius:8px;
+-moz-border-radius:8px;
+-khtml-border-radius:8px;
+-webkit-border-radius:8px;
+margin:10px 0 10px 0;
+opacity:0.6;
+-moz-opacity:0.6;
+}
+#FILTER_TABLE input {
+margin:2px 6px 0 0;
+}
+#FILTER_TABLE:hover {
+opacity:1.0;
+-moz-opacity:1.0;
+}
+.movietable, .movietable img, .movietable .plot, #FILTER_TABLE {
+/* Transform Effect */
+-webkit-transition: all 0.22s ease-out;         /* Safari & Chrome */
+-moz-transition: all 0.22s ease-out;            /* Firefox */
+-o-transition: all 0.22s ease-out;                      /* Opera */
+}
+.movietable:hover .plot {
+color:#999999 !important;
+}
+.poster, .noposter {
+width:144px !important;
+overflow:hidden;
+vertical-align:top;
+border-top:1px solid #242424;
+border-top-left-radius:5px 5px;
+border-top-right-radius:5px 5px;
+}
+.movietable img {
+-moz-box-shadow: 0px 0px 0px #888;
+-webkit-box-shadow:0px 0 14px #414141;
+width:144px !important;
+height:200px !important;
+margin:-2px 0 15px 0;
+border-radius:5px;
+}
+.poster, .noposter {
+margin:0 30px 0 0;
+}
+.noposter {
+border-radius:5px;
+border:1px solid #222222;
+margin:0 0 15px 0;
+padding:0;
+background:url(default.jpg) no-repeat center;
+width:143px !important;
+max-width:145px !important;
+}
+.noposter img {
+display:none;
+}
+.noposter span {
+display:none;
+}
+.title, .title a {
+font-family:'Myriad Pro', Verdana, Arial, Helvetica, sans-serif; 
+color: #252525; /* the fallback color */             
+text-shadow:#484848 1px 1px 1px; 
+line-height:30px;
+/* Transform Effect */
+-webkit-transition: all 0.22s ease-out;		/* Safari & Chrome */
+-moz-transition: all 0.22s ease-out;		/* Firefox */
+-o-transition: all 0.22s ease-out;			/* Opera */
+}
+.title {
+}
+.title a {
+margin:0 0 0 24px !important;
+float:left;
+font-size:27px !important;
+}
+.title:hover, .title a:hover {
+color:#777777 !important;
+}
+.moviedesc td {
+font-family:'Myriad Pro', Verdana, Arial, Helvetica, sans-serif; 
+color: #666;            
+font-size: 11px;
+font-style: normal;
+font-weight: normal;
+letter-spacing: normal;
+line-height: 1.4em;
+padding:0px 0 0 25px;
+}
+.plot font {
+font-family: "Lucida Grande", sans-serif;
+font-size: 10.4px;
+font-style: normal;
+font-weight: normal;
+text-transform: normal;
+letter-spacing: normal;
+line-height: 1.5em;
+}
+.plot {
+padding:15px 0 0 28px !important;
+}
+.tags {
+}
+.moviemeta a {
+font-size:11px;
+color:#aaaaaa;
+}
+.moviemeta a:hover {
+color:#ffffff;
+}
+.movieheadmeta {
+font-family:'Myriad Pro', Verdana, Arial, Helvetica, sans-serif !important; 
+color: #333333 !important;          
+text-shadow:#111111 1px 1px 1px !important; 
+padding:3px 0 0 2px;
+display:block;
+color:#999999;
+font-size:13px !important;
+}
+.moviemeta td {
+-moz-opacity:0.5;
+opacity:0.5;
+font-size:smaller;
+background:#101010;
+border-radius:4px;
+-moz-border-radius:4px;
+-khtml-border-radius:4px;
+-webkit-border-radius:4px;
+padding:10px 20px 10px 10px !important;
+float:left;
+margin:20px 0 0 25px;
+overflow:hidden;
+display:block;
+width:auto !important;
+}

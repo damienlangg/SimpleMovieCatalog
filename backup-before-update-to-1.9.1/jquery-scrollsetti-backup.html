@@ -1,0 +1,32 @@
+	<!-- jQuery UI Widget and Effects Core (custom download)
+	     You can make your own at: http://jqueryui.com/download -->
+	<script src="js/jquery-ui-1.8.18.custom.min.js" type="text/javascript"></script>
+	
+	<!-- Latest version of jQuery Mouse Wheel by Brandon Aaron
+	     You will find it here: http://brandonaaron.net/code/mousewheel/demos -->
+	<script src="js/jquery.mousewheel.min.js" type="text/javascript"></script>
+
+	<!-- Smooth Div Scroll 1.2 minified-->
+	<script src="js/jquery.smoothdivscroll-1.2-min.js" type="text/javascript"></script>
+
+	<!-- If you want to look at the uncompressed version you find it at
+	     js/jquery.smoothDivScroll-1.2.js -->
+
+	<!-- Plugin initialization -->
+	<script type="text/javascript">
+		// Initialize the plugin with no custom options
+		jQuery(document).ready(function () {
+			// None of the options are set
+			jQuery("#MTABLE").smoothDivScroll({
+				autoScrollingMode: "",
+				mousewheelScrolling: "true",
+				visibleHotSpotBackgrounds: "always",
+				hotSpotScrollingStep: "100",
+				hotSpotScrollingInterval: "10",
+				mousewheelScrolling: "200",
+				easingAfterMouseWheelScrolling: "false",
+				easingAfterMouseWheelScrollingFunction: "easeOutQuart",
+				easingAfterMouseWheelScrollingDuration: "400"
+			});
+		});
+	</script>
