@@ -1686,16 +1686,6 @@ sub page_filter
 
     # init filter
     print_html "<script type=\"text/javascript\">init_filter();</script>";
-
-my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime(time);
-$year = $year + 1900;
-$mon += 1;
-$hour = $hour + 3;
-print_html "$mday.$mon.$year";
-if($hour < 23) { print_html " $hour:$min"; }
-
-print_html '</span></div>';
-
 }
 
 sub print_page
