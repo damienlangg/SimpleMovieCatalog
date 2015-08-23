@@ -1187,7 +1187,9 @@ sub format_movie
     }
     print_html "</td></tr>";
 
-    print_html '<tr class="moviedesc"><td class="plot absoluted">';
+    print_html '<tr class="moviedesc"><td class="plot absoluted">
+    <span class="imdb-rating"><span>', $m->user_rating, '</span></span>
+    ';
     print_html $m->plot ? $m->plot : "&nbsp;?";
     #print_html "</font>";
     print_html "</td></tr>";

@@ -6,7 +6,7 @@ This is a modified copy of Damine Langg's [Simple Movie Catalog](http://smovieca
 
 ![Screenshot (Subsonic powered by Fluid App)](https://raw.githubusercontent.com/ronilaukkarinen/SimpleMovieCatalog/master/screenshots/template-6.png "Screenshot")
 
-**webapp2**-template is currently the most complete template. Others are outdated and under constructions and I may suggest not to use them.
+**webapp2**-template is currently the most complete template. Others are outdated and under constructions and I may suggest not to use them. Many parts are borrowed from Letterboxd and Movli, but this is 100% for personal use and not intented to run as public.
 
 More Template screenshots can be  found in [Behance](https://www.behance.net/gallery/1960711/Simple-Movie-Catalog).
 
