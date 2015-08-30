@@ -1030,9 +1030,7 @@ sub get_user_votes
 sub html_start
 {
 print_html << 'HTML_START';
-<!DOCTYPE html
-	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
 HTML_START
 }
@@ -1044,8 +1042,7 @@ sub html_head
 
     print_html "<head>";
     print_html "<title>$title</title>";
-    print_html "<meta http-equiv=\"Content-Type\""
-        . " content=\"text/html; charset=iso-8859-1\">";
+    print_html '<meta charset="UTF-8">';
     print_html '<meta name="viewport" content="width=device-width, initial-scale=1">';
     if ($opt_js) {
         print_html "<script src=\"$jsname\" type=\"text/javascript\"></script>";
