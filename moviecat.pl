@@ -1046,6 +1046,7 @@ sub html_head
     print_html "<title>$title</title>";
     print_html "<meta http-equiv=\"Content-Type\""
         . " content=\"text/html; charset=iso-8859-1\">";
+    print_html '<meta name="viewport" content="width=device-width, initial-scale=1">';
     if ($opt_js) {
         print_html "<script src=\"$jsname\" type=\"text/javascript\"></script>";
     }
