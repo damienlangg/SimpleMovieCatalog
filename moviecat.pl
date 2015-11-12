@@ -1119,8 +1119,6 @@ sub format_links
         $url =~ s/%ID%/$id/g;
         $url =~ s/%YEAR%/$year/g;
         $url =~ s/%TITLE%/$title/g;
-        # print_html "[<a href=\"", $url, "\">$site</a>]&nbsp;";
-        print $m->title . " $url\n";
         print_html "<a target=_blank class=HOVER_BOLD href=\"", $url, "\">$site</a>&nbsp;";
     }
 }
