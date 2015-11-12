@@ -1,5 +1,16 @@
 Changelog:
 
+2015-11-12 Release 2.0.0
+ * Fixed quotes in origtitle
+ * Fixed year filter input box
+ * Added 3D tag
+ * Open external links in new window
+ * Hide location with multiple entries
+ * Minor location formatting changes
+ * Updated subtitles and other links
+ * Deprecated interactive mode
+ * Show all filters by default
+
 2013-02-23 Release 1.9.1
  * Updated IMDB rating
  * Minor performance fixes of cached files

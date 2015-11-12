@@ -1,6 +1,6 @@
 
-Simple Movie Catalog 1.9.1
-Copyright (C) 2008-2013 damien.langg@gmail.com
+Simple Movie Catalog 2.0.0
+Copyright (C) 2008-2015 damien.langg@gmail.com
 
 Simple Movie Catalog will scan a given directory for movies,
 query imdb for info and generate a catalog in html which offers
@@ -16,7 +16,7 @@ Contents:
  - Interactive Mode
  - The Catalog Page
 
- 
+
 
 Install:
 ========
@@ -108,7 +108,7 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
     -V|-version             Version
     -v/q|-verbose/quiet     Verbose/Quiet output
     -c|-config <CFGFILE>    Load configuration
-    -i|-interactive         Interactive mode
+    -i|-interactive         Interactive debug mode (deprecated)
     -o|-out <FILENAME>      Output path base name
     -t|-title <TITLE>       Set Title (multiple to define groups)
     -g|-group               Group separator
@@ -154,7 +154,7 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
     skip list: [sample subs subtitles cover covers]
     regex skip: [/subs-.*/ /\W*sample\W*/]
     media ext: [mpg mpeg mpe mp4 avi mov qt wmv mkv iso bin cue ratdvd tivo ts divx vob nfo rar srt sub]
-    codec tags: [hidef hd hdtv hddvdrip hddvd bluray bd5 bd9 720 720p 720i 1080 1080p 1080i cam ts r5 dvdscr dvdrip dvd dvd9 cd1 cd2 vcd xvid divx x264 matroska wmv dts dolby ac3 vorbis mp3 sub]
+    codec tags: [hidef hd hdtv hddvdrip hddvd bluray bd5 bd9 720 720p 720i 1080 1080p 1080i 3D HSBS Half-SBS H-SBS Half.Over.Under Half-OU Half.OU cam ts r5 dvdscr dvdrip dvd dvd9 cd1 cd2 vcd xvid divx x264 matroska wmv dts dolby ac3 vorbis mp3 sub]
     cache dir: [imdb_cache]
     cache days: [90]
     output: [report/movies]
@@ -185,7 +185,7 @@ Option Notes:
     - movie match method (Guess)
     In a way, path matching tags are similar to groups, but
     offer more flexible filtering.
-    
+
     Examples:
         -tag Seen=seen
         -tag Downloads=/Downloads/
@@ -216,7 +216,7 @@ Option Notes:
         -link Trailers=http://www.imdb.com/title/tt%ID%/trailers
         -link http://www.google.com/search?q=%TITLE%
         -link http://en.wikipedia.org/wiki/Special:Search?search=%TITLE%
-        
+
   Themes:
     -theme <NAME> option will select the default theme
     A new theme can be added to lib/name.css
@@ -238,7 +238,9 @@ See doc/sample-cfg.txt for an example.
 Interactive Mode:
 =================
 
-Start with -i option or run interactive.cmd to enter interactive mode.
+Note: this functionality is deprecated and will get removed in the future.
+
+Start with -i option or run interactive.cmd to enter interactive debug mode.
 In interactive mode, you can assign movies to directories which are missing
 info (either missing a .nfo file or guessing didn't give an exact match).
 

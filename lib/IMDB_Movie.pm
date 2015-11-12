@@ -9,7 +9,7 @@ use HTML::TokeParser;
 use Data::Dumper;
 use HTML::Tagset ();
 
-$VERSION = '0.33';
+$VERSION = '0.34';
 $ERROR = "";
 @MATCH = ();
 $FIND_OPT = ""; # "&site=aka"
@@ -45,6 +45,21 @@ sub new {
     return new_html($class, $id, $html);
 }
 
+sub unqote_and_strip_space
+{
+    my $str = shift;
+    $str =~ s/^ *//;
+    $str =~ s/ *$//;
+    if ($str =~ /^".*"$/)
+    {
+        $str =~ s/^"//;
+        $str =~ s/"$//;
+    }
+    $str =~ s/^ *//;
+    $str =~ s/ *$//;
+    return $str
+}
+
 sub new_html {
     my ($class, $id, $html) = @_;
     @MATCH = ();
@@ -54,7 +69,7 @@ sub new_html {
     my ($title, $type, $year, $newid, $newhtml);
 
     $old_html = 0; # assume it's new html formatting
-    
+
     # get the ball rolling here
     ($parser, $title, $type, $year, $newid, $newhtml) = _title_year_search($parser);
 
@@ -75,14 +90,14 @@ sub new_html {
     }
     # print STDERR "IMDB ID: $id\n";
 
-    $title =~ tr/"//d;
+    $title = unqote_and_strip_space($title);
 
     my $self = {
         title       => $title,
         year        => $year,
     };
     if (!$id) { $id      = _get($html, \$parser, "id", \&_id); }
-    $self->{id}          = $id;                      
+    $self->{id}          = $id;
     $self->{otitle}      = _get($html, \$parser, "header", \&_header);
     $self->{runtime}     = _get($html, \$parser, "runtime", \&_runtime);
     $self->{img}         = _get($html, \$parser, "img", \&_image);
@@ -370,7 +385,7 @@ sub _header {
         }
         if ($tag->[0] eq "span" and $tag->[1]->{"class"} eq "title-extra") {
             $otitle = get_text_html($parser);
-            # print "\nOT: $otitle\n";
+            $otitle = unqote_and_strip_space($otitle);
             return $otitle;
         }
     }
