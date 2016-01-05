@@ -47,6 +47,12 @@ body {
   margin-right: -15px;
   padding-left: 15px;
   padding-right: 15px;
+
+  tbody {
+    width: 100%;
+    display: block;
+    overflow: hidden;
+  }
 }
 
 a {
@@ -68,10 +74,6 @@ a:hover {
   font-size: 12px;
   top: 10px;
   left: 0;
-}
-
-.sort-break {
-  display: none;
 }
 
 #FILTER_TABLE {
@@ -139,6 +141,7 @@ form[name="ThemeForm"] {
   position: absolute !important;
   top: 70px !important;
   right: 20px !important;
+  display: none !important;
 }
 
 #SORT_TITLE,
