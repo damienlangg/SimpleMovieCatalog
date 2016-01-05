@@ -1203,7 +1203,7 @@ sub format_movie
     print_html "</td></tr>";
 
     print_html '<tr class="moviedesc"><td class="plot absoluted">
-    <a href="http://www.imdb.com/title/tt', $m->id, '" class="imdb-rating"><span>', $m->user_rating, '</span></a>
+    <a target="_blank" href="http://www.imdb.com/title/tt', $m->id, '" class="imdb-rating"><span>', $m->user_rating, '</span></a>
     ';
     print_html $m->plot ? $m->plot : "&nbsp;?";
     #print_html "</font>";
