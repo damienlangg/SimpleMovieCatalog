@@ -14,9 +14,9 @@ More Template screenshots can be  found in [Behance](https://www.behance.net/gal
 
 The official documentation starts below.
 
-## Simple Movie Catalog 1.9.0
+## Simple Movie Catalog 2.0.1
 
-Copyright (C) 2008-2013 damien.langg@gmail.com
+Copyright (C) 2008-2016 damien.langg@gmail.com
 
 Simple Movie Catalog will scan a given directory for movies, query imdb for info and generate a catalog in html which offers sorting and grouping of found movies by different criteria.
 
@@ -29,7 +29,7 @@ Simple Movie Catalog will scan a given directory for movies, query imdb for info
  - Interactive Mode
  - The Catalog Page
 
- 
+
 
 ## Install:
 
@@ -124,7 +124,7 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
     -o|-out <FILENAME>      Output path base name
     -t|-title <TITLE>       Set Title (multiple to define groups)
     -g|-group               Group separator
-    -s|-skip <NAME>         Skip file or dir (recursive) 
+    -s|-skip <NAME>         Skip file or dir (recursive)
     -ignore <DIR>           Ignore dir with missing info (not recursive)
     -user VOTES_URL         Add user's votes from imdb user's vote history url
     -subs URL               Add subtitle search site
@@ -197,7 +197,7 @@ Option Notes:
     - movie match method (Guess)
     In a way, path matching tags are similar to groups, but
     offer more flexible filtering.
-    
+
     Examples:
         -tag Seen=seen
         -tag Downloads=/Downloads/
@@ -228,7 +228,7 @@ Option Notes:
         -link Trailers=http://www.imdb.com/title/tt%ID%/trailers
         -link http://www.google.com/search?q=%TITLE%
         -link http://en.wikipedia.org/wiki/Special:Search?search=%TITLE%
-        
+
   Themes:
     -theme <NAME> option will select the default theme
     A new theme can be added to lib/name.css
@@ -301,7 +301,7 @@ Genre filtering:
 The genre filtering behaves in two different ways, depending if more than half or
 less than half of the genres are selected.
 - less than half genres selected:
-  All movies that contain at least one of the selected genre is matched and shown. 
+  All movies that contain at least one of the selected genre is matched and shown.
 - more than half genres selected:
   Only movies whose all genres are selected are matched. In other words,
   movie that contains an unselected genre is not shown.
@@ -319,6 +319,3 @@ License:
 
 Covered by the GPL License.
 Read doc/license.txt and doc/gpl.txt for details.
-
-
-

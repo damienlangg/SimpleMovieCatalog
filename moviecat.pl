@@ -2,8 +2,8 @@
 
 =copyright
 
-    Simple Movie Catalog 1.9.1
-    Copyright (C) 2008-2013 damien.langg@gmail.com
+    Simple Movie Catalog 2.0.1
+    Copyright (C) 2008-2016 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,8 +20,15 @@
 
 =cut
 
-
 use strict;
+
+my $progver = "2.0.1";
+my $author = 'damien.langg@gmail.com';
+my $copyright = "Copyright 2008-2016, $author";
+my $progbin = "moviecat.pl";
+my $progname = "Simple Movie Catalog";
+my $progurl = "http://smoviecat.sf.net/";
+
 use Cwd;
 use FindBin;
 use File::Find;
@@ -50,13 +57,6 @@ require "IMDB_Movie.pm";
 # override download function
 $IMDB::Movie::download_func = \&cache_imdb_id;
 
-my $progver = "1.9.1";
-my $progbin = "moviecat.pl";
-my $progname = "Simple Movie Catalog";
-my $progurl = "http://smoviecat.sf.net/";
-my $author = 'damien.langg@gmail.com';
-my $copyright = "Copyright 2008-2013, $author";
-
 my $prog_dir = $FindBin::Bin;
 my $imdb_cache = "$prog_dir/imdb_cache";
 my $scan_log = "$prog_dir/scan.log";
@@ -77,7 +77,9 @@ my @media_ext = (@video_ext, qw( vob nfo rar srt sub ));
 my @hidef = qw( hidef hd hdtv hddvdrip hddvd bluray bd5 bd9
                 720 720p 720i 1080 1080p 1080i );
 
-my @codec = (@hidef, qw(
+my @tags_3d = qw(3D HSBS Half-SBS H-SBS Half.Over.Under Half-OU Half.OU);
+
+my @codec = (@hidef, @tags_3d, qw(
         cam ts r5 dvdscr dvdrip dvd dvd9 cd1 cd2
         vcd xvid divx x264 matroska wmv
         dts dolby ac3 vorbis mp3 sub
@@ -90,15 +92,12 @@ my @subsearch = (
         "http://opensubtitles.org/en/search2/sublanguageid-eng/moviename-%TITLE%",
         "http://subscene.com/filmsearch.aspx?q=%TITLE%",
         "http://podnapisi.net/ppodnapisi/search?tbsl=1&asdp=0&sJ=2&sY=&sAKA=1&sK=%TITLE%",
-        "http://divxtitles.com/%TITLE%/English/any/1",
-        "http://www.subtitlesource.org/title/tt%ID%",
-        # "http://www.subtitlesource.org/search/%TITLE%",
         );
 
 my @opt_links = (
         "Trailers=http://www.imdb.com/title/tt%ID%/trailers",
         "http://www.youtube.com/results?search_query=%TITLE%",
-        "http://www.rottentomatoes.com/search/full_search.php?search=%TITLE%",
+        "http://www.rottentomatoes.com/search/?search=%TITLE%",
         # "http://www.google.com/search?q=%TITLE%",
         # "http://en.wikipedia.org/wiki/Special:Search?search=%TITLE%",
         );
@@ -133,13 +132,16 @@ my $ndirs;
 # global skip: sample subs subtitles
 my @skiplist = qw( sample subs subtitles cover covers );
 my @rxskiplist = qw( /subs-.*/ /\W*sample\W*/ );
-my @ignorelist; # ignore dir with missing info, not recursive 
+my @ignorelist; # ignore dir with missing info, not recursive
 my %gbl_tags;
 # @{$gbl_tags{"TAG"}{pattern}}
-# ${$gbl_tags{"TAG"}{order}} : sorted<0, user>0, hidef=90, imdb=100, guess=110
+# ${$gbl_tags{"TAG"}{order}} : sorted<0, user>0, 3d=90, hidef=91, imdb=100, guess=110
+
+@{$gbl_tags{"3D"}{pattern}} = @tags_3d;
+$gbl_tags{"3D"}{order} = 90;
 
 @{$gbl_tags{"HiDef"}{pattern}} = @hidef;
-$gbl_tags{"HiDef"}{order} = 90;
+$gbl_tags{"HiDef"}{order} = 91;
 
 my $F_HTML;
 my $F_LOG;
@@ -310,9 +312,9 @@ sub cache_imdb_id
             return undef;
         }
         my $F_CACHE;
-        if (open $F_CACHE, ">", $html_file) {
+        if (open $F_CACHE, ">:utf8", $html_file) {
             print_debug "Write Cache: $html_file\n";
-            print $F_CACHE $html;
+            print $F_CACHE $$html;
             close $F_CACHE;
         } else {
             print_log "Error Writing Cache: $html_file\n";
@@ -343,9 +345,9 @@ sub cache_imdb_find
             return undef;
         }
         my $F_CACHE;
-        if (open $F_CACHE, "> $html_file") {
+        if (open $F_CACHE, ">:utf8 $html_file") {
             print_debug "Write Cache: $html_file\n";
-            print $F_CACHE $html;
+            print $F_CACHE $$html;
             close $F_CACHE;
         } else {
             print_log "Error Writing Cache: $html_file\n";
@@ -637,6 +639,7 @@ sub group_assign_movie
 {
     my ($path, $movie) = @_;
     my $id = $movie->id;
+    #print_debug "group_assign_movie $path : $id";
     $pmlist->{$id}->{movie} = $movie;
     $pmlist->{$id}->{location}{$path}++;
     # match path tags
@@ -706,7 +709,7 @@ sub parse_nfo
                 next;
             }
             dir_assign_movie($fdir, $m);
-            group_assign_movie($fdir, $m);
+            group_assign_movie($fdir."/", $m);
             my $num_loc = count_loc($id);
             if ( $num_loc > 1 ) { print_note "*$num_loc"; }
             print_note " OK\n";
@@ -765,7 +768,7 @@ sub filter_dir
     if ($visited) {
         print_debug "RE-VISITED: $File::Find::dir\n";
         for my $id (keys %{$all_dirs{$File::Find::dir}->{id}}) {
-            group_assign_movie($File::Find::dir, $movie{$id});
+            group_assign_movie($File::Find::dir."/", $movie{$id});
             print_debug "RE-VISITED: $File::Find::dir : $id\n";
             print_note shorten("$File::Find::dir/"), ": $id (re)\n";
         }
@@ -828,7 +831,7 @@ sub filter_dir
     # append a special marker to end of list, so that process_files
     # will try to autoguess if no info is found.
     push @list, $END_DIR_MARK;
-    
+
     return @list;
 }
 
@@ -861,8 +864,8 @@ sub automatch1
     my ($dir, $fname) = @_;
     my $path = "$dir/$fname";
     my ($title, $year, $type, $ccount) = path_to_guess($fname ? cut_ext($fname) : $dir);
-    return 0 if (!$title); 
-    return 0 if (!$opt_match_year and !$year and !$type and ($ccount < 2)); 
+    return 0 if (!$title);
+    return 0 if (!$opt_match_year and !$year and !$type and ($ccount < 2));
     my $dirent = get_dirent($dir, $fname);
     print_note shorten($path), ": GUESS\n";
     print_note shorten(" ??? Guess: '".$title."' (".$year.")".($type?" [$type]":"")), ": ";
@@ -935,7 +938,7 @@ sub check_dir_info
     # check for rar, nfo, cd1/cd2, VIDEO_TS
     my $rar = "$parent/$dir.rar";
     my $nfo = "$parent/$dir.nfo";
-    if ( -e $rar or -e $nfo 
+    if ( -e $rar or -e $nfo
          or $dir =~ /^cd\d$/i
          or uc($dir) eq "VIDEO_TS" )
     {
@@ -1030,7 +1033,9 @@ sub get_user_votes
 sub html_start
 {
 print_html << 'HTML_START';
-<!DOCTYPE html>
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
 HTML_START
 }
@@ -1042,8 +1047,8 @@ sub html_head
 
     print_html "<head>";
     print_html "<title>$title</title>";
-    print_html '<meta charset="UTF-8">';
-    print_html '<meta name="viewport" content="width=device-width, initial-scale=1">';
+    print_html "<meta http-equiv=\"Content-Type\""
+        . " content=\"text/html; charset=iso-8859-1\">";
     if ($opt_js) {
         print_html "<script src=\"$jsname\" type=\"text/javascript\"></script>";
     }
@@ -1060,12 +1065,6 @@ sub html_head
             . ($sel?'':'alternate ') . 'stylesheet" '
             . 'href="'.$theme.'.css" title="'.$theme.'">';
     }
-
-print_html "<link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>";
-
-    print_html '<link rel="icon" href="favicon_32x32.ico" type="image/gif" />
-<link rel="shortcut icon" href="favicon_32x32.ico" type="image/x-icon" />';
-
     print_html "<style type=text/css><!--";
     print_html "span.HOVER_ULN:hover {text-decoration: underline}";
     print_html "a.HOVER_BOLD:hover {font-weight: bold}";
@@ -1093,7 +1092,7 @@ sub format_html_path
     # if file, link to dir
     my ($dir, $fname) = split_location($path);
     #return "<a href=\"file://$path\" style=word-wrap:break-word>$link</a>";
-    return "<a href=\"file://$dir\">$link</a>";
+    return "<a target=_blank href=\"file://$dir\">$link</a>";
 }
 
 sub format_links
@@ -1103,6 +1102,7 @@ sub format_links
     my $year = $m->year;
     my $title = $m->title;
     $title =~ s/ /+/g;
+    $title = xml_quote($title);
     for my $link (@links) {
         my $site = $link;
         my $url = $link;
@@ -1119,8 +1119,7 @@ sub format_links
         $url =~ s/%ID%/$id/g;
         $url =~ s/%YEAR%/$year/g;
         $url =~ s/%TITLE%/$title/g;
-        # print_html "[<a href=\"", $url, "\">$site</a>]&nbsp;";
-        print_html "<a class=HOVER_BOLD href=\"", $url, "\">$site</a>&nbsp;";
+        print_html "<a target=_blank class=HOVER_BOLD href=\"", $url, "\">$site</a>&nbsp;";
     }
 }
 
@@ -1144,26 +1143,31 @@ sub format_movie
     print_html "<table width=100% cellspacing=0 class=movietable>";
         # border=1 frame=border rules=all
 
-    print_html '<tr class="movietr">';
-
+    print_html "<tr>";
+    if ($m->img) {
         my $img_file = img_name($m->id);
         my $img_link = $image_dir ."/". $img_file;
         if ( ! -e $image_cache ."/". $img_file ) { $img_link = $m->img; }
-        print_html '<td class="poster poster_', $m->id ,'">';
-    print_html '<img src="', $img_link, '" /><div class="frame"><div class="info"><span class=titletitle>', $m->title ,'</span><span class=titleyear>', $m->year, '</span>'; my ($runtime) = $m->runtime; my $nloc = scalar @location; print_html '<span class=titleruntime>', $runtime ? $runtime : "?" ,' min</span><span class=loc>', @location ,'</span><span class=imdb2><a href=http://www.imdb.com/title/tt', $m->id, ' target=_blank>imdb</a></span></div></div><div class=base-shadow></div></td>';
+        print_html "<td class=poster rowspan=4 width=95>".
+            "<img src=\"", $img_link, "\"></td>";
+    } else {
+        print_html "<td class=noposter rowspan=4 width=95 height=110 align=center>".
+            '<img src="noposter.png"><span style="display:none">?</span></td>';
+    }
 
     # style=\"padding-left: 10px\"
-    print_html '<td class="title absoluted"><b>';
-    print_html "<h1><a class=MTITLE href=http://www.imdb.com/title/tt",
-               $m->id, ">", $m->title, "</a> <span class=vuosi> <span class=MYEAR>", $m->year, "</span></span></h1>";
- #   print_html " <small><i>", $m->type, "</i></small>";
+    print_html "<td class=title height=1*><b>&nbsp;";
+    print_html "<a target=_blank class=MTITLE href=http://www.imdb.com/title/tt",
+               $m->id, ">", $m->title, "</a></b>";
+    print_html " (<span class=MYEAR>", $m->year, "</span>)",
+               " &nbsp; <small><i>", $m->type, "</i></small>";
     print_html "</td></tr>";
 
     my ($runtime) = $m->runtime; #split '\|', $m->runtime;
-    print_html '<tr class="moviedesc"><td class="hidden absoluted">';
-    print_html "<span class=movieheadmeta><span class=rating info><b class=MRATING>", $m->user_rating, "</b>/10</span>",
-            "<span class=runtime info><b class=MRUNTIME>", $runtime ? $runtime : "?" , "</b> min</span>",
-            "<span class=genre info><i class=MGENRE>", join(' / ',@{$m->genres}), "</i></span></span>";
+    print_html "<tr class=moviedesc><td height=1*>"; #"<font size=-1>";
+    print_html "Rating: <b class=MRATING>", $m->user_rating, "</b> &nbsp;&nbsp; ",
+            "Runtime: <b class=MRUNTIME>", $runtime ? $runtime : "?" , "</b> min",
+            " &nbsp;&nbsp; <i class=MGENRE>(", join(' / ',@{$m->genres}), ")</i>";
     # user votes
     my $found_vote = 0;
     my $uid;
@@ -1185,46 +1189,44 @@ sub format_movie
     }
     print_html "</td></tr>";
 
-    print_html '<tr class="moviedesc"><td class="plot absoluted">
-    <span class="imdb-rating"><span>', $m->user_rating, '</span></span>
-    ';
+    print_html "<tr class=moviedesc><td class=plot><font size=-1>";
     print_html $m->plot ? $m->plot : "&nbsp;?";
     #print_html "</font>";
     print_html "</td></tr>";
 
-print_html '<tr class="otherplaces"><td class="some">
-<a href="http://movies.io/m/search?utf8=%E2%9C%93&q=', $m->title, '" class="moviesio"><span>Movies.io</span></a>
-<a href="http://www.listal.com/search/movies/', $m->title, '" class="listal"><span>Listal</span></a>
-<a href="http://www.jinni.com/movies/', $m->title, '" class="jinni"><span>Jinni</span></a>
-<a href="http://www.imdb.com/title/tt', $m->id, '" class="imdb"><span>IMDb</span></a>
-<a href="http://www.flixster.com/search/?search=', $m->title, '" class="flixster"><span>Flixster</span></a>
-<a href="http://getglue.com/search?q=', $m->title, '" class="getglue"><span>GetGlue</span></a>
-<a href="http://letterboxd.com/search/', $m->title, '" class="letterboxd"><span>Letterboxd</span></a>
-</td></tr>
-';
-    print_html '<tr class="moviemeta"><td class="absoluted">';
+    print_html "<tr class=moviemeta><td height=1*><font size=-2>";
     if (@tags) {
-        print_html "<span class=tagss>Tags: <span class=MTAGS>", join(' ', @tags), "</span><br></span>";
+        print_html "Tags: <span class=MTAGS>", join(' ', @tags), "</span><br>";
     }
 
     print_html "Location: ";
     my $i = 0;
     my $nloc = scalar @location;
     my $dirtime = 0;
+    my $id = $m->id;
+    my $fid = "_L" . $m->id;
+    if ($nloc > 1) {
+        print_html "<a id=SHOW_FILTER$fid href=javascript:show_filter('$fid')>show ($nloc)</a>";
+        print_html "<span id=HIDE_FILTER$fid style=display:none>";
+        print_html "<a href=javascript:hide_filter('$fid')>hide</a>";
+    }
     for my $loc (sort by_alpha @location) {
         $i++;
         if ($nloc > 1) {
-            print_html "<b>($i)</b> ";
+            print_html "<br><b>($i)</b> ";
         }
         my $dirent = get_dirent_location($loc);
-#        if ($dirent->{guess}) {
-#            print_html "<b>(GUESSED)</b> ";
-#        }
+        if ($dirent->{guess}) {
+            print_html "(guess) ";
+        }
         print_html format_html_path($loc);
         # print_html "dt: ", $all_dirs{$loc}->{mtime};
         if ($dirtime < $dirent->{mtime}) {
             $dirtime = $dirent->{mtime};
         }
+    }
+    if ($nloc > 1) {
+        print_html "</span>";
     }
     # print_html "<br>dirtime: ";
     print_html "<span class=MDIRTIME>$dirtime</span>";
@@ -1253,7 +1255,7 @@ sub is_missing_file
     }
     for my $ign (@ignorelist) {
         if (match_path($dir, $fname, $ign)) {
-            return 0;        
+            return 0;
         }
     }
     return 1;
@@ -1270,7 +1272,7 @@ sub is_missing
     return 0 if (!$all_dirs{$dir}->{relevant});
     for my $ign (@ignorelist) {
         if (match_path(dirname($dir), basename($dir), $ign)) {
-            return 0;        
+            return 0;
         }
     }
     # if all video files have appropriate matches, don't report as missing
@@ -1380,7 +1382,7 @@ sub by_runtime {
 sub get_gfname {
     my $gfname = shift;
     return "" unless $gfname;
-    return "" unless (scalar @group > 1 or ($opt_js and $opt_miss)); 
+    return "" unless (scalar @group > 1 or ($opt_js and $opt_miss));
     return "" if ($group[0]->{title} eq $gfname);
     $gfname =~ s/[\W]/_/g; # replace non-alphanum with _
     $gfname = "_" . lc( $gfname ); # lo-case
@@ -1431,7 +1433,7 @@ sub page_start
     open $F_HTML, ">", $fname  or  abort "Can't write $fname";
     print_note "Writing $fname\n";
     html_start;
-    html_head("Leffakatalogi" . ($gname ? ": $gname" : ""));
+    html_head("Movie Catalog" . ($gname ? ": $gname" : ""));
 
     print_html
         '<form style="position: absolute; top: 2pt; right: 2pt;" name="ThemeForm">'.
@@ -1450,8 +1452,8 @@ sub page_start
     }
     print_html '</select></form>';
 
-    if (scalar @group > 1 or ($opt_js and $opt_miss)) { 
-        print_html "<table class=missing><td>";
+    if (scalar @group > 1 or ($opt_js and $opt_miss)) {
+        print_html "<table><tr><td valign=top>Group:<td>";
         print_html "<table cellpadding=0 cellspacing=0><tr>" if ($opt_group_table);
         for my $g (@group) {
             my $gnm = scalar keys %{$g->{mlist}};
@@ -1461,7 +1463,7 @@ sub page_start
                 if ($opt_group_table) {
                     print_html "<tr>";
                 } else {
-                    print_html "&nbsp;&nbsp;<br>";
+                    print_html "<br>";
                 }
             }
         }
@@ -1470,21 +1472,21 @@ sub page_start
             page_head_group "", "Missing Info", $gname, count_missing;
         }
         print_html "</table>" if ($opt_group_table);
-        print_html "</table>";
+        print_html "</table><br>";
     }
 
-    if ($opt_miss and $gname eq "Tietoja ei löytynyt") {
+    if ($opt_miss and $gname eq "Missing Info") {
         # no sort menu
     } else {
         my $fbase = "$base_name$gfname";
-        print_html '<div class="sort-options">';
+        print_html '<div class="sort-options">Sort by:';
         page_head_sort $fbase, $fadd, "", "Title";
         page_head_sort $fbase, $fadd, "-rating", "Rating";
         page_head_sort $fbase, $fadd, "-runtime", "Runtime";
         if ($opt_js) {
             page_head_sort $fbase, $fadd, "-year", "Year";
             print_html "<small>";
-            #page_head_sort $fbase, $fadd, "-dirtime", "DirTime";
+            page_head_sort $fbase, $fadd, "-dirtime", "DirTime";
             if (@opt_user) {
                 print_html "User Votes: ";
                 my $uid;
@@ -1501,13 +1503,20 @@ sub page_start
             }
         }
         print_html "</div>";
-
+        print_html '<br class="sort-break">';
     }
 }
 
 sub page_end
 {
-    print_html "</div></body></html>";
+    #print end_html; # end the HTML
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+    $year += 1900;
+    $mon += 1;
+    my $datestr = $year."-".$mon."-".$mday." ".$hour.":".$min;
+    print_html "<br><div align=right><font size=-2><i>Generated by ";
+    print_html "<a href=\"$progurl\">$progname $progver</a> on $datestr</i></font></div>";
+    print_html "</body></html>";
     close $F_HTML;
 }
 
@@ -1551,19 +1560,25 @@ sub get_all_genres
 sub get_max_year
 {
     my $maxyear = 2000;
+    my $minyear = 2000;
     for my $m (values %movie) {
         if ($m->year > $maxyear) { $maxyear = $m->year; }
+        if ($m->year < $minyear) { $minyear = $m->year; }
     }
-    return $maxyear;
+    if (!$minyear) { $minyear = 0; }
+    return ($minyear, $maxyear);
 }
 
 sub get_max_runtime
 {
-    my $maxrun = 200;
+    my $maxrun = 100;
+    my $minrun = 100;
     for my $m (values %movie) {
         if ($m->runtime > $maxrun) { $maxrun = $m->runtime; }
+        if ($m->runtime < $minrun) { $minrun = $m->runtime; }
     }
-    return $maxrun;
+    if (!$minrun) { $minrun = 0; }
+    return ($minrun, $maxrun);
 }
 
 sub by_tag
@@ -1575,19 +1590,19 @@ sub by_tag
 sub page_filter
 {
     my @genres = sort by_alpha get_all_genres;
-    my $maxyear = get_max_year();
-    my $maxrunt = get_max_runtime();
+    my ($minyear, $maxyear) = get_max_year();
+    my ($minrun, $maxrun) = get_max_runtime();
     my $i = 0;
-    print_html "<span id=FILTER_HEAD><small>";
+    print_html "<span id=FILTER_HEAD>Filter: <small>";
     print_html "<i id=STATUS>", scalar keys %{$pmlist},
-               " movies</i> ";
+               " Movies</i> ";
     print_html "&nbsp; <a href=javascript:filter_reset()>reset</a>";
     print_html "&nbsp; <a id=SHOW_FILTER1 href=javascript:show_filter(1)>",
                "show tags</a>";
     print_html "&nbsp; <a id=SHOW_FILTER2 href=javascript:show_filter(2)>",
                "show genre</a>";
     print_html "&nbsp; <a id=SHOW_FILTER3 href=javascript:show_filter(3)>",
-               "more</a>";
+               "more options</a>";
     print_html "</small></span>";
 
     print_html "<form id=FORM_FILTER style='display:inline'",
@@ -1599,9 +1614,9 @@ sub page_filter
     print_html "<td id=HIDE_FILTER1>";
     print_html "<table id=TAG_TABLE cellspacing=0 cellpadding=0>";
     print_html "<tr valign=top>";
-    print_html "<td><br><small>";
-    print_html "<a href=javascript:tag_all()>all</a>&nbsp;&nbsp;<br>";
-    print_html "<a href=javascript:hide_filter(1)>hide</a>&nbsp;&nbsp;<br>";
+    print_html "<td>Tags:&nbsp;<br><small>";
+    print_html "<a href=javascript:tag_all()>all</a><br>";
+    print_html "<a href=javascript:hide_filter(1)>hide</a><br>";
     print_html "</small></td>";
     print_html "<td><small>";
     print_html "<table cellspacing=0 cellpadding=0>";
@@ -1634,18 +1649,18 @@ sub page_filter
     print_html "<td id=HIDE_FILTER2>";
     print_html "<table id=GENRE_TABLE cellspacing=0 cellpadding=0>";
     print_html "<tr valign=top>";
-    print_html "<td class=filtergenretd><div class=filtergenreoptions><small>";
-    print_html "<a href=javascript:genre_all()>all</a>&nbsp;&nbsp;<br>";
-    print_html "<a href=javascript:genre_none()>none</a>&nbsp;&nbsp;<br>";
-    print_html "<a href=javascript:hide_filter(2) style=\"padding:0 !important;\">hide</a>&nbsp;&nbsp;<br>";
-    print_html "</small></div></td>";
+    print_html "<td>Genre:&nbsp;<br><small>";
+    print_html "<a href=javascript:genre_all()>all</a><br>";
+    print_html "<a href=javascript:genre_none()>none</a><br>";
+    print_html "<a href=javascript:hide_filter(2)>hide</a><br>";
+    print_html "</small></td>";
     print_html "<td><small>";
     my $g_rows = 5;
     if ($tag_count > $g_rows) { $g_rows = $tag_count; }
     for my $g (@genres) {
         my $gid = "G_" . uc($g);
-        print_html "<div class=filtergenre><input type=checkbox id=$gid checked=checked onclick=do_filter()>",
-                   "<span class=HOVER_ULN onclick=genre_one(\'$gid\')>$g</span>&nbsp;&nbsp;&nbsp;<br></div>";
+        print_html "<input type=checkbox id=$gid checked=checked onclick=do_filter()>",
+                   "<span class=HOVER_ULN onclick=genre_one(\'$gid\')>$g</span>&nbsp;<br>";
         $i++;
         if ($i >= $g_rows) {
             print_html "</small></td><td><small>";
@@ -1659,30 +1674,27 @@ sub page_filter
     print_html "<td id=HIDE_FILTER3>";
     print_html "<table id=RANGE_TABLE cellspacing=0 cellpadding=0>";
 
-    print_html "<tr class=rangetr><td class=newsort>Year: <td>";
-    print_html "<input type=text id=YMIN value=0 maxlength=5 size=2",
-               " onkeyup=numbersOnly(this) onchange=do_filter()> - ";
-    print_html "<input type=text id=YMAX value=$maxyear maxlength=5 size=2",
-               " onkeyup=numbersOnly(this) onchange=do_filter()></tr>";
+    my $input_number = "input type=text maxlength=5 size=4 "
+    ."onkeypress='return numbersOnly(event);' onchange='do_filter();'";
+    print_html "<tr><td>Year: <td>";
+    print_html "<$input_number id=YMIN value=$minyear> - ";
+    print_html "<$input_number id=YMAX value=$maxyear></tr>";
 
-    print_html "<tr class=rangetr><td class=newsort>Rating: <td>";
-    print_html "<input type=text id=RMIN value=0 maxlength=5 size=2",
-               " onkeyup=numbersOnly(this) onchange=do_filter()> - ";
-    print_html "<input type=text id=RMAX value=10 maxlength=5 size=2",
-               " onkeyup=numbersOnly(this) onchange=do_filter()></tr>";
+    print_html "<tr><td>Rating: <td>";
+    print_html "<$input_number id=RMIN value=0> - ";
+    print_html "<$input_number id=RMAX value=10></tr>";
 
-    print_html "<tr class=rangetr><td class=newsort>Duration: <td>";
-    print_html "<input type=text id=TMIN value=0 maxlength=5 size=2",
-               " onkeyup=numbersOnly(this) onchange=do_filter()> - ";
-    print_html "<input type=text id=TMAX value=$maxrunt maxlength=5 size=2",
-               " onkeyup=numbersOnly(this) onchange=do_filter()></tr>";
+    print_html "<tr><td>Runtime: <td>";
+    print_html "<$input_number id=TMIN value=$minrun> - ";
+    print_html "<$input_number id=TMAX value=$maxrun></tr>";
+
     print_html "<tr><td colspan=2><small>";
     #print_html " <input type=button value=Filter style='height: 1.6em' onclick=do_filter()>";
     print_html "&nbsp; <a href=javascript:hide_filter(3)>hide</a>";
     print_html "</small></tr></table></td>";
 
     print_html "</tr></table>";
-    print_html "</form>&nbsp;&nbsp;<br>";
+    print_html "</form><br>";
 
     # init filter
     print_html "<script type=\"text/javascript\">init_filter();</script>";
@@ -1698,9 +1710,9 @@ sub print_page
         page_filter;
     }
 
-    print_html '<table id="MTABLE" cellspacing="0" cellpadding="0">';
+    print_html "<table id=MTABLE cellspacing=0 cellpadding=0>";
     for my $id (sort $sort_by keys %{$pmlist}) {
-        print_html "<tr class=movieitself><td class=moviecontent>";
+        print_html "<tr><td>";
         format_movie_id($id);
         print_html "</td></tr>";
     }
@@ -1760,12 +1772,30 @@ sub print_page_miss
 sub xml_quote
 {
     my $text = shift;
-    $text =~ s/&/&amp;/g;
+    my $str = undef;
     $text =~ s/</&lt;/g;
     $text =~ s/>/&gt;/g;
     $text =~ s/'/&apos;/g;
     $text =~ s/"/&quot;/g;
-    return $text;
+    # $text =~ s/&/&amp;/g;
+    # don't re-quote &
+    for $a (split('&', $text." "))
+    {
+        if (!defined $str)
+        {
+            $str = $a;
+        }
+        else
+        {
+            if ($a =~ /^[a-z]+;/) {
+                $str = $str . "&" . $a;
+            } else {
+                $str = $str . "&amp;" . $a;
+            }
+        }
+    }
+    $str =~ s/ $//;
+    return $str;
 }
 
 sub format_movie_xml
@@ -2148,7 +2178,7 @@ sub do_search
             my $ma = $matches[$sel-1];
             print_info "Selected match:\n";
             print_info "  $sel) ", match_string($ma), "\n";
-            print_info "Getting full info .."; 
+            print_info "Getting full info ..";
             my $m = getmovie($ma->{id});
             if (!$m) {
                 print_error "Getting full info for [", $ma->{id}, "]";
@@ -2207,7 +2237,7 @@ sub interactive
     my $nmiss = count_missing;
     print_info "Directories with missing info: ",
                $nmiss, " / ", scalar @sort_dirs, "\n\n";
-    print_info "\n===== Interactive mode =====\n";
+    print_info "\n===== Interactive (debug) mode =====\n";
 
     my $dir;
     my @files;
@@ -2366,7 +2396,7 @@ sub interactive
             run_cmd($dir, $run);
 
         } elsif ($cmd =~ /^\d{7}$/) {
-            # search by ID            
+            # search by ID
             $state = $s_search;
 
         } elsif ($cmd >= 1 and $cmd <= $num_guess) {
@@ -2641,11 +2671,11 @@ Usage: perl $progbin [OPTIONS] [DIRECTORY ...]
     -V|-version             Version
     -v/q|-verbose/quiet     Verbose/Quiet output
     -c|-config <CFGFILE>    Load configuration
-    -i|-interactive         Interactive mode
+    -i|-interactive         Interactive debug mode (deprecated)
     -o|-out <FILENAME>      Output path base name
     -t|-title <TITLE>       Set Title (multiple to define groups)
     -g|-group               Group separator
-    -s|-skip <NAME>         Skip file or dir (recursive) 
+    -s|-skip <NAME>         Skip file or dir (recursive)
     -ignore <DIR>           Ignore dir with missing info (not recursive)
     -user VOTES_URL         Add user's votes from imdb user's vote history url
     -subs URL               Add subtitle search site
