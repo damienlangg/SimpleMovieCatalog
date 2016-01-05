@@ -4,7 +4,7 @@ This is a modified copy of Damine Langg's [Simple Movie Catalog](http://smovieca
 
 **Please note**: This version of SimpleMovieCatalog may be incomplete and can look ugly when downloaded, because it is old and constantly under construction and a bit outdated. This repository exists for backup purposes only.
 
-![Screenshot (SimpleMovieCatalog-fork)](https://raw.githubusercontent.com/ronilaukkarinen/SimpleMovieCatalog/master/screenshots/template-6.png "Screenshot")
+![Screenshot (SimpleMovieCatalog-fork)](https://dl.dropboxusercontent.com/u/18447700/SimpleMovieCatalog.png "Screenshot")
 
 **webapp2**-template is currently the most complete template with latest SCSS. Others are outdated, years of old and ugly CSS. In webapp themes many parts are borrowed from Letterboxd and Movli, but this is 100% for personal use and not intented to run as public.
 
