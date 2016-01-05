@@ -9,7 +9,7 @@ use HTML::TokeParser;
 use Data::Dumper;
 use HTML::Tagset ();
 
-$VERSION = '0.34';
+$VERSION = '0.35';
 $ERROR = "";
 @MATCH = ();
 $FIND_OPT = ""; # "&site=aka"
@@ -99,7 +99,7 @@ sub new_html {
     if (!$id) { $id      = _get($html, \$parser, "id", \&_id); }
     $self->{id}          = $id;
     $self->{otitle}      = _get($html, \$parser, "header", \&_header);
-    $self->{runtime}     = _get($html, \$parser, "runtime", \&_runtime);
+    $self->{runtime}     = _get($html, \$parser, "runtime", \&_runtime, \&_runtime_old);
     $self->{img}         = _get($html, \$parser, "img", \&_image);
     $self->{user_rating} = _get($html, \$parser, "rating", \&_user_rating, \&_user_rating_old);
     $self->{photos}      = _get($html, \$parser, "photos", \&_photos) || [];
@@ -397,18 +397,11 @@ sub _image {
     my $parser = shift;
     my ($tag,$image);
 
-    # old:
-    # while ($tag = $parser->get_tag('a')) {
-    # if ($tag->[1]->{name} =~ /poster/i) {
-
-    while ($tag = $parser->get_tag('td')) {
-        $tag->[1]->{id} ||= '';
-        if ($tag->[1]->{id} =~ /img_primary/i) {
+    while ($tag = $parser->get_tag('div')) {
+        $tag->[1]->{class} ||= '';
+        if ($tag->[1]->{class} =~ /poster/i) {
             $tag = $parser->get_tag('img');
             $image = $tag->[1]->{src};
-            last;
-        }
-        elsif ($tag->[1]->{title} =~ /poster not/i ) {
             last;
         }
     }
@@ -420,21 +413,13 @@ sub _image {
 }
 
 
-sub _photos_old
+sub _photos
 {
-    my $parser = shift;
-    my ($tag, @photos);
-    _jump_attr($parser, "photos", "b") or return undef;
-    while ($tag = $parser->get_tag()) {
-        last if ($tag->[0] eq "hr");
-        if ($tag->[0] eq "img" and $tag->[1]->{src}) {
-            push @photos, $tag->[1]->{src};
-        }
-    }
-    return [ @photos ];
+    # photos no longer work, return empty list
+    return [];
 }
 
-sub _photos
+sub _photos_old
 {
     my $parser = shift;
     my ($tag, @photos);
@@ -697,7 +682,7 @@ sub _storyline {
     return $plot;
 }
 
-sub _runtime_old {
+sub _runtime {
     # runtime from technical info section
     # new: h4 old: h5
     my $runstr = _get_info(shift, "runtime", "h4|h5", "/div") or return undef;
@@ -706,10 +691,10 @@ sub _runtime_old {
     return $runtime;
 }
 
-sub _runtime {
+sub _runtime_old {
     # runtime from below title ("infobar" class)
     # some movies don't have technical info, but have the runtime below title
-    # so this is preferred method now
+    # there is no longer an infobar class
     my $parser = shift;
     my $tag = _jump_class($parser, "infobar", "div") or return undef;
     my $val = $parser->get_text("/div") or return undef;

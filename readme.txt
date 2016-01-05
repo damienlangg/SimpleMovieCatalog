@@ -1,6 +1,6 @@
 
-Simple Movie Catalog 2.0.0
-Copyright (C) 2008-2015 damien.langg@gmail.com
+Simple Movie Catalog 2.0.1
+Copyright (C) 2008-2016 damien.langg@gmail.com
 
 Simple Movie Catalog will scan a given directory for movies,
 query imdb for info and generate a catalog in html which offers
