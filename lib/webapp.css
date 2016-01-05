@@ -176,7 +176,7 @@ display:block !important;
 .missing {
 position:absolute;
 top:35px;
-left:210px;
+left:15px;
 z-index:20;
 text-transform:lowercase;
 }
