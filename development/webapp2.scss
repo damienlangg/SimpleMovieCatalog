@@ -133,9 +133,9 @@ a:hover {
 }
 
 form[name="ThemeForm"] {
-  position: absolute;
-  top: 70px;
-  right: 20px;
+  position: absolute !important;
+  top: 70px !important;
+  right: 20px !important;
 }
 
 #SORT_TITLE,

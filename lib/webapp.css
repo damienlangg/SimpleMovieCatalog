@@ -202,7 +202,7 @@ padding:6px;
 width:100%;
 }
 form {
-display:none;
+/*display:none;*/
 }
 #SORT_TITLE, #SORT_RATING, #SORT_RUNTIME, #SORT_YEAR, #SORT_DIRTIME {
 font-weight:normal !important;
