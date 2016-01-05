@@ -1,6 +1,9 @@
 @import url(http://fonts.googleapis.com/css?family=Berkshire+Swash|Arimo);
 @import 'bower_components/jeet/scss/jeet/index';
 
+$container-mobile: 480px;
+$container-ipad-landscape: 1250px;
+
 .title {
   font-family: 'Berkshire Swash';
   font-size: 13px;
@@ -98,7 +101,7 @@ a:hover {
   clear: both;
   display: block;
 
-  @media (max-width: 1250px) {
+  @media (max-width: $container-ipad-landscape) {
     @include stack();
   width: 100% !important;
   }
@@ -368,4 +371,48 @@ a:visited {
   left: 183px;
   opacity: .7;
   -moz-opacity: .7;
+}
+
+
+.imdb-rating {
+  float: left;
+  width: 62px;
+  height: 17px;
+  background-image: url('imdb-rating.png');
+  background-position: 0 0;
+  display: inline-block;
+  vertical-align: top;
+  position: relative;
+  margin-right: 8px;
+  border: 0;
+  box-shadow: 0;
+  top: 2px;
+
+  @media(max-width: $container-mobile) {
+    float: left;
+    clear: both;
+    margin-top: 15px;
+  }
+
+  &:hover {
+    background-position: 0 -17px;
+
+    span {
+      color: #ffec00;
+    }
+  }
+
+  span {
+    width: 25px;
+    height: 15px;
+    line-height: 15px;
+    text-align: center;
+    color: #ffcd00;
+    float: right;
+    margin-right: 1px;
+    margin-top: 1px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
 }

@@ -1047,6 +1047,8 @@ sub html_head
     print_html "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
     print_html "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\">";
     print_html "<title>$title</title>";
+    # Favicon
+    print_html '<link rel="shortcut icon" href="favicon.ico">';
     if ($opt_js) {
         print_html "<script src=\"$jsname\" type=\"text/javascript\"></script>";
     }
@@ -1201,7 +1203,7 @@ sub format_movie
     print_html "</td></tr>";
 
     print_html '<tr class="moviedesc"><td class="plot absoluted">
-    <span class="imdb-rating"><span>', $m->user_rating, '</span></span>
+    <a href="http://www.imdb.com/title/tt', $m->id, '" class="imdb-rating"><span>', $m->user_rating, '</span></a>
     ';
     print_html $m->plot ? $m->plot : "&nbsp;?";
     #print_html "</font>";

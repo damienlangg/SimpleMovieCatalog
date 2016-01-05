@@ -2,19 +2,39 @@
 
 This is a modified copy of Damine Langg's [Simple Movie Catalog](http://smoviecat.sourceforge.net/) script by Roni Laukkarinen. White and black themes included by default from version 1.7.0 (see [Changelog here](http://sourceforge.net/p/smoviecat/news/)).
 
-**Please note**: This version of SimpleMovieCatalog may not work for you at all. It is incomplete and can look ugly when downloaded, because it is old and constantly under construction and a bit outdated. This repository exists for backup purposes only.
+**Please note**: This version of SimpleMovieCatalog may be incomplete and can look ugly when downloaded, because it is old and constantly under construction and a bit outdated. This repository exists for backup purposes only.
 
-![Screenshot (Subsonic powered by Fluid App)](https://raw.githubusercontent.com/ronilaukkarinen/SimpleMovieCatalog/master/screenshots/template-6.png "Screenshot")
+![Screenshot (SimpleMovieCatalog-fork)](https://raw.githubusercontent.com/ronilaukkarinen/SimpleMovieCatalog/master/screenshots/template-6.png "Screenshot")
 
-**webapp2**-template is currently the most complete template. Others are outdated and under constructions and I may suggest not to use them. Many parts are borrowed from Letterboxd and Movli, but this is 100% for personal use and not intented to run as public.
+**webapp2**-template is currently the most complete template with latest SCSS. Others are outdated, years of old and ugly CSS. In webapp themes many parts are borrowed from Letterboxd and Movli, but this is 100% for personal use and not intented to run as public.
 
-More Template screenshots can be  found in [Behance](https://www.behance.net/gallery/1960711/Simple-Movie-Catalog).
+More Template screenshots can be found in [Behance](https://www.behance.net/gallery/1960711/Simple-Movie-Catalog), but those are fully deprecated and never intended in production. Don't ask for them, they do not exist in working versions.
 
 ### [Official demo](http://smoviecat.sourceforge.net/demo/catalog.html)
 
+## How to use
+
+1. [Download latest version](https://github.com/ronilaukkarinen/SimpleMovieCatalog/archive/master.zip) and unpack it or git clone this repo to your home directory
+2. Fill out config.txt, like this:
+
+````
+/path/to/your/video/files
+
+-theme webapp2
+-skip sample cover folder sub
+-ext avi mkv nfo
+-matchfirst
+-origtitle
+-nosubs
+-nolink
+````
+
+3. Add bash-alias, open `~/.bashrc` and add (edit path to home and public): `alias catalog_movies='rm -rf ~/SimpleMovieCatalog/imdb_cache && perl /home/user/SimpleMovieCatalog/moviecat.pl -v -o /var/www/html/movies/index -c /home/user/SimpleMovieCatalog/config.txt && cd /var/www/html/leffat && iconv -f iso-8859-1 -t utf-8 index.html > index.html2 && rm index.html && mv index.html2 index.html'`, then reload new settings with `. ~/.bashrc`
+4. Run `catalog_movies` and browse to your webserver subdirectory. If you don't like it to be public you can just edit -o directory or or it could be a good idea to set up .htpasswd in public directory. Optionally you could add command to crontab for example to catalog movies every night.
+
 The official documentation starts below.
 
-## Simple Movie Catalog 2.0.1
+## Simple Movie Catalog 2.0.1-fork
 
 Copyright (C) 2008-2016 damien.langg@gmail.com
 
