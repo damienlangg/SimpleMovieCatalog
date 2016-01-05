@@ -1210,10 +1210,10 @@ sub format_movie
     print_html "</td></tr>";
 
     print_html '<tr class="otherplaces"><td class="some">
-    <a href="http://movies.io/m/search?utf8=%E2%9C%93&q=', $m->title, '" class="moviesio"><span>Movies.io</span></a>
-    <a href="http://www.imdb.com/title/tt', $m->id, '" class="imdb"><span>IMDb</span></a>
-    <a href="http://www.flixster.com/search/?search=', $m->title, '" class="flixster"><span>Flixster</span></a>
-    <a href="http://letterboxd.com/search/', $m->title, '" class="letterboxd"><span>Letterboxd</span></a>
+    <a target="_blank" href="http://movies.io/m/search?utf8=%E2%9C%93&q=', $m->title, '" class="moviesio"><span>Movies.io</span></a>
+    <a target="_blank" href="http://www.imdb.com/title/tt', $m->id, '" class="imdb"><span>IMDb</span></a>
+    <a target="_blank" href="http://www.flixster.com/search/?search=', $m->title, '" class="flixster"><span>Flixster</span></a>
+    <a target="_blank" href="http://letterboxd.com/search/', $m->title, '" class="letterboxd"><span>Letterboxd</span></a>
     </td></tr>
     ';
         print_html '<tr class="moviemeta"><td class="absoluted">';
