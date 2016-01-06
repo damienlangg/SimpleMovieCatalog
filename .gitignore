@@ -4,6 +4,9 @@ config.txt
 backup*/*.log
 backup*/config.txt
 *cache*
-development/node_modules
-development/*.log
-development/bower_components
+*node_modules
+*.log
+*bower_components
+*/node_modules
+*/*cache*
+*/bower_components*
