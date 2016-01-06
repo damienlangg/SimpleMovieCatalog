@@ -1148,7 +1148,7 @@ sub format_movie
         my $img_file = img_name($m->id);
         my $img_link = $image_dir ."/". $img_file;
         if ( ! -e $image_cache ."/". $img_file ) { $img_link = $m->img; }
-        print_html '<td class="poster poster_', $m->id ,'">';
+        print_html '<td rowspan="5" width="95" class="poster poster_', $m->id ,'">';
         print_html '<img src="', $img_link, '" />
 
           <div class="frame">
@@ -1165,19 +1165,19 @@ sub format_movie
 
           <div class=base-shadow></div></td>';
     } else {
-        print_html '<td class="poster noposter" align="center">'.
-            '<img src="noposter.png"><span style="display:none">?</span></td>';
+        print_html '<td rowspan="5" width="95" class="poster noposter" align="center">'.
+            '<img src="noposter.png"></td>';
     }
 
     # style=\"padding-left: 10px\"
-    print_html '<td class="title absoluted"><b>';
+    print_html '<td class="title"><b>';
     print_html "<h1><a class=\"MTITLE\" href=\"http://www.imdb.com/title/tt",
                $m->id, "\">", $m->title, "</a> <span class=\"vuosi\"> <span class=\"MYEAR\">", $m->year, "</span></span></h1>";
  #   print_html " <small><i>", $m->type, "</i></small>";
     print_html "</td></tr>";
 
     my ($runtime) = $m->runtime; #split '\|', $m->runtime;
-    print_html '<tr class="moviedesc"><td class="hidden absoluted">';
+    print_html '<tr class="moviedesc"><td class="hidden">';
     print_html "<span class=movieheadmeta><span class=rating info><b class=MRATING>", $m->user_rating, "</b>/10</span>",
             "<span class=runtime info><b class=MRUNTIME>", $runtime ? $runtime : "?" , "</b> min</span>",
             "<span class=genre info><i class=MGENRE>", join(' / ',@{$m->genres}), "</i></span></span>";
@@ -1202,7 +1202,7 @@ sub format_movie
     }
     print_html "</td></tr>";
 
-    print_html '<tr class="moviedesc"><td class="plot absoluted">
+    print_html '<tr class="moviedesc"><td class="plot">
     <a target="_blank" href="http://www.imdb.com/title/tt', $m->id, '" class="imdb-rating"><span>', $m->user_rating, '</span></a>
     ';
     print_html $m->plot ? $m->plot : "&nbsp;?";
@@ -1216,7 +1216,7 @@ sub format_movie
     <a target="_blank" href="http://letterboxd.com/search/', $m->title, '" class="letterboxd"><span>Letterboxd</span></a>
     </td></tr>
     ';
-        print_html '<tr class="moviemeta"><td class="absoluted">';
+        print_html '<tr class="moviemeta"><td>';
 
     if (@tags) {
         print_html "<span class=\"tagss\">Tags: <span class=\"MTAGS\">", join(' ', @tags), "</span><br /></span>";

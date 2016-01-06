@@ -1,0 +1,16 @@
+{
+	"name"        : "cviebrock/jquery-equalheights",
+	"description" : "Equalize heights of containers via jQuery, with additional options.",
+	"license"     : "MIT",
+	"authors": [
+		{
+			"name"  : "Colin Viebrock",
+			"email" : "colin@viebrock.ca"
+		},
+		{
+			"name" : "Rob Glazebrook",
+			"website" : "http://www.cssnewbie.com/equalheights-jquery-plugin/"
+		}
+	]
+
+}

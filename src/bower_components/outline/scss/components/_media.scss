@@ -1,0 +1,79 @@
+//---------------------------------------------//
+// Media - Outline
+// Basic styling for media & flag object
+// Docs - http://outlinecss.co.uk/get-started.html#media-objects
+//---------------------------------------------//
+
+// media object
+.media {
+  display: block;
+  margin-bottom: $spacing;
+  @extend %clearfix;
+}
+
+.media__item {
+  float: left;
+  margin: 0 $spacing $spacing 0;
+}
+
+// Reversed item - right instead of left
+.media__item--reversed {
+  float: right;
+  margin-left: $spacing;
+}
+
+.media__item img,
+.media__item--reversed img {
+  display: block;
+}
+
+.media__body {
+  overflow: hidden;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// flag object
+.flag {
+  display: table;
+  width: 100%;
+  margin-bottom: $spacing;
+}
+
+.flag__item,
+.flag__body {
+  display: table-cell;
+  vertical-align: middle;
+
+  .flag--top & {
+    vertical-align: top;
+  }
+
+  .flag--bottom & {
+    vertical-align: bottom;
+  }
+}
+
+.flag__item {
+  padding-right: $spacing;
+
+  > img {
+    display: block;
+    max-width: none;
+  }
+
+  .flag--reversed & {
+    padding-right: 0;
+    padding-left: $spacing;
+  }
+}
+
+.flag__body {
+  width: 100%;
+
+  p:last-of-type {
+    margin-bottom: 0;
+  }
+}

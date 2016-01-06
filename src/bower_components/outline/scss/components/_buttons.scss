@@ -1,0 +1,123 @@
+//---------------------------------------------//
+// Buttons - Outline
+// CSS styles for buttons
+// Docs - http://outlinecss.co.uk/get-started.html#buttons
+//---------------------------------------------//
+
+button,
+.btn,
+%btn {
+  margin-bottom: 1rem;
+  padding: .5rem 1rem;
+  display: inline-block;
+  font-family: $font-secondary;
+  font-size: inherit;
+  font-weight: normal;
+  text-align: center;
+  line-height: 1;
+  color: $btn-text-color;
+  background-color: $color-primary;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: all .3s ease-in-out;
+
+  &:hover,
+  &:focus,
+  &:active {
+    color: $btn-text-color;
+    text-decoration: none;
+    background-color: shade($color-primary, 15%);
+  }
+
+  &.btn--disabled, &[disabled] {
+    cursor: not-allowed;
+    opacity: .6;
+  }
+}
+
+.btn--secondary,
+%btn--secondary {
+  background-color: $color-secondary;
+
+  &:hover,
+  &:focus,
+  &:active {
+    background-color: shade($color-secondary, 15%);
+  }
+}
+
+.btn--tertiary,
+%btn--tertiary {
+  color: $btn-text-color-alt;
+  background-color: $color-tertiary;
+
+  &:hover,
+  &:focus,
+  &:active {
+    color: $btn-text-color-alt;
+    background-color: shade($color-tertiary, 15%);
+  }
+}
+
+.btn--grey,
+%btn--grey {
+  color: $btn-text-color-alt;
+  background-color: $color-grey-light;
+
+  &:hover,
+  &:focus,
+  &:active {
+    color: $btn-text-color-alt;
+    background-color: shade($color-grey-light, 15%);
+  }
+}
+
+.btn--small,
+%btn--small {
+  padding: .25rem .75rem;
+  font-size: .875rem;
+}
+
+.btn--large,
+%btn--large {
+  padding: .5rem 1.625rem;
+  font-size: 1.375rem;
+  line-height: normal;
+}
+
+.btn--xlarge,
+%btn--xlarge {
+  padding: .75rem 1.75rem;
+  font-size: 1.375rem;
+  line-height: normal;
+}
+
+.btn--rounded,
+%btn--rounded {
+  border-radius: .25rem;
+}
+
+.btn--pill,
+%btn--pill {
+  border-radius: 3rem;
+}
+
+.btn--ghost,
+%btn--ghost {
+  @include ghost-btn($color-primary);
+}
+
+.btn--block,
+%btn-block,
+input[type="submit"].btn-block,
+input[type="reset"].btn-block,
+input[type="button"].btn-block {
+  margin-right: 0;
+  margin-left: 0;
+  padding-right: 0;
+  padding-left: 0;
+  display: block;
+  width: 100%;
+}

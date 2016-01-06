@@ -1,0 +1,163 @@
+// white.css theme version information
+//
+// @link https://github.com/ronilaukkarinen/SimpleMovieCatalog
+// @author Roni Laukkarinen
+// @since 11.11.2010 - Release 1.6.0
+// @version 06.03.2016
+
+@import url('http://fonts.googleapis.com/css?family=Crimson+Text|Droid+Sans|Droid+Serif|Cardo');
+
+@mixin gradient($from: #dfdfdf, $to: #f8f8f8) {
+	background-color: $to;
+	background-image: -webkit-gradient(linear, to left top, to left bottom, from($from), to($to));
+	background-image: -webkit-linear-gradient(to top, $from, $to);
+	background-image: -moz-linear-gradient(to top, $from, $to);
+	background-image: -o-linear-gradient(to top, $from, $to);
+	background-image: -ms-linear-gradient(to top, $from, $to);
+	background-image: linear-gradient(to top, $from, $to);
+}
+
+#SORT_TITLE,
+#SORT_RATING,
+#SORT_RUNTIME,
+#SORT_YEAR,
+#SORT_DIRTIME {
+  font-weight: normal;
+  border: 0 !important;
+  background: none transparent !important;
+  text-decoration: none !important;
+  margin: 0 10px 0 0;
+}
+
+body {
+  background: #fff;
+  color: #777;
+  font-family: arial;
+  font-size: 12px;
+  margin: 20px;
+}
+
+a,
+a:link,
+a:visited {
+  color: #458c26;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+  font-weight: normal !important;
+  color: #0e302a;
+}
+
+#FILTER_TABLE {
+  background: #ddd;
+  color: #444;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin: 10px 0;
+
+  input {
+    margin: 2px 6px 0 0;
+  }
+}
+
+
+.movietable {
+  @include gradient(#ddd, #fff);
+  font-family: Georgia, serif;
+  font-size: 20px;
+  font-weight: normal;
+  text-transform: normal;
+  letter-spacing: normal;
+  line-height: 1.2em;
+  color: #333;
+  margin: 10px 0;
+  padding: 0 0 30px 10px;
+
+  img {
+    min-width: 214px;
+    max-width: 214px;
+    min-height: 314px;
+  }
+}
+
+.noposter {
+  span {
+    display: none;
+  }
+}
+
+.title {
+  font-family: 'Droid Sans';
+  font-weight: bolder !important;
+  color: #526075;
+  text-shadow: rgba(#9b9b9b, .5) 0 5px 6px;
+
+  h1 {
+    margin: 0;
+    padding: 0;
+    line-height: 22px;
+
+    .MYEAR {
+      font-size: 22px;
+      font-weight: normal;
+      opacity: .5;
+    }
+
+    a {
+      font-family: 'Droid Sans';
+      font-weight: bolder;
+      padding-right: 10px;
+      color: #526075;
+      text-shadow: rgba(#9b9b9b, .5) 0 5px 6px;
+      font-size: 22px;
+      line-height: 22px;
+
+      &:hover {
+        color: #777;
+        text-decoration: none;
+      }
+    }
+  }
+}
+
+.title,
+.moviedesc td,
+.otherplaces td,
+.moviemeta td {
+  padding: 0 0 0 25px;
+}
+
+.moviedesc {
+  * {
+    font-size: 13px;
+  }
+}
+
+.moviemeta {
+  font-size: 11px;
+
+  * {
+    font-size: 11px;
+  }
+}
+
+.frame,
+.imdb-rating {
+  display: none;
+}
+
+.movieheadmeta {
+  span {
+    margin-right: 10px;
+  }
+}
+
+.some {
+  a {
+    font-size: 12px;
+    margin-right: 5px;
+  }
+}

@@ -2,14 +2,19 @@
 
 This is a modified copy of Damine Langg's [Simple Movie Catalog](http://smoviecat.sourceforge.net/) script by Roni Laukkarinen.
 
-**Please note**: This version of SimpleMovieCatalog does not include old themes. Included themes are webapp and webapp2. Screenshots below.
-
 ![Screenshot of webapp (SimpleMovieCatalog-fork)](https://dl.dropboxusercontent.com/u/18447700/SimpleMovieCatalog-webapp.png "Screenshot")
 ![Screenshot of webapp2 (SimpleMovieCatalog-fork)](https://dl.dropboxusercontent.com/u/18447700/SimpleMovieCatalog.png "Screenshot")
 
-**webapp2**-template is currently the most complete template with latest SCSS. Others are outdated, years of old and ugly CSS. In webapp themes many parts are borrowed from Letterboxd and Movli, but this is 100% for personal use and not intented to run in public.
+**webapp2**-template is currently the most complete template with latest SCSS.
 
 More Template screenshots can be found in [Behance](https://www.behance.net/gallery/1960711/Simple-Movie-Catalog), but those are fully deprecated and never intended in production. Don't ask for them, they do not exist in working versions.
+
+Themes included:
+- Old
+- White
+- Black
+- Webapp
+- Webapp2
 
 ### [Official demo](http://smoviecat.sourceforge.net/demo/catalog.html)
 

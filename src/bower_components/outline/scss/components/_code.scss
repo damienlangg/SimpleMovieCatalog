@@ -1,0 +1,35 @@
+//---------------------------------------------//
+// Code - Outline
+// Basic styling for code / pre / kbd
+// Docs - http://outlinecss.co.uk/get-started.html#code
+//---------------------------------------------//
+
+code,
+kbd,
+pre,
+samp {
+  font-family: $font-monospace;
+  font-weight: normal;
+  font-size: .875rem;
+  color: $color-grey-dark;
+}
+
+pre {
+  margin: 0 0 $spacing 0;
+  padding: 1rem;
+  background-color: tint($color-grey-light, 50%);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow: auto;
+  tab-size: 2;
+}
+
+code {
+  padding: .25rem;
+  background-color: tint($color-grey-light, 50%);
+}
+
+pre code {
+  padding: 0;
+  background-color: transparent;
+}

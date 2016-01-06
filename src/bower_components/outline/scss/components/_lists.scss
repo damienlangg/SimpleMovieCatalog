@@ -1,0 +1,71 @@
+//---------------------------------------------//
+// Lists - Outline
+// Basic styling for lists
+// Docs - http://outlinecss.co.uk/get-started.html#lists
+//---------------------------------------------//
+
+ul,
+ol,
+dl,
+.list {
+  margin-bottom: $spacing;
+  margin-left: 1.75rem;
+  font-family: inherit;
+  list-style-position: outside;
+}
+
+ul ul,
+ul ol,
+ol ol,
+ol ul {
+  margin-bottom: 0;
+}
+
+ul {
+  list-style: disc;
+
+  ul {
+    list-style: square;
+
+    ul {
+      list-style: circle;
+    }
+  }
+}
+
+ol {
+  list-style: decimal;
+
+  ol {
+    list-style: upper-alpha;
+
+    ol {
+      list-style: lower-roman;
+    }
+  }
+}
+
+dl {
+  margin-left: 0;
+}
+
+dt {
+  font-weight: bold;
+  font-family: $font-secondary;
+}
+
+.list--unstyled,
+%list--unstyled {
+  margin-left: 0;
+  list-style: none;
+}
+
+.list--inline,
+%list--inline {
+  margin-left: 0;
+
+  li {
+    display: inline-block;
+    margin-right: .5rem;
+  }
+}
