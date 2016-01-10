@@ -9,7 +9,7 @@ use HTML::TokeParser;
 use Data::Dumper;
 use HTML::Tagset ();
 
-$VERSION = '0.35';
+$VERSION = '0.36';
 $ERROR = "";
 @MATCH = ();
 $FIND_OPT = ""; # "&site=aka"
@@ -100,7 +100,7 @@ sub new_html {
     $self->{id}          = $id;
     $self->{otitle}      = _get($html, \$parser, "header", \&_header);
     $self->{runtime}     = _get($html, \$parser, "runtime", \&_runtime, \&_runtime_old);
-    $self->{img}         = _get($html, \$parser, "img", \&_image);
+    $self->{img}         = _get($html, \$parser, "img", \&_image, \&_image_alt, \&_image_og);
     $self->{user_rating} = _get($html, \$parser, "rating", \&_user_rating, \&_user_rating_old);
     $self->{photos}      = _get($html, \$parser, "photos", \&_photos) || [];
     $self->{plot}        = _get($html, \$parser, "story", \&_storyline);
@@ -123,31 +123,28 @@ sub new_html {
     return bless $self, $class;
 }
 
+
 sub _get
 {
-    my ($html, $parse_r, $name, $func, $func_old) = @_;
+    my ($html, $parse_r, $name, $func, @alt_func) = @_;
     my $val = &$func($$parse_r);
     if (!defined $val) {
         # if func returns undef then rewind parser and retry
         # print "\nRETRY: $name\n";
         $$parse_r = _get_toker_html($html);
         $val = &$func($$parse_r);
-        if (!defined $val) {
-            if ($func_old) {
-                # print "OLD: $name\n";
-                $$parse_r = _get_toker_html($html);
-                $val = &$func_old($$parse_r);
-                if ($val) {
-                    # looks like old style html format
-                    $old_html = 1;
-                }
-            }
+        while ((!defined $val) && ($func = shift @alt_func)) {
+            # try alternate funcs
+            # print "\nALT: $name $func\n";
+            $$parse_r = _get_toker_html($html);
+            $val = &$func($$parse_r);
         }
         # if (!defined $val) { print "FAIL: $name\n"; }
         # print "RET: $val\n";
     }
     return $val;
 }
+
 
 sub to_string() {
     my $self = shift;
@@ -393,13 +390,13 @@ sub _header {
 }
 
 
-sub _image {
+sub _image_alt {
     my $parser = shift;
     my ($tag,$image);
 
     while ($tag = $parser->get_tag('div')) {
-        $tag->[1]->{class} ||= '';
-        if ($tag->[1]->{class} =~ /poster/i) {
+        #$tag->[1]->{class} ||= '';
+        if ($tag->[1]->{class} =~ /\bposter\b/i) {
             $tag = $parser->get_tag('img');
             $image = $tag->[1]->{src};
             last;
@@ -409,6 +406,36 @@ sub _image {
         return "";
     }
 
+    return $image;
+}
+
+sub _image {
+    my $parser = shift;
+    my ($tag,$image);
+
+    while ($tag = $parser->get_tag('td')) {
+        #$tag->[1]->{id} ||= '';
+        if ($tag->[1]->{id} =~ /img_primary/i) {
+            $tag = $parser->get_tag('img');
+            $image = $tag->[1]->{src};
+            last;
+        }
+    }
+    if ($image =~ /\/nopicture\//i) {
+        return "";
+    }
+
+    return $image;
+}
+
+# og = opengraph, appears cut on sides
+sub _image_og {
+    my $parser = shift;
+    my ($tag,$image);
+    $tag = _jump_prop($parser, "property", "og:image", "meta") or return undef;
+    $image = $tag->[1]->{content};
+    if ($image =~ /\/nopicture\//i) { return ""; }
+    #print "og:image = $image\n";
     return $image;
 }
 

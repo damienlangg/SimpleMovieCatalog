@@ -1,5 +1,9 @@
 Changelog:
 
+2016-01-11 Release 2.0.2
+ * Fixed poster images
+ * Fixed caching of guessed titles
+
 2016-01-05 Release 2.0.1
  * Fixed poster images for new imdb formatting (thanks to mmocoroa)
    It is recomended that you delete old report/images files

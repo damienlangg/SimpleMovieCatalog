@@ -10,6 +10,7 @@ rm -rf $RELDIR $ZIP
 svn export . $RELDIR
 
 rm $RELDIR/makerel.sh
+rm $RELDIR/interactive.cmd
 
 unix2dos $RELDIR/*.txt $RELDIR/doc/*.txt $RELDIR/demo/*.txt
 unix2dos $RELDIR/*.cmd $RELDIR/demo/*.cmd
