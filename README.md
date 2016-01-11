@@ -40,7 +40,7 @@ Themes included:
 
 The official documentation starts below.
 
-## Simple Movie Catalog 2.0.1-fork
+## Simple Movie Catalog 2.0.2-fork
 
 Copyright (C) 2008-2016 damien.langg@gmail.com
 
