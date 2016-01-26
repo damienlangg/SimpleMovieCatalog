@@ -1,18 +1,1 @@
-.movietable {
-background: whitesmoke;
-}
-
-.noposter {
-background: gray;
-}
-.noposter img {
-display: none;
-}
-.noposter span {
-display: inline !important; 
-}
-
-.title {
-background: lightblue;
-}
-
+.movietable{background:#f5f5f5}.noposter{background:grey}.noposter img{display:none}.noposter span{display:inline!important}.some a{margin-right:5px}.title{background:#add8e6}.title *{margin:0;font-size:16px}.moviedesc td,.moviemeta td,.otherplaces td,.title{padding-left:5px}.moviedesc *{font-size:13px}.moviemeta *{font-size:10px}.frame,.imdb-rating{display:none}.movieheadmeta span{margin-right:10px}

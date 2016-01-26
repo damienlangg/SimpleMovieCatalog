@@ -1,0 +1,64 @@
+// old.css theme version information
+//
+// @author Damien Langg
+
+.movietable {
+  background: #f5f5f5; // whitesmoke
+}
+
+.noposter {
+  background: #808080; // gray
+
+  img {
+    display: none;
+  }
+
+  span {
+    display: inline !important;
+  }
+}
+
+.some {
+  a {
+    margin-right: 5px;
+  }
+}
+
+.title {
+  background: #add8e6; // lightblue
+
+  * {
+    margin: 0;
+    font-size: 16px;
+  }
+}
+
+.title,
+.moviedesc td,
+.otherplaces td,
+.moviemeta td {
+  padding-left: 5px;
+}
+
+.moviedesc {
+  * {
+    font-size: 13px;
+  }
+}
+
+.moviemeta {
+  * {
+    font-size: 10px;
+  }
+}
+
+.frame,
+.imdb-rating {
+  display: none;
+}
+
+.movieheadmeta {
+  span {
+    margin-right: 10px;
+  }
+}

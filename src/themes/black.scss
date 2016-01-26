@@ -1,0 +1,209 @@
+// black.css theme version information
+//
+// @link https://github.com/ronilaukkarinen/SimpleMovieCatalog
+// @author Roni Laukkarinen
+// @since 11.11.2010 - Release 1.6.0
+// @version 06.03.2016
+
+@mixin gradient($from: #dfdfdf, $to: #f8f8f8) {
+	background-color: $to;
+	background-image: -webkit-gradient(linear, to left top, to left bottom, from($from), to($to));
+	background-image: -webkit-linear-gradient(to top, $from, $to);
+	background-image: -moz-linear-gradient(to top, $from, $to);
+	background-image: -o-linear-gradient(to top, $from, $to);
+	background-image: -ms-linear-gradient(to top, $from, $to);
+	background-image: linear-gradient(to top, $from, $to);
+}
+
+@import url('http://fonts.googleapis.com/css?family=Crimson+Text|Droid+Sans|Droid+Serif|Cardo');
+
+.sort-options {
+  #SORT_TITLE,
+  #SORT_RATING,
+  #SORT_RUNTIME,
+  #SORT_YEAR,
+  #SORT_DIRTIME {
+    font-weight: normal;
+    border: 0;
+    background: none transparent !important;
+    text-decoration: none !important;
+    margin: 0 10px 0 0;
+  }
+}
+
+body {
+  background: #111;
+  color: #777;
+  font-family: arial;
+  font-size: 12px;
+  padding: 15px;
+  margin: 0;
+}
+
+a,
+a:link,
+a:visited {
+  color: #a2b340;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+  font-weight: normal;
+  color: #bc8b40;
+}
+
+#FILTER_TABLE {
+  background: #191919;
+  color: #777;
+  padding: 10px;
+  border: 1px solid #222;
+  border-radius: 8px;
+  margin: 10px 0;
+
+  input {
+    margin: 2px 6px 0;
+  }
+}
+
+.movietable {
+  @include gradient(#090909, #111);
+  font-family: Georgia, serif;
+  font-size: 20px;
+  font-weight: normal;
+  text-transform: normal;
+  letter-spacing: normal;
+  line-height: 1.2em;
+  color: #666;
+  margin: 0;
+  padding: 0;
+
+  img {
+    min-width: 214px;
+    max-width: 214px;
+    min-height: 314px;
+    margin: 0 0 15px;
+  }
+}
+
+.noposter span {
+  display: none;
+}
+
+.title {
+  padding: 0;
+  margin: 0;
+
+  h1 {
+    margin: 10px 0 0;
+    padding: 0 0 0 25px;
+
+    .MYEAR {
+      font-size: 22px;
+      font-weight: normal;
+    }
+
+    a {
+      font-family: 'Droid Sans';
+      font-weight: bolder;
+      text-shadow: 0 3px 3px #000;
+      text-decoration: none;
+      color: #768520;
+      font-size: 22px;
+      line-height: 22px;
+
+      &:hover {
+        text-shadow: 0 6px 6px #000;
+        text-decoration: none;
+        color: #9fb42b;
+      }
+    }
+  }
+}
+
+// Fixes the new template
+.moviedesc td,
+.otherplaces td {
+  padding: 5px 0 0 25px;
+}
+
+.moviemeta td {
+  padding: 25px 0 0 25px;
+}
+
+.moviemeta,
+.moviemeta a {
+  font-size: 11px;
+
+  b {
+    font-size: smaller;
+  }
+}
+
+.frame {
+  display: none;
+}
+
+.imdb-rating {
+  transition: none;
+  float: left;
+  width: 62px;
+  height: 17px;
+  background-image: url('imdb-rating.png');
+  background-position: 0 0;
+  display: inline-block;
+  vertical-align: top;
+  position: relative;
+  margin-right: 8px;
+  border: 0;
+  box-shadow: 0;
+  top: 2px;
+
+  &:hover {
+    background-position: 0 -17px;
+
+    span {
+      color: #ffec00;
+    }
+  }
+
+  span {
+    width: 25px;
+    height: 15px;
+    line-height: 15px;
+    text-align: center;
+    color: #ffcd00;
+    float: right;
+    margin-right: 1px;
+    margin-top: 1px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+}
+
+.movieheadmeta {
+  span {
+    margin-right: 10px;
+
+    &.rating {
+      display: none;
+    }
+  }
+}
+
+.plot,
+.otherplaces {
+  font-size: 13px;
+
+  p,
+  a {
+    font-size: 13px;
+  }
+}
+
+.otherplaces {
+  a {
+    margin-right: 5px;
+  }
+}
