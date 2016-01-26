@@ -1,3 +1,5 @@
+                    GNU GENERAL PUBLIC LICENSE
+                       Version 3, 29 June 2007
 
 Simple Movie Catalog 1.0
 Copyright (C) 2008 damien.langg@gmail.com
@@ -19,5 +21,3 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Module IMDB_Movie.pm is covered by the license embedded at the end of the
 file.
-
-
