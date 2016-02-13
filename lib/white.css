@@ -47,39 +47,20 @@ margin:2px 6px 0 0;
 }
 .movietable {
 font-family: Georgia, serif;
-font-size: 20px;
+font-size: 12px;
 font-weight: normal;
-text-transform: normal;
 letter-spacing: normal;
 line-height: 1.2em;
 color:#333;
 margin:10px 0 10px 0;
 padding:0 0 30px 10px;
-border-bottom:10px solid #ededed;
 filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#dddddd'); /* for IE */
 background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#dddddd)); /* for webkit browsers */
 background: -moz-linear-gradient(top,  #fff,  #dddddd); /* for firefox 3.6+ */
 }
-.movietable:hover {
-border-bottom:10px solid #dcdcdc;
-}
-.movietable img {
-min-width:214px !important;
-max-width:214px !important;
-min-height:314px !important;
-}
-.poster {
-/* border:1px solid red !important; */
-/*margin:0 !important;
-padding:0 !important;*/
-}
-.noposter {
-}
-.noposter span {
-display:none;
-}
 .title {
 padding:15px 0 15px 10px;
+font-size:15px;
 font-family:"Droid Sans"; 
 font-weight:bolder !important;
 color: rgb(82,96,117);

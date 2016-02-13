@@ -69,7 +69,7 @@ font-family:'Droid Serif',Cambria, Georgia, courier new, serif;
 font-size: 17px;
 line-height: 1.4em;
 margin:30px 0 10px -9px;
-font-weight:light;
+font-weight:lighter;
 }
 .title a:hover {
 border:0 !important;
@@ -101,14 +101,10 @@ text-align: left;
 width:80%;
 padding:10px 15px 0 0;
 }
-.moviemeta {
-}
 .movietable img {
-min-width:214px !important;
-max-width:214px !important;
-min-height:314px !important;
 margin:0 14px 15px 0;
 background-image:url("posterbg.png");
+background-size:100%;
 background-repeat:no-repeat;
 padding:18px !important;
 }
