@@ -4,17 +4,20 @@ Simple Movie Catalog will scan a given directory for movies,
 query imdb for info and generate a catalog in html which offers
 sorting and grouping of found movies by different criteria.
 
-## Contents
+## Table of contents
 
 1. [Install](#install)
+    1. [Windows](#windows)
+    2. [Linux / BSD / Mac OS X](#linux--bsd--mac-os-x)
 2. [Usage](#usage)
 3. [Command Line Options](#command-line-options)
 4. [Config File](#config-file)
 5. [Interactive Mode](#interactive-mode)
 6. [The Catalog Page](#the-catalog-page)
+    1. [Tag filtering](#tag-filtering)
 7. [License](#license)
 8. [Contributing](#contributing)
-9. [Development](#development)
+    1. [Development](#development)
 
 ## Install
 
@@ -31,8 +34,6 @@ sorting and grouping of found movies by different criteria.
 1. Unpack, edit config.txt and run: `perl moviecat.pl -c config.txt`. Open report/movies.html with your favorite browser.
 
 **Note:** the packaged text files are in msdos format. Convert them to unix format with: `dos2unix *.txt doc/*.txt`
-
-
 
 ## Usage
 
