@@ -12,6 +12,9 @@ sorting and grouping of found movies by different criteria.
 4. [Config File](#config-file)
 5. [Interactive Mode](#interactive-mode)
 6. [The Catalog Page](#the-catalog-page)
+7. [License](#license)
+8. [Contributing](#contributing)
+9. [Development](#development)
 
 ## Install
 
@@ -89,7 +92,7 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
     -o|-out <FILENAME>      Output path base name
     -t|-title <TITLE>       Set Title (multiple to define groups)
     -g|-group               Group separator
-    -s|-skip <NAME>         Skip file or dir (recursive) 
+    -s|-skip <NAME>         Skip file or dir (recursive)
     -ignore <DIR>           Ignore dir with missing info (not recursive)
     -user VOTES_URL         Add user's votes from imdb user's vote history url
     -subs URL               Add subtitle search site
@@ -263,7 +266,7 @@ Genre filtering:
 The genre filtering behaves in two different ways, depending if more than half or
 less than half of the genres are selected.
 - less than half genres selected:
-  All movies that contain at least one of the selected genre is matched and shown. 
+  All movies that contain at least one of the selected genre is matched and shown.
 - more than half genres selected:
   Only movies whose all genres are selected are matched. In other words,
   movie that contains an unselected genre is not shown.
@@ -279,3 +282,16 @@ To quickly select just one genre, you can just click on the genre name.
 Covered by the GPL License.
 Read doc/license.txt and doc/gpl.txt for details.
 Copyright (C) 2008-2016 damien.langg@gmail.com
+
+## Contributing
+
+Feel free to contribute in development, if you have ideas on how to improve SimpleMovieCatalog. If you have issues, please send an issue through [issue tracker](https://github.com/damienlangg/SimpleMovieCatalog/issues).
+
+### Development
+
+1. Fork this repository
+2. `cd /path/to/SimpleMovieCatalog/src`
+3. `npm install && bower install`
+4. Edit scss in `themes/`
+5. Run `gulp styles` or set up watch
+6. Back end: edit `moviecat.pl` and `lib/IMDB_Movie.pm`
