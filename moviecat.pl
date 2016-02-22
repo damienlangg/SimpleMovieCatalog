@@ -1172,7 +1172,7 @@ sub format_movie
     # style=\"padding-left: 10px\"
     print_html '<td class="title"><b>';
     print_html "<h1><a class=\"MTITLE\" href=\"http://www.imdb.com/title/tt",
-               $m->id, "\">", $m->title, "</a> <span class=\"vuosi\"> <span class=\"MYEAR\">", $m->year, "</span></span></h1>";
+               $m->id, "\">", $m->title, "</a> <span class=\"year-label\"> <span class=\"MYEAR\">", $m->year, "</span></span></h1>";
  #   print_html " <small><i>", $m->type, "</i></small>";
     print_html "</td></tr>";
 
