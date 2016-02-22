@@ -1171,15 +1171,15 @@ sub format_movie
 
     # style=\"padding-left: 10px\"
     print_html '<td class="title"><b>';
-    print_html "<h1><a class=\"MTITLE\" href=\"http://www.imdb.com/title/tt",
+    print_html "<h1><a target=_blank class=\"MTITLE\" href=\"http://www.imdb.com/title/tt",
                $m->id, "\">", $m->title, "</a> <span class=\"year-label\"> <span class=\"MYEAR\">", $m->year, "</span></span></h1>";
- #   print_html " <small><i>", $m->type, "</i></small>";
+    print_html " <small><i>", $m->type, "</i></small>";
     print_html "</td></tr>";
 
     my ($runtime) = $m->runtime; #split '\|', $m->runtime;
     print_html '<tr class="moviedesc"><td class="hidden">';
-    print_html "<span class=movieheadmeta><span class=rating info><b class=MRATING>", $m->user_rating, "</b>/10</span>",
-            "<span class=runtime info><b class=MRUNTIME>", $runtime ? $runtime : "?" , "</b> min</span>",
+    print_html "<span class=movieheadmeta><span class=rating info>Rating: <b class=MRATING>", $m->user_rating, "</b>/10</span>",
+            "<span class=runtime info>Runtime: <b class=MRUNTIME>", $runtime ? $runtime : "?" , "</b> min</span>",
             "<span class=genre info><i class=MGENRE>", join(' / ',@{$m->genres}), "</i></span></span>";
     # user votes
     my $found_vote = 0;
@@ -1476,7 +1476,8 @@ sub page_start
     print_html '</select></form>';
 
     if (scalar @group > 1 or ($opt_js and $opt_miss)) {
-        print_html "<table class=\"missing\"><td>";
+        print_html "<table class=\"missing\">";
+        #print_html "<td valign=top>Group:<td>";
         print_html "<table cellpadding=0 cellspacing=0><tr>" if ($opt_group_table);
         for my $g (@group) {
             my $gnm = scalar keys %{$g->{mlist}};
@@ -1503,13 +1504,14 @@ sub page_start
     } else {
         my $fbase = "$base_name$gfname";
         print_html '<div class="sort-options">';
+        print_html 'Sort by: ';
         page_head_sort $fbase, $fadd, "", "Title";
         page_head_sort $fbase, $fadd, "-rating", "Rating";
         page_head_sort $fbase, $fadd, "-runtime", "Runtime";
         if ($opt_js) {
             page_head_sort $fbase, $fadd, "-year", "Year";
             print_html "<small>";
-            #page_head_sort $fbase, $fadd, "-dirtime", "DirTime";
+            page_head_sort $fbase, $fadd, "-dirtime", "DirTime";
             if (@opt_user) {
                 print_html "User Votes: ";
                 my $uid;
@@ -1637,7 +1639,7 @@ sub page_filter
     print_html "<td id=HIDE_FILTER1>";
     print_html "<table id=TAG_TABLE cellspacing=0 cellpadding=0>";
     print_html "<tr valign=top>";
-    print_html "<td><br><small>";
+    print_html "<td>Tags:&nbsp;&nbsp;<br><small>";
     print_html "<a href=javascript:tag_all()>all</a>&nbsp;&nbsp;<br>";
     print_html "<a href=javascript:hide_filter(1)>hide</a>&nbsp;&nbsp;<br>";
     print_html "</small></td>";
@@ -1672,7 +1674,9 @@ sub page_filter
     print_html "<td id=HIDE_FILTER2>";
     print_html "<table id=GENRE_TABLE cellspacing=0 cellpadding=0>";
     print_html "<tr valign=top>";
-    print_html "<td class=filtergenretd><div class=filtergenreoptions><small>";
+    print_html "<td class=filtergenretd><div class=filtergenreoptions>";
+    print_html "Genre:&nbsp;&nbsp;<br>";
+    print_html "<small>";
     print_html "<a href=javascript:genre_all()>all</a>&nbsp;&nbsp;<br>";
     print_html "<a href=javascript:genre_none()>none</a>&nbsp;&nbsp;<br>";
     print_html "<a href=javascript:hide_filter(2) style=\"padding:0 !important;\">hide</a>&nbsp;&nbsp;<br>";
