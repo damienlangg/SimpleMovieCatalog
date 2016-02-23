@@ -4,6 +4,8 @@ REQUIRED STUFF
 ==============
 */
 
+require('es6-promise').polyfill();
+
 var changed     = require('gulp-changed');
 var gulp        = require('gulp');
 var imagemin    = require('gulp-imagemin');

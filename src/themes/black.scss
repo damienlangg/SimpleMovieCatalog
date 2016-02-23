@@ -77,13 +77,13 @@ a:hover {
   color: #666;
   margin: 0;
   padding: 0;
+}
 
-  img {
-    min-width: 214px;
-    max-width: 214px;
-    min-height: 314px;
-    margin: 0 0 15px;
-  }
+.poster img {
+  min-width: 214px;
+  max-width: 214px;
+  min-height: 314px;
+  margin: 0 0 15px;
 }
 
 .noposter span {
