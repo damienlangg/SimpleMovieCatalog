@@ -190,6 +190,9 @@ Option Notes:
         %TITLE% -   Movie Title
         %YEAR%  -   Movie Year
     And a custom name can be specified like this: NAME=URL
+    If a custom name is not specified the domain name is used.
+    If an image file is present named like: link-NAME.png it will
+    be used instead of the text.
 
     Examples:
         -subs http://www.subtitlesource.org/title/tt%ID%
@@ -292,7 +295,10 @@ Feel free to contribute in development, if you have ideas on how to improve Simp
 
 1. Fork this repository
 2. `cd /path/to/SimpleMovieCatalog/src`
-3. `npm install && bower install`
-4. Edit scss in `themes/`
-5. Run `gulp styles` or set up watch
-6. Back end: edit `moviecat.pl` and `lib/IMDB_Movie.pm`
+3. `npm install`
+4. `npm install bower -g`
+5. `bower install`
+6. `npm install gulp -g`
+7. Edit scss in `themes/`
+8. Run `gulp styles` or set up watch
+9. Back end: edit `moviecat.pl` and `lib/IMDB_Movie.pm`

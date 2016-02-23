@@ -98,6 +98,9 @@ my @opt_links = (
         "Trailers=http://www.imdb.com/title/tt%ID%/trailers",
         "http://www.youtube.com/results?search_query=%TITLE%",
         "http://www.rottentomatoes.com/search/?search=%TITLE%",
+        "moviesio=http://movies.io/m/search?utf8=%E2%9C%93&q=%TITLE%",
+        "http://www.flixster.com/search/?search=%TITLE%",
+        "http://letterboxd.com/search/%TITLE%",
         # "http://www.google.com/search?q=%TITLE%",
         # "http://en.wikipedia.org/wiki/Special:Search?search=%TITLE%",
         );
@@ -155,6 +158,10 @@ $| = 1; # autoflush stdout
 
 sub print_html {
     print $F_HTML @_, "\n";
+}
+
+sub print_html_n {
+    print $F_HTML @_;
 }
 
 sub print_level {
@@ -1119,7 +1126,14 @@ sub format_links
         $url =~ s/%ID%/$id/g;
         $url =~ s/%YEAR%/$year/g;
         $url =~ s/%TITLE%/$title/g;
-        print_html "<a target=_blank class=HOVER_BOLD href=\"", $url, "\">$site</a>&nbsp;";
+        print_html_n '<a target=_blank class=HOVER_BOLD href="', $url, '">';
+        my $link_icon = lc("link-$site.png");
+        if ( -e "$prog_dir/lib/$link_icon" ) {
+            print_html_n '<img src="', $link_icon, '" alt="', $site, '" />';
+        } else {
+            print_html_n $site;
+        }
+        print_html "</a>&nbsp;";
     }
 }
 
@@ -1209,6 +1223,7 @@ sub format_movie
     #print_html "</font>";
     print_html "</td></tr>";
 
+=disabled
     print_html '<tr class="otherplaces"><td class="some">
     <a target="_blank" href="http://movies.io/m/search?utf8=%E2%9C%93&q=', $m->title, '" class="moviesio"><span>Movies.io</span></a>
     <a target="_blank" href="http://www.imdb.com/title/tt', $m->id, '" class="imdb"><span>IMDb</span></a>
@@ -1216,7 +1231,8 @@ sub format_movie
     <a target="_blank" href="http://letterboxd.com/search/', $m->title, '" class="letterboxd"><span>Letterboxd</span></a>
     </td></tr>
     ';
-        print_html '<tr class="moviemeta"><td>';
+=cut
+    print_html '<tr class="moviemeta"><td>';
 
     if (@tags) {
         print_html "<span class=\"tagss\">Tags: <span class=\"MTAGS\">", join(' ', @tags), "</span><br /></span>";
