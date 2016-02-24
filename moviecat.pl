@@ -1550,8 +1550,8 @@ sub page_start
         page_head_sort $fbase, $fadd, "-runtime", "Runtime";
         if ($opt_js) {
             page_head_sort $fbase, $fadd, "-year", "Year";
-            print_html "<small>";
             page_head_sort $fbase, $fadd, "-dirtime", "DirTime";
+            print_html "<small>";
             if (@opt_user) {
                 print_html "User Votes: ";
                 my $uid;

@@ -1,0 +1,53 @@
+@import url(links-d.css);
+#FILTER_TABLE,#MTABLE,a{transition:all .22s ease-out}
+@font-face{font-family:Arimo;font-style:normal;font-weight:400;src:local('Arimo'),url(http://fonts.gstatic.com/s/arimo/v9/BkZwJXYnumPMepfEA344yQ.ttf) format('truetype')}
+@font-face{font-family:'Berkshire Swash';font-style:normal;font-weight:400;src:local('Berkshire Swash'),local('BerkshireSwash-Regular'),url(http://fonts.gstatic.com/s/berkshireswash/v4/4RZJjVRPjYnC2939hKCAitJftMAoj96Wrc4hVDPiTSk.ttf) format('truetype')}
+.title{font-family:'Berkshire Swash';font-size:13px;font-style:normal;position:absolute;left:265px;top:0;line-height:1;margin:0 7px 0 0}
+#FILTER_HEAD,#FILTER_TABLE,#MTABLE{position:relative}
+.title .a{text-shadow:#000 0 1px 5px;color:#ccc}
+.title h1{margin:10px 0 0;padding:0}
+body{background:#14181c;color:#7b8b95;font-family:arial;padding:15px;margin:0;overflow-x:hidden}
+#MTABLE{background:url(content-bg.png) repeat-x #14181c;display:block;white-space:nowrap;clear:both!important;top:50px;padding-top:20px;margin-left:-15px;margin-right:-15px;padding-left:15px;padding-right:15px}
+#MTABLE tbody{width:100%;display:block;overflow:hidden}
+a:hover{color:#fff!important}
+.gradient{margin-top:20px}
+#FILTER_HEAD{font-family:Arimo;font-size:12px;top:10px;left:0}
+#FILTER_TABLE{top:20px;background:#1c2126;color:#7b8b95;padding:10px;border:1px solid #222;border-radius:8px;margin:10px 0;opacity:.6}
+#FILTER_TABLE input{margin:2px 6px 0 0}
+#FILTER_TABLE:hover{opacity:1}
+.missing{position:absolute;top:35px;right:10px;z-index:20;text-transform:lowercase}
+#FILTER_HEAD a:hover,.missing a:hover{color:#fff}
+#FORM_FILTER{display:inline!important;font-size:11px}
+#SORT_DIRTIME,#SORT_RATING,#SORT_RUNTIME,#SORT_TITLE,#SORT_YEAR{font-weight:400!important;border:0!important;background:0 0!important;text-decoration:none!important;margin:0 10px 0 0!important}
+.poster,.poster .frame{background-repeat:no-repeat;background-clip:padding-box}
+#STATUS{font-size:19px;font-weight:900}
+.movieitself{float:left;clear:none;text-align:inherit;width:50%;margin-left:0;margin-right:0;overflow:hidden;transition:all 1s;position:relative;font-family:Arimo,Georgia;font-size:15px;line-height:22px;color:#9ab;height:380px}
+.movieitself:after,.movieitself:before{content:'';display:table}
+.movieitself:after{clear:both}
+@media (max-width:1250px){.movieitself,.movieitself:first-child{margin-left:auto}
+.movieitself,.movieitself:last-child{margin-right:auto}
+.movieitself{display:block;float:left;width:auto;clear:none}
+.movieitself .imdb2 a{width:100%;height:100%;position:absolute;top:0;left:0}
+}
+.poster,.poster img{width:230px;border-radius:4px;display:block}
+.movietable,.poster{position:relative}
+.poster{background-image:url(posters.png);box-shadow:0 1px 3px rgba(0,0,0,.35);margin-right:10px}
+.base-shadow,.moviedesc,.moviemeta td,.plot,.poster .frame{position:absolute}
+.poster img{height:341px}
+.poster .frame{transition:all .22s ease-out;background-image:-webkit-gradient(linear,left top,right top,color-stop(.01,rgba(255,255,255,0)),color-stop(.5,rgba(255,255,255,.6)),color-stop(1,rgba(255,255,255,0)));background-image:-moz-linear-gradient(left center,rgba(255,255,255,0) 1%,#fff 50%,rgba(255,255,255,0) 100%);background-size:100% 1px;border-radius:4px;box-shadow:0 0 2px #def inset;display:block;height:100%;left:0;overflow:hidden;text-indent:-999em;top:0;width:100%;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0;outline:0;padding:0;vertical-align:baseline}
+.poster .frame:hover{box-shadow:inset 0 0 5px #fff}
+.base-shadow{background:url(base-shadow.png) 3px -13px no-repeat!important;height:20px;top:344px;width:230px}
+a,a:link,a:visited{color:#aaa;text-decoration:none}
+.moviedesc{top:60px;left:265px;white-space:normal;width:290px}
+.year-label{color:#9ab;border-bottom:1px solid #456;font-weight:lighter;font-size:16px;font-family:tahoma;margin:0 0 0 15px}
+.moviemeta td{left:240px;top:230px;font-size:smaller;background:rgba(0,0,0,.2);border-radius:4px;padding:10px!important;margin:19px 0 0 25px;display:block;width:413px;overflow:hidden;max-height:73px;word-wrap:break-word}
+.rating,.runtime,.tagss{display:none}
+.MGENRE,.imdb-rating{display:inline-block}
+.MGENRE{color:#9ab;background:#242d35;border:1px solid #333b42;white-space:nowrap;border-radius:4px;padding:2px 5px;font-size:12px;font-style:normal}
+.plot{height:110px!important;overflow:hidden!important;top:45px;width:370px!important}
+.imdb-rating{transition:none;float:left;width:62px;height:17px;background-image:url(imdb-rating.png);background-position:0 0;vertical-align:top;position:relative;margin-right:8px;border:0;box-shadow:0;top:2px}
+@media (max-width:480px){.imdb-rating{float:left;clear:both;margin-top:15px}
+}
+.imdb-rating:hover{background-position:0 -17px}
+.imdb-rating:hover span{color:#ffec00}
+.imdb-rating span{width:25px;height:15px;line-height:15px;text-align:center;color:#ffcd00;float:right;margin-right:1px;margin-top:1px;font-size:11px;font-weight:700;text-transform:uppercase}
