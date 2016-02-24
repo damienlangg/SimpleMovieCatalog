@@ -35,7 +35,7 @@ body {
   background: #fff;
   color: #777;
   font-family: arial;
-  font-size: 12px;
+  font-size: 20px;
   margin: 20px;
 }
 
@@ -127,23 +127,12 @@ a:hover {
 
 .title,
 .moviedesc td,
-.otherplaces td,
 .moviemeta td {
   padding: 0 0 0 25px;
 }
 
-.moviedesc {
-  * {
-    font-size: 13px;
-  }
-}
-
-.moviemeta {
-  font-size: 11px;
-
-  * {
-    font-size: 11px;
-  }
+.moviemeta td {
+  font-size: smaller;
 }
 
 .frame,
@@ -157,9 +146,3 @@ a:hover {
   }
 }
 
-.some {
-  a {
-    font-size: 12px;
-    margin-right: 5px;
-  }
-}

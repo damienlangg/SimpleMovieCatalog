@@ -1,5 +1,5 @@
-#FILTER_TABLE,.info,a{transition:all .22s ease-out}
 .imdb2 a,.info,.movieitself,.moviemeta td,.poster .frame{overflow:hidden}
+#FILTER_TABLE,.info,a{transition:all .22s ease-out}
 @font-face{font-family:Arimo;font-style:normal;font-weight:400;src:local('Arimo'),url(http://fonts.gstatic.com/s/arimo/v9/BkZwJXYnumPMepfEA344yQ.ttf) format('truetype')}
 @font-face{font-family:'Berkshire Swash';font-style:normal;font-weight:400;src:local('Berkshire Swash'),local('BerkshireSwash-Regular'),url(http://fonts.gstatic.com/s/berkshireswash/v4/4RZJjVRPjYnC2939hKCAitJftMAoj96Wrc4hVDPiTSk.ttf) format('truetype')}
 @font-face{font-family:'Cantata One';font-style:normal;font-weight:400;src:local('Cantata One'),local('CantataOne-Regular'),url(http://fonts.gstatic.com/s/cantataone/v5/Ur66QXTDfN1RjqAm41DRZZ0EAVxt0G0biEntp43Qt6E.ttf) format('truetype')}
@@ -13,8 +13,8 @@
 .titletitle{font-weight:bolder}
 .loc{white-space:nowrap;font-size:10px!important;color:#567!important}
 .info{opacity:0;width:131px;height:191px;background:#89a;padding:0 1px;box-shadow:inset 0 1px 0 #cbd2d9,0 5px 20px #000;border-radius:4px;z-index:2000;margin:0}
-.info span{color:#345;text-shadow:rgba(255,255,255,.35) 0 1px 0;display:block;padding:6px;text-align:center;border-bottom:1px solid #778899;border-top:1px solid #9ab;font-size:12px!important;font-family:'lucida grande','lucida sans unicode',sans-serif;position:relative;z-index:200}
-.moviedesc,.moviemeta,.otherplaces,.some,.title{display:none}
+.info span{color:#345;text-shadow:rgba(255,255,255,.35) 0 1px 0;display:block;padding:5px;text-align:center;border-bottom:1px solid #778899;border-top:1px solid #9ab;font-size:12px!important;font-family:'lucida grande','lucida sans unicode',sans-serif;position:relative;z-index:200}
+.moviedesc,.moviemeta,.title{display:none}
 #FILTER_HEAD,#FORM_FILTER,#MTABLE,#RANGE_TABLE a{display:block!important}
 .title,.title a{text-shadow:#000 0 1px 5px!important}
 body{background:#14181c;color:#7b8b95;font-family:arial;padding:0;margin:0;overflow-x:hidden}
@@ -37,7 +37,6 @@ small{font-size:11px!important;font-family:'lucida grande','lucida sans unicode'
 #GENRE_TABLE,#GENRE_TABLE small{font-size:11px!important}
 .filtergenreoptions,.filtergenreoptions a,.filtergenretd{white-space:nowrap!important}
 #GENRE_TABLE .filtergenreoptions a{float:left!important;margin:0;padding:0 4px 0 0}
-.gradient{margin-top:20px}
 #FILTER_HEAD{right:0;top:0;margin:6px 20px 0 0;font-size:12px;left:200px}
 #FILTER_HEAD a{margin:0 -10px 0 0;padding:0}
 .missing{position:absolute;top:35px;left:15px;z-index:20;text-transform:lowercase}
@@ -71,6 +70,3 @@ a,a:link,a:visited{color:#9ab;text-decoration:none}
 .rating,.runtime,.tagss{display:none}
 .MGENRE{color:#9ab;background:#242d35;display:inline-block;border:1px solid #333b42;white-space:nowrap;border-radius:4px;padding:2px 5px;font-size:12px}
 .plot{height:110px!important;overflow:hidden!important;position:absolute;top:45px;width:370px!important}
-.some{position:absolute;left:265px;top:235px}
-.some a span{display:none}
-.some a:hover{opacity:1}

@@ -2,10 +2,9 @@
 .noposter{background:grey}
 .noposter img{display:none}
 .noposter span{display:inline!important}
-.some a{margin-right:5px}
 .title{background:#add8e6}
 .title *{margin:0;font-size:16px}
-.moviedesc td,.moviemeta td,.otherplaces td,.title{padding-left:5px}
+.moviedesc td,.moviemeta td,.title{padding-left:5px}
 .moviedesc *{font-size:13px}
 .moviemeta *{font-size:10px}
 .frame,.imdb-rating{display:none}

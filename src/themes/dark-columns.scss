@@ -8,6 +8,16 @@
 
 @import 'bower_components/jeet/scss/jeet/index';
 
+@mixin gradient($from: #dfdfdf, $to: #f8f8f8) {
+	background-color: $to;
+	background-image: -webkit-gradient(linear, to left top, to left bottom, from($from), to($to));
+	background-image: -webkit-linear-gradient(to top, $from, $to);
+	background-image: -moz-linear-gradient(to top, $from, $to);
+	background-image: -o-linear-gradient(to top, $from, $to);
+	background-image: -ms-linear-gradient(to top, $from, $to);
+	background-image: linear-gradient(to top, $from, $to);
+}
+
 $container-mobile: 480px;
 $container-ipad-landscape: 1250px;
 
@@ -42,7 +52,7 @@ body {
 }
 
 #MTABLE {
-  background: url('content-bg.png') repeat-x scroll 0 0 #14181c;
+  //background: url('content-bg.png') repeat-x scroll 0 0 #14181c;
   display: block;
   white-space: nowrap;
   transition: all .22s ease-out;
@@ -68,11 +78,6 @@ a {
 
 a:hover {
   color: #fff !important;
-}
-
-// HEAD / FILTER TABLE
-.gradient {
-  margin-top: 20px;
 }
 
 #FILTER_HEAD {
@@ -142,6 +147,7 @@ a:hover {
 // MAIN / POSTERS
 .movieitself {
   @include span(1/2);
+  @include gradient(#14181c, #20262e);
   overflow: hidden;
   transition: all 1s;
   position: relative;

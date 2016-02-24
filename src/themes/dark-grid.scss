@@ -54,7 +54,7 @@
     color: #345;
     text-shadow: rgba(#fff, .35) 0 1px 0;
     display: block;
-    padding: 6px;
+    padding: 5px;
     text-align: center;
     border-bottom: 1px solid lightSlateGray;
     border-top: 1px solid #9ab;
@@ -67,8 +67,6 @@
 
 .moviedesc,
 .title,
-.otherplaces,
-.some,
 .moviemeta {
   display: none;
 }
@@ -207,10 +205,6 @@ small {
   float: left !important;
   margin: 0;
   padding: 0 4px 0 0;
-}
-
-.gradient {
-  margin-top: 20px;
 }
 
 #FILTER_HEAD {
@@ -468,19 +462,5 @@ a:visited {
   position: absolute;
   top: 45px;
   width: 370px !important;
-}
-
-.some {
-  position: absolute;
-  left: 265px;
-  top: 235px;
-
-  a span {
-    display: none;
-  }
-
-  a:hover {
-    opacity: 1;
-  }
 }
 

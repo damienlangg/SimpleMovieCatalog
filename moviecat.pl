@@ -1179,7 +1179,7 @@ sub format_movie
     #print_debug "LOC: ", join ("\n+++", @location), "\n";
 
     print_html "<table width=100% cellspacing=0 class=movietable>";
-        # border=1 frame=border rules=all
+    # border=1 frame=border rules=all
 
     print_html '<tr class="movietr">';
     if ($m->img) {
@@ -1187,27 +1187,21 @@ sub format_movie
         my $img_link = $image_dir ."/". $img_file;
         if ( ! -e $image_cache ."/". $img_file ) { $img_link = $m->img; }
         print_html '<td rowspan="5" width="95" class="poster poster_', $m->id ,'">';
-        print_html '<img src="', $img_link, '" />
-
-          <div class="frame">
-            <div class="info">
-              <span class=titletitle>', $m->title ,'</span><span class=titleyear>', $m->year, '</span>';
-              my ($runtime) = $m->runtime;
-              my $nloc = scalar @location;
-
-              print_html '<span class="titleruntime">', $runtime ? $runtime : "?" ,' min</span>
-              <span class="loc">', @location ,'</span>
-              <span class="imdb2"><a href="http://www.imdb.com/title/tt', $m->id, '" target="_blank">imdb</a></span>
-            </div>
-          </div>
-
-          <div class=base-shadow></div></td>';
+        print_html '<img src="', $img_link, '" />';
     } else {
-        print_html '<td rowspan="5" width="95" class="poster noposter" align="center">'.
-            '<img src="noposter.png"></td>';
+        print_html '<td rowspan="5" width="95" class="poster noposter">';
+        print_html '<img src="noposter.png">';
     }
+    # grid layout hover info
+    print_html '<div class="frame"><div class="info">';
+    print_html '<span class=titletitle>', $m->title ,'</span><span class=titleyear>', $m->year, '</span>';
+    print_html '<span class="loc"><b>', $m->user_rating, '</b> / 10</span>';
+    print_html '<span class="titleruntime">', $m->runtime ? $m->runtime : "?" ,' min</span>';
+    print_html '<span class="imdb2"><a href="http://www.imdb.com/title/tt', $m->id, '" target="_blank">imdb</a></span>';
+    print_html '</div></div>';
+    print_html '<div class=base-shadow></div></td>';
 
-    # style=\"padding-left: 10px\"
+    # standard layout
     print_html '<td class="title"><b>';
     print_html "<h1><a target=_blank class=\"MTITLE\" href=\"http://www.imdb.com/title/tt",
                $m->id, "\">", $m->title, "</a> <span class=\"year-label\"> <span class=\"MYEAR\">", $m->year, "</span></span></h1>";
@@ -1244,18 +1238,8 @@ sub format_movie
     <a target="_blank" href="http://www.imdb.com/title/tt', $m->id, '" class="imdb-rating"><span>', $m->user_rating, '</span></a>
     ';
     print_html $m->plot ? $m->plot : "&nbsp;?";
-    #print_html "</font>";
     print_html "</td></tr>";
 
-=disabled
-    print_html '<tr class="otherplaces"><td class="some">
-    <a target="_blank" href="http://movies.io/m/search?utf8=%E2%9C%93&q=', $m->title, '" class="moviesio"><span>Movies.io</span></a>
-    <a target="_blank" href="http://www.imdb.com/title/tt', $m->id, '" class="imdb"><span>IMDb</span></a>
-    <a target="_blank" href="http://www.flixster.com/search/?search=', $m->title, '" class="flixster"><span>Flixster</span></a>
-    <a target="_blank" href="http://letterboxd.com/search/', $m->title, '" class="letterboxd"><span>Letterboxd</span></a>
-    </td></tr>
-    ';
-=cut
     print_html '<tr class="moviemeta"><td>';
 
     if (@tags) {
@@ -1954,6 +1938,8 @@ sub print_report
         for my $f (glob "$prog_dir/lib/*.png") {
             copy_lib basename($f);
         }
+        # favicon
+        copy_lib "favicon.ico";
         # links css
         create_links_css();
         create_links_css("-d"); # "dark" variant
