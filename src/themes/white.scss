@@ -5,6 +5,8 @@
 // @since 11.11.2010 - Release 1.6.0
 // @version 06.03.2016
 
+@import url('links.css');
+
 @import url('http://fonts.googleapis.com/css?family=Crimson+Text|Droid+Sans|Droid+Serif|Cardo');
 
 @mixin gradient($from: #dfdfdf, $to: #f8f8f8) {

@@ -1,4 +1,4 @@
-#FILTER_TABLE:hover,.some a:hover{opacity:1}
+@import url(links-d.css);
 @font-face{font-family:Arimo;font-style:normal;font-weight:400;src:local('Arimo'),url(http://fonts.gstatic.com/s/arimo/v9/BkZwJXYnumPMepfEA344yQ.ttf) format('truetype')}
 @font-face{font-family:'Berkshire Swash';font-style:normal;font-weight:400;src:local('Berkshire Swash'),local('BerkshireSwash-Regular'),url(http://fonts.gstatic.com/s/berkshireswash/v4/4RZJjVRPjYnC2939hKCAitJftMAoj96Wrc4hVDPiTSk.ttf) format('truetype')}
 .title{font-family:'Berkshire Swash';font-size:13px;font-style:normal;position:absolute;left:265px;top:0;line-height:1;margin:0 7px 0 0}
@@ -14,6 +14,7 @@ a:hover{color:#fff!important}
 #FILTER_HEAD{font-family:Arimo;font-size:12px;top:10px;left:0}
 #FILTER_TABLE{top:20px;transition:all .22s ease-out;background:#1c2126;color:#7b8b95;padding:10px;border:1px solid #222;border-radius:8px;margin:10px 0;opacity:.6}
 #FILTER_TABLE input{margin:2px 6px 0 0}
+#FILTER_TABLE:hover{opacity:1}
 #FILTER_HEAD,#FORM_FILTER{float:left;text-align:inherit;width:48.5%;margin-left:0;margin-right:3%;clear:both;display:block}
 #FILTER_HEAD:after,#FILTER_HEAD:before,#FORM_FILTER:after,#FORM_FILTER:before{content:'';display:table}
 #FILTER_HEAD:after,#FORM_FILTER:after{clear:both}
@@ -41,7 +42,7 @@ form[name=ThemeForm]{position:absolute!important;top:70px!important;right:20px!i
 .poster,.poster img{width:230px;border-radius:4px;display:block}
 .movietable,.poster{position:relative}
 .poster{background-image:url(posters.png);box-shadow:0 1px 3px rgba(0,0,0,.35);margin-right:10px}
-.base-shadow,.moviedesc,.moviemeta td,.plot,.poster .frame,.some{position:absolute}
+.base-shadow,.moviedesc,.moviemeta td,.plot,.poster .frame{position:absolute}
 .poster img{height:341px}
 .poster .frame{transition:all .22s ease-out;background-image:-webkit-gradient(linear,left top,right top,color-stop(.01,rgba(255,255,255,0)),color-stop(.5,rgba(255,255,255,.6)),color-stop(1,rgba(255,255,255,0)));background-image:-moz-linear-gradient(left center,rgba(255,255,255,0) 1%,#fff 50%,rgba(255,255,255,0) 100%);background-size:100% 1px;border-radius:4px;box-shadow:0 0 2px #def inset;display:block;height:100%;left:0;overflow:hidden;text-indent:-999em;top:0;width:100%;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0;outline:0;padding:0;vertical-align:baseline}
 .poster .frame:hover{box-shadow:inset 0 0 5px #fff}
@@ -49,18 +50,12 @@ form[name=ThemeForm]{position:absolute!important;top:70px!important;right:20px!i
 a,a:link,a:visited{color:#aaa;text-decoration:none}
 .moviedesc{top:60px;left:265px;white-space:normal;width:290px}
 .year-label{color:#9ab;border-bottom:1px solid #456;font-weight:lighter;font-size:16px;font-family:tahoma;margin:0 0 0 15px}
-.moviemeta td{left:240px;top:270px;font-size:smaller;background:rgba(0,0,0,.2);border-radius:4px;padding:10px!important;margin:19px 0 0 25px;display:block;width:375px;overflow:hidden;max-height:57px;word-wrap:break-word}
+.moviemeta td{left:240px;top:230px;font-size:smaller;background:rgba(0,0,0,.2);border-radius:4px;padding:10px!important;margin:19px 0 0 25px;display:block;width:413px;overflow:hidden;max-height:73px;word-wrap:break-word}
 .rating,.runtime,.tagss{display:none}
-.MGENRE{color:#9ab;background:#242d35;display:inline-block;border:1px solid #333b42;white-space:nowrap;border-radius:4px;padding:2px 5px;font-size:12px;font-style:normal}
+.MGENRE,.imdb-rating{display:inline-block}
+.MGENRE{color:#9ab;background:#242d35;border:1px solid #333b42;white-space:nowrap;border-radius:4px;padding:2px 5px;font-size:12px;font-style:normal}
 .plot{height:110px!important;overflow:hidden!important;top:45px;width:370px!important}
-.some{left:265px;top:235px}
-.imdb,.moviesio{opacity:.4;height:41px;position:absolute}
-.some a span{display:none}
-.moviesio{background:url(moviesio.png) no-repeat;width:40px;-moz-opacity:.4}
-.imdb{background:url(imdb.png) 0 1px no-repeat;width:70px;left:39px;-moz-opacity:.4}
-.flixster{background:url(flixster.png) 0 -3px no-repeat;width:80px;height:41px;position:absolute;left:95px;opacity:.4;-moz-opacity:.4}
-.letterboxd{background:url(letterboxd.png) 0 -2px no-repeat;width:150px;height:41px;position:absolute;left:183px;opacity:.7;-moz-opacity:.7}
-.imdb-rating{transition:none;float:left;width:62px;height:17px;background-image:url(imdb-rating.png);background-position:0 0;display:inline-block;vertical-align:top;position:relative;margin-right:8px;border:0;box-shadow:0;top:2px}
+.imdb-rating{transition:none;float:left;width:62px;height:17px;background-image:url(imdb-rating.png);background-position:0 0;vertical-align:top;position:relative;margin-right:8px;border:0;box-shadow:0;top:2px}
 @media (max-width:480px){.imdb-rating{float:left;clear:both;margin-top:15px}
 }
 .imdb-rating:hover{background-position:0 -17px}

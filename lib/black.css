@@ -1,3 +1,4 @@
+@import url(links.css);
 .frame,.noposter span{display:none}
 @font-face{font-family:Cardo;font-style:normal;font-weight:400;src:local('Cardo'),local('Cardo-Regular'),url(http://fonts.gstatic.com/s/cardo/v8/vjI-nu0OQ4awNWMtISxB9w.ttf) format('truetype')}
 @font-face{font-family:'Crimson Text';font-style:normal;font-weight:400;src:local('Crimson Text'),local('CrimsonText-Roman'),url(http://fonts.gstatic.com/s/crimsontext/v6/3IFMwfRa07i-auYR-B-zNYnF5uFdDttMLvmWuJdhhgs.ttf) format('truetype')}

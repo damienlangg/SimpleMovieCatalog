@@ -5,6 +5,8 @@
 // @since 11.11.2010 - Release 1.6.0
 // @version 06.03.2016
 
+@import url('links.css');
+
 @mixin gradient($from: #dfdfdf, $to: #f8f8f8) {
 	background-color: $to;
 	background-image: -webkit-gradient(linear, to left top, to left bottom, from($from), to($to));

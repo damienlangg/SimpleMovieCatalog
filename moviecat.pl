@@ -98,7 +98,7 @@ my @opt_links = (
         "Trailers=http://www.imdb.com/title/tt%ID%/trailers",
         "http://www.youtube.com/results?search_query=%TITLE%",
         "http://www.rottentomatoes.com/search/?search=%TITLE%",
-        "moviesio=http://movies.io/m/search?utf8=%E2%9C%93&q=%TITLE%",
+        "movies.io=http://movies.io/m/search?utf8=%E2%9C%93&q=%TITLE%",
         "http://www.flixster.com/search/?search=%TITLE%",
         "http://letterboxd.com/search/%TITLE%",
         # "http://www.google.com/search?q=%TITLE%",
@@ -1102,6 +1102,27 @@ sub format_html_path
     return "<a target=_blank href=\"file://$dir\">$link</a>";
 }
 
+sub parse_opt_link
+{
+    my ($strip_tld, $link) = @_;
+    my ($site, $csite, $url);
+    $site = $link;
+    $url = $link;
+    if ($link =~ /^(.+)=(https?:\/\/.+$)/) {
+        $site = $1;
+        $url = $2;
+    } elsif ($link =~ /^https?:\/\/(www\.)?([^\/]+)/) {
+        $site = $2;
+        if ($strip_tld) {
+            $site =~ s/^(.*\.)?([^.]+)\.[^.]+$/\2/;
+            $site = ucfirst($site);
+        }
+    }
+    $csite = lc($site);
+    $csite =~ s/[^-a-zA-Z0-9_]/-/g; # replace invalid class chars
+    return ($site, $csite, $url);
+}
+
 sub format_links
 {
     my ($m, $strip_tld, @links) = @_;
@@ -1111,30 +1132,33 @@ sub format_links
     $title =~ s/ /+/g;
     $title = xml_quote($title);
     for my $link (@links) {
-        my $site = $link;
-        my $url = $link;
-        if ($link =~ /^(.+)=(https?:\/\/.+$)/) {
-            $site = $1;
-            $url = $2;
-        } elsif ($link =~ /^https?:\/\/(www\.)?([^\/]+)/) {
-            $site = $2;
-            if ($strip_tld) {
-                $site =~ s/^(.*\.)?([^.]+)\.[^.]+$/\2/;
-                $site = ucfirst($site);
-            }
-        }
+        my ($site, $csite, $url) = parse_opt_link($strip_tld, $link);
         $url =~ s/%ID%/$id/g;
         $url =~ s/%YEAR%/$year/g;
         $url =~ s/%TITLE%/$title/g;
         print_html_n '<a target=_blank class=HOVER_BOLD href="', $url, '">';
-        my $link_icon = lc("link-$site.png");
-        if ( -e "$prog_dir/lib/$link_icon" ) {
-            print_html_n '<img src="', $link_icon, '" alt="', $site, '" />';
-        } else {
-            print_html_n $site;
-        }
+        # link css image placeholder
+        print_html_n "<span class=ln-tx-$csite>$site</span>";
+        print_html_n "<span class=ln-im-$csite title=$site></span>";
         print_html "</a>&nbsp;";
     }
+}
+
+sub create_links_css
+{
+    my $mod = shift;
+    my $fname = $base_dir . "links$mod.css";
+    print_note "Writing $fname\n";
+    open $F_HTML, ">", $fname  or  abort "Can't write $fname $!";
+    for my $link (@opt_links) {
+        my ($site, $csite, $url) = parse_opt_link(1, $link);
+        my $link_icon = lc("link$mod-$csite.png");
+        if ( -e "$prog_dir/lib/$link_icon" ) {
+            print_html ".ln-tx-".$csite."{display:none;}";
+            print_html ".ln-im-".$csite.":after{content:url('$link_icon');}";
+        }
+    }
+    close $F_HTML;
 }
 
 sub format_movie_id
@@ -1930,6 +1954,9 @@ sub print_report
         for my $f (glob "$prog_dir/lib/*.png") {
             copy_lib basename($f);
         }
+        # links css
+        create_links_css();
+        create_links_css("-d"); # "dark" variant
         # *.css
         my $theme_found = 0;
         for my $tfile (glob "$prog_dir/lib/*.css") {

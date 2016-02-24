@@ -1,4 +1,7 @@
+@import url('links-d.css');
+
 @import url(http://fonts.googleapis.com/css?family=Berkshire+Swash|Arimo);
+
 @import 'bower_components/jeet/scss/jeet/index';
 
 $container-mobile: 480px;
@@ -278,16 +281,16 @@ a:visited {
 .moviemeta td {
   position: absolute;
   left: 240px;
-  top: 270px;
+  top: 230px;
   font-size: smaller;
   background: rgba(#000, .2);
   border-radius: 4px;
   padding: 10px !important;
   margin: 19px 0 0 25px;
   display: block;
-  width: 375px;
+  width: 413px;
   overflow: hidden;
-  max-height: 57px;
+  max-height: 73px;
   word-wrap: break-word;
 }
 
@@ -319,6 +322,10 @@ a:visited {
   top: 45px;
   width: 370px !important;
 }
+
+/*
+
+// old approach now links are handled in a generic way
 
 .some {
   position: absolute;
@@ -375,6 +382,7 @@ a:visited {
   opacity: .7;
   -moz-opacity: .7;
 }
+*/
 
 .imdb-rating {
   transition: none;
