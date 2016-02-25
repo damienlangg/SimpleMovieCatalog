@@ -275,7 +275,7 @@ less than half of the genres are selected.
   Only movies whose all genres are selected are matched. In other words,
   movie that contains an unselected genre is not shown.
 Example:
-- Only "Comdey" is selected: all movies that contain comedy are shown.
+- Only "Comedy" is selected: all movies that contain comedy are shown.
 - Everything but "Comedy" selected: all movies except those that
   contain comedy are shown.
 
