@@ -74,8 +74,8 @@ gulp.task('styles', function() {
 
   gulp.src(
     [
-      'themes/webapp2.scss',
-      'themes/webapp.scss',
+//      'themes/webapp2.scss',
+//      'themes/webapp.scss',
       'themes/dark-columns.scss',
       'themes/dark-grid.scss',
       'themes/black.scss',
