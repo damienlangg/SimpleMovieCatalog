@@ -1,0 +1,6 @@
+{
+  "name": "SimpleMovieCatalog",
+  "dependencies": {
+    "jeet": "*"
+  }
+}

@@ -1,0 +1,12 @@
+*.log
+*DS_Store*
+config.txt
+backup*/*.log
+backup*/config.txt
+*cache*
+*node_modules
+*.log
+*bower_components
+*/node_modules
+*/*cache*
+*/bower_components*

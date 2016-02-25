@@ -1,0 +1,340 @@
+//
+// dark-columns theme based on webapp2 theme from Roni Laukkarinen
+//
+
+@import url('links-d.css');
+
+@import url(http://fonts.googleapis.com/css?family=Berkshire+Swash|Arimo);
+
+@import 'bower_components/jeet/scss/jeet/index';
+
+@mixin gradient($from: #dfdfdf, $to: #f8f8f8) {
+	background-color: $to;
+	background-image: -webkit-gradient(linear, to left top, to left bottom, from($from), to($to));
+	background-image: -webkit-linear-gradient(to top, $from, $to);
+	background-image: -moz-linear-gradient(to top, $from, $to);
+	background-image: -o-linear-gradient(to top, $from, $to);
+	background-image: -ms-linear-gradient(to top, $from, $to);
+	background-image: linear-gradient(to top, $from, $to);
+}
+
+$container-mobile: 480px;
+$container-ipad-landscape: 1250px;
+
+.title {
+  font-family: 'Berkshire Swash';
+  font-size: 13px;
+  font-style: normal;
+  position: absolute;
+  left: 265px;
+  top: 0;
+  line-height: 1;
+  margin: 0 7px 0 0;
+
+  .a {
+    text-shadow: #000 0 1px 5px;
+    color: #ccc;
+  }
+
+  h1 {
+    margin: 10px 0 0;
+    padding: 0;
+  }
+}
+
+body {
+  background: #14181c;
+  color: #7b8b95;
+  font-family: arial;
+  padding: 15px;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+#MTABLE {
+  //background: url('content-bg.png') repeat-x scroll 0 0 #14181c;
+  display: block;
+  white-space: nowrap;
+  transition: all .22s ease-out;
+  clear: both !important;
+  position: relative;
+  padding-top: 20px;
+  margin-left: -15px;
+  margin-right: -15px;
+  padding-left: 15px;
+  padding-right: 15px;
+
+  tbody {
+    width: 100%;
+    display: block;
+    overflow: hidden;
+  }
+}
+
+a {
+  transition: all .22s ease-out;
+}
+
+a:hover {
+  color: #fff !important;
+}
+
+#FILTER_HEAD {
+  font-family: Arimo;
+  position: relative;
+  font-size: 12px;
+  top: 10px;
+  left: 0;
+}
+
+#FILTER_TABLE {
+  position: relative;
+  top: 20px;
+  transition: all .22s ease-out;
+  background: #1c2126;
+  color: #7b8b95;
+  padding: 10px;
+  border: 1px solid #222;
+  border-radius: 8px;
+  margin: 10px 0;
+  opacity: .6;
+
+  input {
+    margin: 2px 6px 0 0;
+  }
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+#FILTER_HEAD a:hover {
+  color: #fff;
+}
+
+#FORM_FILTER {
+  display: inline !important;
+  font-size: 11px;
+}
+
+#SORT_TITLE,
+#SORT_RATING,
+#SORT_RUNTIME,
+#SORT_YEAR,
+#SORT_DIRTIME {
+  font-weight: normal !important;
+  border: 0 !important;
+  background: none !important;
+  text-decoration: none !important;
+  margin: 0 10px 0 0 !important;
+}
+
+#STATUS {
+  font-size: 19px;
+  font-weight: 900;
+}
+
+// MAIN / POSTERS
+.movieitself {
+  @include span(1/2);
+  @include gradient(#14181c, #20262e);
+  overflow: hidden;
+  transition: all 1s;
+  position: relative;
+  font-family: Arimo, Georgia;
+  font-size: 15px;
+  line-height: 22px;
+  color: #9ab;
+  height: 380px;
+
+  @media (max-width: 1250px) {
+    @include stack();
+      float: left;
+      width: auto;
+      clear: none;
+
+      .imdb2 a {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+    }
+}
+
+.movietable {
+  position: relative;
+}
+
+.poster {
+  width: 230px;
+  background-image: url('posters.png');
+  background-repeat: no-repeat;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .35);
+  display: block;
+  margin-right: 10px;
+  background-clip: padding-box;
+  border-radius: 4px;
+  position: relative;
+
+  img {
+    width: 230px;
+    height: 341px;
+    border-radius: 4px;
+    display: block;
+  }
+
+  .frame {
+    transition: all .22s ease-out;
+    background-image: -webkit-gradient(linear, left top, right top, color-stop(.01, rgba(255, 255, 255, 0)), color-stop(.5, rgba(255, 255, 255, .6)), color-stop(1, rgba(255, 255, 255, 0)));
+    background-repeat: no-repeat;
+    background-clip: padding-box;
+    background-image: -moz-linear-gradient(left center, rgba(255, 255, 255, 0) 1%, #fff 50%, rgba(255, 255, 255, 0) 100%);
+    background-size: 100% 1px;
+    border-radius: 4px;
+    box-shadow: 0 0 2px #def inset;
+    display: block;
+    height: 100%;
+    left: 0;
+    overflow: hidden;
+    position: absolute;
+    text-indent: -999em;
+    top: 0;
+    width: 100%;
+    font-family: inherit;
+    font-size: 100%;
+    font-style: inherit;
+    font-weight: inherit;
+    margin: 0;
+    outline: 0 none;
+    padding: 0;
+    vertical-align: baseline;
+
+    &:hover {
+        box-shadow: inset 0 0 5px #fff;
+    }
+  }
+}
+
+.base-shadow {
+  background: url('base-shadow.png') no-repeat 3px -13px !important;
+  height: 20px;
+  position: absolute;
+  top: 344px;
+  width: 230px;
+}
+
+a,
+a:link,
+a:visited {
+  color: #aaa;
+  text-decoration: none;
+}
+
+.moviedesc {
+  top: 60px;
+  position: absolute;
+  left: 265px;
+  white-space: normal;
+  width: 290px;
+}
+
+.year-label {
+  color: #9ab;
+  border-bottom: 1px solid #456;
+  font-weight: lighter;
+  font-size: 16px;
+  font-family: tahoma;
+  margin: 0 0 0 15px;
+}
+
+.moviemeta td {
+  position: absolute;
+  left: 240px;
+  top: 230px;
+  font-size: smaller;
+  background: rgba(#000, .2);
+  border-radius: 4px;
+  padding: 10px !important;
+  margin: 19px 0 0 25px;
+  display: block;
+  width: 413px;
+  overflow: hidden;
+  max-height: 73px;
+  word-wrap: break-word;
+}
+
+.tagss {
+  display: none;
+}
+
+.rating,
+.runtime {
+  display: none;
+}
+
+.MGENRE {
+  color: #9ab;
+  background: #242d35;
+  display: inline-block;
+  border: 1px solid #333b42;
+  white-space: nowrap;
+  border-radius: 4px;
+  padding: 2px 5px;
+  font-size: 12px;
+  font-style: normal;
+}
+
+.plot {
+  height: 110px !important;
+  overflow: hidden !important;
+  position: absolute;
+  top: 45px;
+  width: 370px !important;
+}
+
+.imdb-rating {
+  transition: none;
+  float: left;
+  width: 62px;
+  height: 17px;
+  background-image: url('imdb-rating.png');
+  background-position: 0 0;
+  display: inline-block;
+  vertical-align: top;
+  position: relative;
+  margin-right: 8px;
+  border: 0;
+  box-shadow: 0;
+  top: 2px;
+
+  @media(max-width: $container-mobile) {
+    float: left;
+    clear: both;
+    margin-top: 15px;
+  }
+
+  &:hover {
+    background-position: 0 -17px;
+
+    span {
+      color: #ffec00;
+    }
+  }
+
+  span {
+    width: 25px;
+    height: 15px;
+    line-height: 15px;
+    text-align: center;
+    color: #ffcd00;
+    float: right;
+    margin-right: 1px;
+    margin-top: 1px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+}
+
