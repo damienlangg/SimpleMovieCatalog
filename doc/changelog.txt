@@ -1,5 +1,9 @@
 Changelog:
 
+2016-02-25 Release 2.1.0
+ * New themes: dark-grid and dark-columns by Roni Laukkarinen
+ * Links icons
+
 2016-01-11 Release 2.0.2
  * Fixed poster images
  * Fixed caching of guessed titles

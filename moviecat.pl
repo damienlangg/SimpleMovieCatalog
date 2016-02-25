@@ -2,7 +2,7 @@
 
 =copyright
 
-    Simple Movie Catalog 2.0.2
+    Simple Movie Catalog 2.1.0
     Copyright (C) 2008-2016 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -22,7 +22,7 @@
 
 use strict;
 
-my $progver = "2.0.2";
+my $progver = "2.1.0";
 my $author = 'damien.langg@gmail.com';
 my $copyright = "Copyright 2008-2016, $author";
 my $progbin = "moviecat.pl";
