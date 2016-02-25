@@ -7,6 +7,8 @@
 
 @import url('links.css');
 
+@import url('http://fonts.googleapis.com/css?family=Crimson+Text|Droid+Sans|Droid+Serif|Cardo');
+
 @mixin gradient($from: #dfdfdf, $to: #f8f8f8) {
 	background-color: $to;
 	background-image: -webkit-gradient(linear, to left top, to left bottom, from($from), to($to));
@@ -16,8 +18,6 @@
 	background-image: -ms-linear-gradient(to top, $from, $to);
 	background-image: linear-gradient(to top, $from, $to);
 }
-
-@import url('http://fonts.googleapis.com/css?family=Crimson+Text|Droid+Sans|Droid+Serif|Cardo');
 
 .sort-options {
   #SORT_TITLE,
@@ -37,7 +37,7 @@ body {
   background: #111;
   color: #777;
   font-family: arial;
-  font-size: 12px;
+  font-size: 20px;
   padding: 15px;
   margin: 0;
 }
@@ -93,12 +93,11 @@ a:hover {
 }
 
 .title {
-  padding: 0;
-  margin: 0;
+  vertical-align: top;
 
   h1 {
-    margin: 10px 0 0;
-    padding: 0 0 0 25px;
+    margin: 0;
+    padding: 0;
 
     .MYEAR {
       font-size: 22px;
@@ -123,23 +122,14 @@ a:hover {
   }
 }
 
-// Fixes the new template
+.title,
 .moviedesc td,
-.otherplaces td {
-  padding: 5px 0 0 25px;
+.moviemeta td {
+  padding: 0 0 0 25px;
 }
 
 .moviemeta td {
-  padding: 25px 0 0 25px;
-}
-
-.moviemeta,
-.moviemeta a {
-  font-size: 11px;
-
-  b {
-    font-size: smaller;
-  }
+  font-size: smaller;
 }
 
 .frame {
@@ -194,18 +184,3 @@ a:hover {
   }
 }
 
-.plot,
-.otherplaces {
-  font-size: 13px;
-
-  p,
-  a {
-    font-size: 13px;
-  }
-}
-
-.otherplaces {
-  a {
-    margin-right: 5px;
-  }
-}

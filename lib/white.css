@@ -13,7 +13,7 @@ a:hover{text-decoration:underline;font-weight:400!important;color:#0e302a}
 .movietable{background-color:#fff;background-image:linear-gradient(to top,#ddd,#fff);font-family:Georgia,serif;font-size:20px;font-weight:400;text-transform:normal;letter-spacing:normal;line-height:1.2em;color:#333;margin:10px 0;padding:0 0 30px 10px}
 .title,.title h1 a{font-family:'Droid Sans';color:#526075;text-shadow:rgba(155,155,155,.5) 0 5px 6px}
 .poster img{min-width:214px;max-width:214px;min-height:314px}
-.title{font-weight:bolder!important}
+.title{vertical-align:top;font-weight:bolder!important}
 .title h1{margin:0;padding:0;line-height:22px}
 .title h1 .MYEAR{font-size:22px;font-weight:400;opacity:.5}
 .title h1 a{font-weight:bolder;padding-right:10px;font-size:22px;line-height:22px}

@@ -2,7 +2,7 @@
 .noposter{background:grey}
 .noposter img{display:none}
 .noposter span{display:inline!important}
-.title{background:#add8e6}
+.title{background:#add8e6;height:15%}
 .title *{margin:0;font-size:16px}
 .moviedesc td,.moviemeta td,.title{padding-left:5px}
 .moviedesc *{font-size:13px}

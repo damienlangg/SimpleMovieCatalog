@@ -58,7 +58,6 @@ body {
   transition: all .22s ease-out;
   clear: both !important;
   position: relative;
-  top: 50px;
   padding-top: 20px;
   margin-left: -15px;
   margin-right: -15px;
@@ -109,15 +108,6 @@ a:hover {
   }
 }
 
-.missing {
-  position: absolute;
-  top: 35px;
-  right: 10px;
-  z-index: 20;
-  text-transform: lowercase;
-}
-
-.missing a:hover,
 #FILTER_HEAD a:hover {
   color: #fff;
 }

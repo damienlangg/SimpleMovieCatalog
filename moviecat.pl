@@ -1059,6 +1059,20 @@ sub html_head
     if ($opt_js) {
         print_html "<script src=\"$jsname\" type=\"text/javascript\"></script>";
     }
+
+    # base CSS style
+    print_html "<style type=text/css><!--";
+    print_html "span.HOVER_ULN:hover {text-decoration: underline}";
+    print_html "a.HOVER_BOLD:hover {font-weight: bold}";
+    print_html "input[type=text] {font-size: small; height: 1em;}";
+    # print_html "table {border: outset;}";
+    print_html "input[type=checkbox] {margin: 0px; width:13px; height:13px;}";
+    print_html "input[type=radio] {margin: 0px; width:13px; height:13px;}";
+    print_html "span.MDIRTIME {display: none}";
+    print_html ".frame {display: none}";
+    print_html ".imdb-rating {display: none}";
+    print_html "--></style>";
+
     # CSS style
     for my $tfile (glob "$prog_dir/lib/*.css") {
         my $theme;
@@ -1072,16 +1086,6 @@ sub html_head
             . ($sel?'':'alternate ') . 'stylesheet" '
             . 'href="'.$theme.'.css" title="'.$theme.'">';
     }
-    print_html "<style type=text/css><!--";
-    print_html "span.HOVER_ULN:hover {text-decoration: underline}";
-    print_html "a.HOVER_BOLD:hover {font-weight: bold}";
-    print_html "input[type=text] {font-size: small; height: 1em;}";
-    # print_html "table {border: outset;}";
-    print_html "input[type=checkbox] {margin: 0px; width:13px; height:13px;}";
-    print_html "input[type=radio] {margin: 0px; width:13px; height:13px;}";
-    print_html "span.MDIRTIME {display: none}";
-    print_html "--></style>";
-
     print_html "</head>";
     print_html "<body bgcolor=\"$bgcolor\">";
 }
@@ -1500,9 +1504,9 @@ sub page_start
     print_html '</select></form>';
 
     if (scalar @group > 1 or ($opt_js and $opt_miss)) {
-        print_html "<table class=\"missing\">";
-        #print_html "<td valign=top>Group:<td>";
-        print_html "<table cellpadding=0 cellspacing=0><tr>" if ($opt_group_table);
+        print_html '<table class=GroupTable>';
+        #print_html "<td valign=top>Group:";
+        print_html "<td><table cellpadding=0 cellspacing=0><tr>" if ($opt_group_table);
         for my $g (@group) {
             my $gnm = scalar keys %{$g->{mlist}};
             print_html "<td>" if ($opt_group_table);
@@ -1652,7 +1656,7 @@ sub page_filter
                "show genre</a>";
     print_html "&nbsp; <a id=SHOW_FILTER3 href=javascript:show_filter(3)>",
                "more options</a>";
-    print_html "</small></span>";
+    print_html "</small></span><br>";
 
     print_html "<form id=FORM_FILTER style='display:inline'",
                " onsubmit=do_filter();return(false)>";

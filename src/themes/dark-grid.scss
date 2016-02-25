@@ -4,10 +4,6 @@
 
 @import url(http://fonts.googleapis.com/css?family=Berkshire+Swash|Cantata+One|Kaushan+Script|Arimo|Rochester|Droid+Serif);
 
-.onsale {
-  display: none;
-}
-
 .movietr:hover .info {
   opacity: 1 !important;
 }
@@ -80,7 +76,7 @@ body {
   background: #14181c;
   color: #7b8b95;
   font-family: arial;
-  padding: 0;
+  padding: 15px;
   margin: 0;
   overflow-x: hidden;
 }
@@ -94,6 +90,7 @@ a {
 }
 
 // HEAD / FILTER TABLE
+/*
 small {
   font-size: 11px !important;
   font-family: 'lucida grande', 'lucida sans unicode', sans-serif;
@@ -224,16 +221,8 @@ small {
 #FORM_FILTER {
   display: block !important;
 }
+*/
 
-.missing {
-  position: absolute;
-  top: 35px;
-  left: 15px;
-  z-index: 20;
-  text-transform: lowercase;
-}
-
-.missing a:hover,
 #FILTER_HEAD a:hover {
   color: #fff !important;
 }
@@ -256,9 +245,8 @@ small {
 }
 
 #STATUS {
-  font-size: 11px !important;
-  font-family: 'lucida grande', 'lucida sans unicode', sans-serif;
-  font-style: normal !important;
+  font-size: 19px;
+  font-weight: 900;
 }
 
 .rangetr {
@@ -269,22 +257,32 @@ small {
   padding: 11px 5px 0 0 !important;
 }
 
-#FILTER_TABLE {
-  transition: all .22s ease-out;
+#FILTER_HEAD {
+//  font-family: Arimo;
   position: relative;
-  top: 0;
-  display: block;
-  width: 97% !important;
-  background: #232d38 !important;
-  padding: 7px;
-  border: 1px solid #2e3c4b;
+  font-size: 12px;
+  top: 10px;
+  left: 0;
+}
+
+#FILTER_TABLE {
+  position: relative;
+  top: 20px;
+  transition: all .22s ease-out;
+  background: #1c2126;
+  color: #7b8b95;
+  padding: 10px;
+  border: 1px solid #222;
   border-radius: 8px;
-//  margin: 45px 0 0 15px;
-  margin: 5px 0 0 15px;
+  margin: 10px 0;
   opacity: .6;
 
   input {
     margin: 2px 6px 0 0;
+  }
+
+  &:hover {
+    opacity: 1;
   }
 }
 
@@ -292,7 +290,7 @@ small {
 #MTABLE {
   padding: 15px;
   background: url('content-bg.png') repeat-x scroll 0 0 #14181c;
-  margin: 0;
+  margin-left: -15px;
   width: 100%;
   height: 100%;
   min-height: 500px !important;

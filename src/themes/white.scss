@@ -85,13 +85,12 @@ a:hover {
   min-height: 314px;
 }
 
-.noposter {
-  span {
-    display: none;
-  }
+.noposter span {
+  display: none;
 }
 
 .title {
+  vertical-align: top;
   font-family: 'Droid Sans';
   font-weight: bolder !important;
   color: #526075;
