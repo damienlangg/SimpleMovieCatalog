@@ -1,5 +1,9 @@
 Changelog:
 
+2016-02-27 Release 2.2.0
+ * Checkbox to mark and filter Watched movies by Alexander Deyke
+ * Remember theme selection by Alexander Deyke
+
 2016-02-25 Release 2.1.0
  * New themes: dark-grid and dark-columns by Roni Laukkarinen
  * Links icons
