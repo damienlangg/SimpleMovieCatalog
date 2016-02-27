@@ -1180,6 +1180,7 @@ sub format_movie
 
     my @location = $loc_ref ? @{$loc_ref} : ();
     my @tags     = $tag_ref ? @{$tag_ref} : ();
+    my $id = $m->id;
 
     #print_debug "LOC: ", join ("\n+++", @location), "\n";
 
@@ -1200,7 +1201,7 @@ sub format_movie
     # grid layout hover info
     print_html '<div class="frame"><div class="info">';
     print_html '<span class=titletitle>', $m->title ,'</span><span class=titleyear>', $m->year, '</span>';
-    print_html '<span class="loc"><b>', $m->user_rating, '</b> / 10</span>';
+    print_html '<span class="grid_rating"><b>', $m->user_rating, '</b> / 10</span>';
     print_html '<span class="titleruntime">', $m->runtime ? $m->runtime : "?" ,' min</span>';
     print_html '<span class="imdb2"><a href="http://www.imdb.com/title/tt', $m->id, '" target="_blank">imdb</a></span>';
     print_html '</div></div>';
@@ -1247,15 +1248,18 @@ sub format_movie
 
     print_html "<tr class=moviemeta><td>";
 
+    print_html "<span class=\"tagss\">Tags: ";
     if (@tags) {
-        print_html "<span class=\"tagss\">Tags: <span class=\"MTAGS\">", join(' ', @tags), "</span><br /></span>";
+        print_html "<span class=\"MTAGS\">", join(' ', @tags), "</span>";
     }
+    print_html " &nbsp; <input type=checkbox id=\"watched$id\" onclick=\"toggle_watched('watched$id')\">";
+    print_html "<label class=HOVER_ULN for=\"watched$id\">Watched</label>";
+    print_html "<br /></span>";
 
-    print_html "Location: ";
+    print_html "<span class=location>Location: ";
     my $i = 0;
     my $nloc = scalar @location;
     my $dirtime = 0;
-    my $id = $m->id;
     my $fid = "_L" . $m->id;
     if ($nloc > 1) {
         print_html "<a id=SHOW_FILTER$fid href=\"javascript:show_filter('$fid')\">show ($nloc)</a>";
@@ -1280,17 +1284,19 @@ sub format_movie
     if ($nloc > 1) {
         print_html "</span>";
     }
+    print_html "<br></span>";
     # print_html "<br>dirtime: ";
     print_html "<span class=MDIRTIME>$dirtime</span>";
+
     if (@subsearch) {
-        print_html "<br>Subtitles: ";
+        print_html "Subtitles: ";
         format_links $m, 0, @subsearch;
+        print_html "<br>";
     }
     if (@opt_links) {
-        print_html "<br>Links: ";
+        print_html "Links: ";
         format_links $m, 1, @opt_links;
     }
-    print_html "<br><input type=checkbox id=\"watched$id\" onclick=\"toggle_watched('watched$id')\"> <label class=HOVER_ULN for=\"watched$id\">I've watched this</label>";
     # print_html "<br><a href=../imdb_cache/imdb-",$m->id,".html>cache</a>";
     print_html "</td></tr>";
 

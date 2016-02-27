@@ -39,7 +39,7 @@ a,a:link,a:visited{color:#aaa;text-decoration:none}
 .moviedesc{top:60px;left:265px;white-space:normal;width:290px}
 .year-label{color:#9ab;border-bottom:1px solid #456;font-weight:lighter;font-size:16px;font-family:tahoma;margin:0 0 0 15px}
 .moviemeta td{left:240px;top:230px;font-size:smaller;background:rgba(0,0,0,.2);border-radius:4px;padding:10px!important;margin:19px 0 0 25px;display:block;width:413px;overflow:hidden;max-height:73px;word-wrap:break-word}
-.rating,.runtime,.tagss{display:none}
+.location,.rating,.runtime{display:none}
 .MGENRE,.imdb-rating{display:inline-block}
 .MGENRE{color:#9ab;background:#242d35;border:1px solid #333b42;white-space:nowrap;border-radius:4px;padding:2px 5px;font-size:12px;font-style:normal}
 .plot{height:110px!important;overflow:hidden!important;top:45px;width:370px!important}
