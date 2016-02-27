@@ -91,7 +91,9 @@ my @series_tag = ( 's\d{1,2}e\d{1,2}', 'season\W+\d+', 'episode\W+\d+', '\d+x\d+
 my @subsearch = (
         "http://opensubtitles.org/en/search2/sublanguageid-eng/moviename-%TITLE%",
         "http://subscene.com/filmsearch.aspx?q=%TITLE%",
-        "http://podnapisi.net/ppodnapisi/search?tbsl=1&asdp=0&sJ=2&sY=&sAKA=1&sK=%TITLE%",
+        #"http://podnapisi.net/ppodnapisi/search?tbsl=1&asdp=0&sJ=2&sY=&sAKA=1&sK=%TITLE%",
+        # todo: maybe auto quote at runtime?
+        "http://podnapisi.net/ppodnapisi/search?tbsl=1&amp;asdp=0&amp;sJ=2&amp;sY=&amp;sAKA=1&amp;sK=%TITLE%",
         );
 
 my @opt_links = (
@@ -1036,12 +1038,10 @@ sub get_user_votes
 
 
 # start the HTML
-#print start_html(-title=>'Movie Catalog', -bgcolor=>'lightgrey');
 sub html_start
 {
-print_html << 'HTML_START';
-<!DOCTYPE html>
-HTML_START
+  print_html "<!DOCTYPE html>";
+  print_html "<html>";
 }
 
 sub html_head
@@ -1062,7 +1062,7 @@ sub html_head
 
     # base CSS style
     print_html "<style type=text/css><!--";
-    print_html "span.HOVER_ULN:hover {text-decoration: underline}";
+    print_html ".HOVER_ULN:hover {text-decoration: underline}";
     print_html "a.HOVER_BOLD:hover {font-weight: bold}";
     print_html "input[type=text] {font-size: small; height: 1em;}";
     # print_html "table {border: outset;}";
@@ -1102,6 +1102,7 @@ sub format_html_path
     }
     # if file, link to dir
     my ($dir, $fname) = split_location($path);
+    $dir =~ s/ /%20/g;
     #return "<a href=\"file://$path\" style=word-wrap:break-word>$link</a>";
     return "<a target=_blank href=\"file://$dir\">$link</a>";
 }
@@ -1140,7 +1141,7 @@ sub format_links
         $url =~ s/%ID%/$id/g;
         $url =~ s/%YEAR%/$year/g;
         $url =~ s/%TITLE%/$title/g;
-        print_html_n '<a target=_blank class=HOVER_BOLD href="', $url, '">';
+        print_html_n '<a target=_blank href="', $url, '">';
         # link css image placeholder
         print_html_n "<span class=ln-tx-$csite>$site</span>";
         print_html_n "<span class=ln-im-$csite title=$site></span>";
@@ -1182,7 +1183,7 @@ sub format_movie
 
     #print_debug "LOC: ", join ("\n+++", @location), "\n";
 
-    print_html "<table width=100% cellspacing=0 class=movietable>";
+    print_html "<table width=100% cellspacing=0 class=movietable id=\"",$m->id,"\">";
     # border=1 frame=border rules=all
 
     print_html '<tr class="movietr">';
@@ -1194,7 +1195,7 @@ sub format_movie
         print_html '<img src="', $img_link, '" />';
     } else {
         print_html '<td rowspan="5" width="95" class="poster noposter">';
-        print_html '<img src="noposter.png">';
+        print_html '<img src="noposter.png" alt="No movie poster">';
     }
     # grid layout hover info
     print_html '<div class="frame"><div class="info">';
@@ -1213,7 +1214,7 @@ sub format_movie
     print_html "</td></tr>";
 
     my ($runtime) = $m->runtime; #split '\|', $m->runtime;
-    print_html '<tr class="moviedesc"><td class="hidden">';
+    print_html "<tr class=moviedesc><td>";
     print_html "<span class=movieheadmeta><span class=rating info>Rating: <b class=MRATING>", $m->user_rating, "</b>/10</span>",
             "<span class=runtime info>Runtime: <b class=MRUNTIME>", $runtime ? $runtime : "?" , "</b> min</span>",
             "<span class=genre info><i class=MGENRE>", join(' / ',@{$m->genres}), "</i></span></span>";
@@ -1238,13 +1239,13 @@ sub format_movie
     }
     print_html "</td></tr>";
 
-    print_html '<tr class="moviedesc"><td class="plot">
-    <a target="_blank" href="http://www.imdb.com/title/tt', $m->id, '" class="imdb-rating"><span>', $m->user_rating, '</span></a>
-    ';
+    print_html '<tr class=moviedesc><td class=plot>',
+    '<a target="_blank" href="http://www.imdb.com/title/tt', $m->id, '" class="imdb-rating">',
+    '<span>', $m->user_rating, '</span></a>';
     print_html $m->plot ? $m->plot : "&nbsp;?";
     print_html "</td></tr>";
 
-    print_html '<tr class="moviemeta"><td>';
+    print_html "<tr class=moviemeta><td>";
 
     if (@tags) {
         print_html "<span class=\"tagss\">Tags: <span class=\"MTAGS\">", join(' ', @tags), "</span><br /></span>";
@@ -1257,7 +1258,7 @@ sub format_movie
     my $id = $m->id;
     my $fid = "_L" . $m->id;
     if ($nloc > 1) {
-        print_html "<a id=SHOW_FILTER$fid href=javascript:show_filter('$fid')>show ($nloc)</a>";
+        print_html "<a id=SHOW_FILTER$fid href=\"javascript:show_filter('$fid')\">show ($nloc)</a>";
         print_html "<span id=HIDE_FILTER$fid style=display:none>";
         print_html "<a href=javascript:hide_filter('$fid')>hide</a>";
     }
@@ -1289,8 +1290,9 @@ sub format_movie
         print_html "<br>Links: ";
         format_links $m, 1, @opt_links;
     }
+    print_html "<br><input type=checkbox id=\"watched$id\" onclick=\"toggle_watched('watched$id')\"> <label class=HOVER_ULN for=\"watched$id\">I've watched this</label>";
     # print_html "<br><a href=../imdb_cache/imdb-",$m->id,".html>cache</a>";
-    print_html "</font></td></tr>";
+    print_html "</td></tr>";
 
     print_html "</table><br>\n";
 }
@@ -1459,7 +1461,7 @@ sub page_head_jsort {
 sub page_head_jsort_user {
     my ($uid, $uname) = @_;
     print_html "<a id=\"SORT_UV", $uid , "\"",
-                " href=javascript:sort_user('", $uid, "')>$uname</a> ";
+                " href=\"javascript:sort_user('", $uid, "')\">$uname</a> ";
 }
 
 sub page_head_sort {
@@ -1488,7 +1490,7 @@ sub page_start
 
     print_html
         '<form style="position: absolute; top: 2pt; right: 2pt;" name="ThemeForm">'.
-        'Theme:'.
+        'Theme: '.
         '<select name="ThemeList" size="1" onChange="switchTheme(this.form)">';
     for my $tfile (glob "$prog_dir/lib/*.css") {
         my $theme;
@@ -1502,6 +1504,7 @@ sub page_start
             . 'value="' . $theme . '">' . $theme . '</option>';
     }
     print_html '</select></form>';
+    print_html '<script>set_preferred_theme()</script>';
 
     if (scalar @group > 1 or ($opt_js and $opt_miss)) {
         print_html '<table class=GroupTable>';
@@ -1539,7 +1542,6 @@ sub page_start
         if ($opt_js) {
             page_head_sort $fbase, $fadd, "-year", "Year";
             page_head_sort $fbase, $fadd, "-dirtime", "DirTime";
-            print_html "<small>";
             if (@opt_user) {
                 print_html "User Votes: ";
                 my $uid;
@@ -1548,7 +1550,6 @@ sub page_start
                     page_head_jsort_user $uid, $uv->{'name'};
                 }
             }
-            print_html "</small>";
         } else {
             page_head_sort $fbase, $fadd, "-genre", "Genre";
             if ($opt_miss and scalar @group == 1) {
@@ -1566,9 +1567,9 @@ sub page_end
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
     $year += 1900;
     $mon += 1;
-    my $datestr = $year."-".$mon."-".$mday." ".$hour.":".$min;
-    print_html "<br><div align=right><font size=-2><i>Generated by ";
-    print_html "<a href=\"$progurl\">$progname $progver</a> on $datestr</i></font></div>";
+    my $datestr = "$year-$mon-$mday $hour:$min";
+    print_html "<br><div style=\"text-align:right\"><i>Generated by ";
+    print_html "<a href=\"$progurl\">$progname $progver</a> on $datestr</i></div>";
     print_html "</body></html>";
     close $F_HTML;
 }
@@ -1581,7 +1582,7 @@ sub page_footer
         print_html "<br>Total: ", scalar keys %{$pmlist}, " Movies<br>";
     }
     if (@user_vote) {
-        print_html "<small>User votes: ";
+        print_html "User votes: ";
         for my $uv (@user_vote) {
             my $votes = scalar keys %{$uv->{'vote'}};
             if ($uv->{'name'} ne $uv->{'user'}) {
@@ -1591,7 +1592,7 @@ sub page_footer
                        " (", $uv->{'count'}, "/$votes votes) &nbsp;";
             $uv->{'count'} = 0;
         }
-        print_html "</small>";
+        print_html "";
     }
 }
 
@@ -1647,26 +1648,22 @@ sub page_filter
     my ($minrun, $maxrun) = get_max_runtime();
     my $i = 0;
     print_html "<span id=FILTER_HEAD>Filter: <small>";
-    print_html "<i id=STATUS>", scalar keys %{$pmlist},
-               " Movies</i> ";
+    print_html "<i id=STATUS>", scalar keys %{$pmlist}, " Movies</i> ";
     print_html "&nbsp; <a href=javascript:filter_reset()>reset</a>";
-    print_html "&nbsp; <a id=SHOW_FILTER1 href=javascript:show_filter(1)>",
-               "show tags</a>";
-    print_html "&nbsp; <a id=SHOW_FILTER2 href=javascript:show_filter(2)>",
-               "show genre</a>";
-    print_html "&nbsp; <a id=SHOW_FILTER3 href=javascript:show_filter(3)>",
-               "more options</a>";
+    print_html "&nbsp; <a id=SHOW_FILTER1 href=javascript:show_filter(1)>show tags</a>";
+    print_html "&nbsp; <a id=SHOW_FILTER2 href=javascript:show_filter(2)>show genre</a>";
+    print_html "&nbsp; <a id=SHOW_FILTER3 href=javascript:show_filter(3)>more options</a>";
     print_html "</small></span><br>";
 
-    print_html "<form id=FORM_FILTER style='display:inline'",
+    print_html "<form id=FORM_FILTER style=\"display:inline\"",
                " onsubmit=do_filter();return(false)>";
 
     print_html "<table id=FILTER_TABLE cellspacing=3 cellpadding=0 bgcolor=silver>";
-    print_html "<tr valign=top>";
+    print_html "<tr style=\"vertical-align:top\">";
 
     print_html "<td id=HIDE_FILTER1>";
     print_html "<table id=TAG_TABLE cellspacing=0 cellpadding=0>";
-    print_html "<tr valign=top>";
+    print_html "<tr style=\"vertical-align:top\">";
     print_html "<td>Tags:&nbsp;&nbsp;<br><small>";
     print_html "<a href=javascript:tag_all()>all</a>&nbsp;&nbsp;<br>";
     print_html "<a href=javascript:hide_filter(1)>hide</a>&nbsp;&nbsp;<br>";
@@ -1681,18 +1678,25 @@ sub page_filter
         my $tid = "TAG_" . uc($tag);
         print_html "<tr>";
         print_html "<td><input type=radio id=$tid"."_ALL name=$tid value=all",
-                   ($state eq "all" ? " checked=checked" : ""), " onclick=do_filter()>",
-                   "<span class=HOVER_ULN onclick=tag_set(\'$tid\','ALL')>all</span>&nbsp;";
+                   ($state eq "all" ? " checked=checked" : ""), " onclick=\"do_filter()\">",
+                   "<label class=HOVER_ULN for=\"$tid"."_ALL\">all</label>&nbsp;";
         print_html "<td><input type=radio id=$tid"."_NOT name=$tid value=not",
-                   ($state eq "not" ? " checked=checked" : ""), " onclick=do_filter()>",
-                   "<span class=HOVER_ULN onclick=tag_set(\'$tid\','NOT')>not</span>&nbsp;";
+                   ($state eq "not" ? " checked=checked" : ""), " onclick=\"do_filter()\">",
+                   "<label class=HOVER_ULN for=\"$tid"."_NOT\">not</label>&nbsp;";
         print_html "<td><input type=radio id=$tid"."_SET name=$tid value=set",
-                   ($state eq "set" ? " checked=checked" : ""), " onclick=do_filter()>",
-                   "<span class=HOVER_ULN onclick=tag_set(\'$tid\','SET')>$tag (",
-                   $pgroup->{tag}{$tag}, ")</span>&nbsp;";
+                   ($state eq "set" ? " checked=checked" : ""), " onclick=\"do_filter()\">",
+                   "<label class=HOVER_ULN for=\"$tid"."_SET\">$tag (",
+                   $pgroup->{tag}{$tag}, ")</label>&nbsp;";
         print_html "</tr>";
         $tag_count++;
     }
+    print_html "<tr>";
+    print_html "<td><input type=radio id=WATCHED_ALL name=WATCHED value=all checked onclick=\"do_filter()\">",
+                   "<label class=HOVER_ULN for=\"WATCHED_ALL\">all</label>&nbsp;";
+    print_html "<td><input type=radio id=WATCHED_NOT name=WATCHED value=not onclick=\"do_filter()\">",
+                   "<label class=HOVER_ULN for=\"WATCHED_NOT\">not</label>&nbsp;";
+    print_html "<td><input type=radio id=WATCHED_SET name=WATCHED value=set onclick=\"do_filter()\">",
+                   "<label class=HOVER_ULN for=\"WATCHED_SET\">Watched (<span id=\"watched_count\">0</span>)</label>&nbsp;";
     print_html "</table>";
     print_html "</small></td>";
     print_html "<td style='width:1em'></td>";
@@ -1701,7 +1705,7 @@ sub page_filter
 
     print_html "<td id=HIDE_FILTER2>";
     print_html "<table id=GENRE_TABLE cellspacing=0 cellpadding=0>";
-    print_html "<tr valign=top>";
+    print_html "<tr style=\"vertical-align:top\">";
     print_html "<td class=filtergenretd><div class=filtergenreoptions>";
     print_html "Genre:&nbsp;&nbsp;<br>";
     print_html "<small>";
@@ -1730,7 +1734,7 @@ sub page_filter
     print_html "<table id=RANGE_TABLE cellspacing=0 cellpadding=0>";
 
     my $input_number = "input type=text maxlength=5 size=4 "
-    ."onkeypress='return numbersOnly(event);' onchange='do_filter();'";
+    ."onkeypress=\"return numbersOnly(event);\" onchange=\"do_filter();\"";
     print_html "<tr class=\"rangetr\"><td class=\"newsort\">Year: <td>";
     print_html "<$input_number id=YMIN value=$minyear> - ";
     print_html "<$input_number id=YMAX value=$maxyear></tr>";
