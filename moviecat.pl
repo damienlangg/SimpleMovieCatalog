@@ -279,7 +279,7 @@ sub exit_cfg {
 sub getfile {
   my $filename = shift;
   my $F;
-  open $F, "<", $filename or return undef;
+  open $F, "<:utf8", $filename or return undef;
   my $contents;
   {
     local $/ = undef;     # Read entire file at once
@@ -1155,7 +1155,7 @@ sub create_links_css
     my $mod = shift;
     my $fname = $base_dir . "links$mod.css";
     print_note "Writing $fname\n";
-    open $F_HTML, ">", $fname  or  abort "Can't write $fname $!";
+    open $F_HTML, ">:utf8", $fname  or  abort "Can't write $fname $!";
     for my $link (@opt_links) {
         my ($site, $csite, $url) = parse_opt_link(1, $link);
         my $link_icon = lc("link$mod-$csite.png");
@@ -1490,7 +1490,7 @@ sub page_start
     my $gfname = get_gfname($gname);
     my $fname = $base_path . $gfname . $fadd . ".html";
 
-    open $F_HTML, ">", $fname  or  abort "Can't write $fname $!";
+    open $F_HTML, ">:utf8", $fname  or  abort "Can't write $fname $!";
     print_note "Writing $fname\n";
     html_start;
     html_head("Movie Catalog" . ($gname ? ": $gname" : ""));
@@ -1894,7 +1894,7 @@ sub print_xml
     my $gfname = get_gfname($gname);
     my $fname = $base_path . $gfname . ".xml";
 
-    open $F_HTML, ">", $fname  or  abort "Can't write $fname $!";
+    open $F_HTML, ">:utf8", $fname  or  abort "Can't write $fname $!";
     print_note "Writing $fname\n";
 
     print_html '<?xml version="1.0" ?>';
