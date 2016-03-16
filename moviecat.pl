@@ -36,6 +36,7 @@ use File::Basename;
 use File::Copy;
 use File::stat qw(); # no-override
 use LWP::Simple;
+use IO::Handle;
 
 #use Term::ReadKey qw(GetTerminalSize);
 my $have_term = eval 'use Term::ReadKey; 1';
@@ -2678,6 +2679,23 @@ sub set_opt
     } elsif ($opt eq "-deftitle") {
         $opt_otitle = 0;
 
+    } elsif ($opt eq "-http-accept-language") {
+        $arg_used = required_arg($opt, $arg);
+        $LWP::Simple::ua->default_header('Accept-Language' => $arg);
+
+    } elsif ($opt eq "-http-user-agent") {
+        $arg_used = required_arg($opt, $arg);
+        $LWP::Simple::ua->default_header('User-Agent' => $arg);
+
+    } elsif ($opt eq "-http-header") {
+        $arg_used = required_arg($opt, $arg);
+        my ($a_hdr, $a_val) = split(/=/, $arg);
+        $LWP::Simple::ua->default_header($a_hdr => $a_val);
+
+    } elsif ($opt eq "-http-remove-header") {
+        $arg_used = required_arg($opt, $arg);
+        $LWP::Simple::ua->default_headers->remove_header($arg);
+
     } elsif ($opt =~ /^-/) {
         abort "Unknown option: $opt";
 
@@ -2788,6 +2806,10 @@ USAGE
     -theme <NAME>           Select theme name [default: $opt_theme]
     -origtitle              Use original movie title
     -deftitle               Use default (regional) movie title [default]
+    -http-accept-language <LANG>  Set HTTP Accept-Language header value
+    -http-user-agent <AGENT>      Set HTTP User-Agent header value
+    -http-header <HEADER=VALUE>   Set any HTTP header
+    -http-remove-header <HEADER>  Remove HTTP header
 
   Presets:
     skip list: [@skiplist]
@@ -2873,10 +2895,12 @@ sub init
         $IMDB::Movie::FIND_OPT = "&site=aka";
     }
     print_debug "AKA: '", $IMDB::Movie::FIND_OPT, "'";
+    print_debug "LWP Headers:\n", $LWP::Simple::ua->default_headers->as_string;
 }
 
 sub open_log {
     open $F_LOG, ">", $scan_log;
+    $F_LOG->autoflush(1);
     print_log "$progname $progver";
     print_log "Perl: ", $^X, " ", sprintf("v%vd", $^V), " ", $^O;
     print_log "CYGWIN='", $ENV{CYGWIN}, "'";

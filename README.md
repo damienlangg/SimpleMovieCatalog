@@ -130,6 +130,10 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
     -theme <NAME>           Select theme name [default: white]
     -origtitle              Use original movie title
     -deftitle               Use default (regional) movie title [default]
+    -http-accept-language <LANG>  Set HTTP Accept-Language header value
+    -http-user-agent <AGENT>      Set HTTP User-Agent header value
+    -http-header <HEADER=VALUE>   Set any HTTP header
+    -http-remove-header <HEADER>  Remove HTTP header
 
   Presets:
     skip list: [sample subs subtitles cover covers]
@@ -204,6 +208,15 @@ Option Notes:
   Themes:
     -theme <NAME> option will select the default theme
     A new theme can be added to lib/name.css
+
+  HTTP Headers:
+    Note, setting accept-language header will not change IMDB to any specified
+    language except "en", because they depend on ip geolocation. Specifying this to
+    "en" will give english titles even if you're located in a non-english country.
+    For more information on HTTP headers see:
+    https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
+
+
 ````
 
 ## Config File

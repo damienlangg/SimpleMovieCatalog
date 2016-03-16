@@ -1,5 +1,7 @@
 Changelog:
 
+ * Added options to specify http headers
+
 2016-02-27 Release 2.2.0
  * Checkbox to mark and filter Watched movies by Alexander Deyke
  * Remember theme selection by Alexander Deyke
