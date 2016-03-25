@@ -23,7 +23,7 @@ sorting and grouping of found movies by different criteria.
 
 ### Windows:
 
-1. Install Perl. Simple Movie Catalog is written in perl so you'll have to install it first. Download either [ActivePerl](http://www.activestate.com/Products/activeperl/) or [Strawberry Perl](http://strawberryperl.com/) or install cygwin](http://www.cygwin.com/), which includes perl. Make sure to have perl in PATH!
+1. Install Perl. Simple Movie Catalog is written in perl so you'll have to install it first. Download either [ActivePerl](http://www.activestate.com/Products/activeperl/) or [Strawberry Perl](http://strawberryperl.com/) or install [cygwin](http://www.cygwin.com/), which includes perl. Make sure to have perl in PATH!
 
 2. Install Simple Movie Catalog. Download SimpleMovieCatalog.zip and unpack to a directory of your liking. (example: C:\Program Files\SimpleMovieCatalog)
 
