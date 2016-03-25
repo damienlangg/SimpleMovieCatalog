@@ -70,6 +70,13 @@ body {
     width: 100%;
     display: block;
     overflow: hidden;
+
+    .movieheadmeta {
+      .rating,
+      .runtime {
+        display: none;
+      }
+    }
   }
 }
 
@@ -264,15 +271,6 @@ a:visited {
   overflow: hidden;
   max-height: 73px;
   word-wrap: break-word;
-}
-
-.location {
-  display: none;
-}
-
-.rating,
-.runtime {
-  display: none;
 }
 
 .MGENRE {
