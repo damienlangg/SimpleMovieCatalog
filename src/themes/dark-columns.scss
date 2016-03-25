@@ -52,7 +52,9 @@ body {
 }
 
 #MTABLE {
-  //background: url('content-bg.png') repeat-x scroll 0 0 #14181c;
+  @include gradient(#14181c, #20262e);
+  border-top: 1px solid #2b3239;
+  margin-top: 20px;
   display: block;
   white-space: nowrap;
   transition: all .22s ease-out;
@@ -137,7 +139,6 @@ a:hover {
 // MAIN / POSTERS
 .movieitself {
   @include span(1/2);
-  @include gradient(#14181c, #20262e);
   overflow: hidden;
   transition: all 1s;
   position: relative;
