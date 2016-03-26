@@ -76,8 +76,15 @@ body {
       .runtime {
         display: none;
       }
+     }
+
+    .moviemeta {
+      .links {
+        display: none;
+      } 
     }
-  }
+
+ }
 }
 
 a {
@@ -269,7 +276,7 @@ a:visited {
   display: block;
   width: 413px;
   overflow: hidden;
-  max-height: 73px;
+  max-height: 87px;
   word-wrap: break-word;
 }
 
