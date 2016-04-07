@@ -1295,11 +1295,11 @@ sub format_movie
         print_html "<br>";
     }
     if (@opt_links) {
-        print_html "Links: ";
+        print_html '<div class="links">Links: ';
         format_links $m, 1, @opt_links;
     }
     # print_html "<br><a href=../imdb_cache/imdb-",$m->id,".html>cache</a>";
-    print_html "</td></tr>";
+    print_html "</div></td></tr>";
 
     print_html "</table><br>\n";
 }

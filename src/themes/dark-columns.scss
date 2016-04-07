@@ -52,7 +52,9 @@ body {
 }
 
 #MTABLE {
-  //background: url('content-bg.png') repeat-x scroll 0 0 #14181c;
+  @include gradient(#14181c, #20262e);
+  border-top: 1px solid #2b3239;
+  margin-top: 20px;
   display: block;
   white-space: nowrap;
   transition: all .22s ease-out;
@@ -68,7 +70,21 @@ body {
     width: 100%;
     display: block;
     overflow: hidden;
-  }
+
+    .movieheadmeta {
+      .rating,
+      .runtime {
+        display: none;
+      }
+     }
+
+    .moviemeta {
+      .links {
+        display: none;
+      } 
+    }
+
+ }
 }
 
 a {
@@ -137,7 +153,6 @@ a:hover {
 // MAIN / POSTERS
 .movieitself {
   @include span(1/2);
-  @include gradient(#14181c, #20262e);
   overflow: hidden;
   transition: all 1s;
   position: relative;
@@ -261,17 +276,8 @@ a:visited {
   display: block;
   width: 413px;
   overflow: hidden;
-  max-height: 73px;
+  max-height: 87px;
   word-wrap: break-word;
-}
-
-.location {
-  display: none;
-}
-
-.rating,
-.runtime {
-  display: none;
 }
 
 .MGENRE {
