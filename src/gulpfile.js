@@ -80,7 +80,8 @@ gulp.task('styles', function() {
       'themes/dark-grid.scss',
       'themes/black.scss',
       'themes/old.scss',
-      'themes/white.scss'
+      'themes/white.scss',
+      'themes/white-columns.scss',
     ])
     .pipe(sass({
         compass: false,

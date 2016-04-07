@@ -10,6 +10,7 @@ a,a:link,a:visited{color:#458c26;text-decoration:none}
 a:hover{text-decoration:underline;font-weight:400!important;color:#0e302a}
 #FILTER_TABLE{background:#ddd;color:#444;padding:10px;border:1px solid #ddd;border-radius:8px;margin:10px 0}
 #FILTER_TABLE input{margin:2px 6px 0 0}
+#STATUS{font-size:19px;font-weight:900}
 .movietable{background-color:#fff;background-image:linear-gradient(to top,#ddd,#fff);font-family:Georgia,serif;font-size:20px;font-weight:400;text-transform:normal;letter-spacing:normal;line-height:1.2em;color:#333;margin:10px 0;padding:0 0 30px 10px}
 .title,.title h1 a{font-family:'Droid Sans';color:#526075;text-shadow:rgba(155,155,155,.5) 0 5px 6px}
 .poster img{min-width:214px;max-width:214px;min-height:314px}
