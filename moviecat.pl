@@ -1741,7 +1741,9 @@ sub page_filter
     print_html "<table id=RANGE_TABLE cellspacing=0 cellpadding=0>";
 
     my $input_number = "input type=text maxlength=5 size=4 "
-    ."onkeypress=\"return numbersOnly(event);\" onchange=\"do_filter();\"";
+    ."onkeypress=\"return numbersOnly(event);\" "
+    ."onkeyup=\"numbersOnlyObj(this);\" "
+    ."onchange=\"numbersOnlyObj(this);do_filter();\"";
     print_html "<tr class=\"rangetr\"><td class=\"newsort\">Year: <td>";
     print_html "<$input_number id=YMIN value=$minyear> - ";
     print_html "<$input_number id=YMAX value=$maxyear></tr>";
