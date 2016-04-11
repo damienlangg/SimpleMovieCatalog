@@ -1,4 +1,4 @@
-# Simple Movie Catalog 2.3.0
+# Simple Movie Catalog 2.4.0
 
 Simple Movie Catalog will scan a given directory for movies,
 query imdb for info and generate a catalog in html which offers
@@ -128,8 +128,9 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
     -as|-autosave           Save auto guessed exact matches
     -cachedays <NUM>        Number of days to cache pages [default: 90]
     -theme <NAME>           Select theme name [default: white]
-    -origtitle              Use original movie title
     -deftitle               Use default (regional) movie title [default]
+    -origtitle              Use original movie title
+    -og-title               Use opengraph title (english)
     -http-accept-language <LANG>  Set HTTP Accept-Language header value
     -http-user-agent <AGENT>      Set HTTP User-Agent header value
     -http-header <HEADER=VALUE>   Set any HTTP header

@@ -1,5 +1,13 @@
 Changelog:
 
+2016-04-12 Release 2.4.0
+ * Fixed -origtitle
+ * Added -og-title for opengraph title (english)
+ * Improved filter number input fields
+ * Minor sorting improvements
+ * Added theme: white-columns
+ * Minor cleanup of dark columns theme (by Roni)
+
 2016-03-16 Release 2.3.0
  * Fixed unicode characters (accents and other international characters)
  * Added options to specify http headers (Accept-Language,...)
