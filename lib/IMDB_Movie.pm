@@ -9,7 +9,7 @@ use HTML::TokeParser;
 use Data::Dumper;
 use HTML::Tagset ();
 
-$VERSION = '0.36';
+$VERSION = '0.37';
 $ERROR = "";
 @MATCH = ();
 $FIND_OPT = ""; # "&site=aka"
@@ -98,7 +98,8 @@ sub new_html {
     };
     if (!$id) { $id      = _get($html, \$parser, "id", \&_id); }
     $self->{id}          = $id;
-    $self->{otitle}      = _get($html, \$parser, "header", \&_header);
+    $self->{otitle}      = _get($html, \$parser, "otitle", \&_otitle, \&_otitle_old);
+    $self->{og_title}    = _get($html, \$parser, "og_title", \&_og_title);
     $self->{runtime}     = _get($html, \$parser, "runtime", \&_runtime, \&_runtime_old);
     $self->{img}         = _get($html, \$parser, "img", \&_image, \&_image_alt, \&_image_og);
     $self->{user_rating} = _get($html, \$parser, "rating", \&_user_rating, \&_user_rating_old);
@@ -367,7 +368,7 @@ sub _id {
     return undef;
 }
 
-sub _header {
+sub _otitle_old {
     my $parser = shift;
     my $tag;
     my $stag;
@@ -389,6 +390,29 @@ sub _header {
     return undef;
 }
 
+sub _otitle {
+    my $parser = shift;
+    my $tag;
+    my $otitle;
+    $tag = _jump_class($parser, "originalTitle") or return undef;
+    $otitle = get_text_html($parser);
+    $otitle = unqote_and_strip_space($otitle);
+    return $otitle;
+}
+
+#    <meta property='og:title' content="Tomorrowland (2015)" />
+#    opengraph title
+sub _og_title {
+    my $parser = shift;
+    my $tag;
+    my $ogtitle;
+    $tag = _jump_prop($parser, "property", "og:title", "meta") or return undef;
+    $ogtitle = $tag->[1]->{content};
+    $ogtitle = unqote_and_strip_space($ogtitle);
+    # strip year
+    $ogtitle =~ s/ *\([^(]*\) *$//;
+    return $ogtitle;
+}
 
 sub _image_alt {
     my $parser = shift;
@@ -538,7 +562,10 @@ sub _jump_prop {
                 # print ("skip: ", $parser->get_text(), "\n");
                 next;
             }
-            return $tag if ($tag->[1]->{$prop_name} =~ /$prop_val/i);
+            if ($tag->[1]->{$prop_name} =~ /$prop_val/i) {
+                # print "\nFOUND TAG[", scalar @{$tag}, "]: ", join(' ',@{$tag}), "\n";
+                return $tag
+            }
         }
     }
     return 0;

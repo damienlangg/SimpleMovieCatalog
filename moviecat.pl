@@ -413,10 +413,15 @@ sub cache_image
 sub cache_movie
 {
     my $m = shift;
-    if ($opt_otitle) {
+    if ($opt_otitle == 1) {
         if ($m->{otitle} and !defined($m->{rtitle})) {
             $m->{rtitle} = $m->{title}; # save regional title
             $m->{title} = $m->{otitle}; # use original title
+        }
+    } elsif ($opt_otitle == 2) {
+        if ($m->{og_title} and !defined($m->{rtitle})) {
+            $m->{rtitle} = $m->{title}; # save regional title
+            $m->{title} = $m->{og_title}; # use opengraph title
         }
     }
     $movie{$m->id} = $m;
@@ -1202,7 +1207,8 @@ sub format_movie
     }
     # grid layout hover info
     print_html '<div class="frame"><div class="info">';
-    print_html '<span class=titletitle>', $m->title ,'</span><span class=titleyear>', $m->year, '</span>';
+    my $m_title = xml_quote($m->title);
+    print_html '<span class=titletitle>', $m_title ,'</span><span class=titleyear>', $m->year, '</span>';
     print_html '<span class="grid_rating"><b>', $m->user_rating, '</b> / 10</span>';
     print_html '<span class="titleruntime">', $m->runtime ? $m->runtime : "?" ,' min</span>';
     print_html '<span class="imdb2"><a href="http://www.imdb.com/title/tt', $m->id, '" target="_blank">imdb</a></span>';
@@ -1212,7 +1218,7 @@ sub format_movie
     # standard layout
     print_html '<td class="title"><b>';
     print_html "<h1><a target=_blank class=\"MTITLE\" href=\"http://www.imdb.com/title/tt",
-               $m->id, "\">", $m->title, "</a> <span class=\"year-label\"> <span class=\"MYEAR\">", $m->year, "</span></span></h1>";
+               $m->id, "\">", $m_title, "</a> <span class=\"year-label\"> <span class=\"MYEAR\">", $m->year, "</span></span></h1>";
     print_html " <small><i>", $m->type, "</i></small>";
     print_html "</td></tr>";
 
@@ -2677,11 +2683,14 @@ sub set_opt
         $arg_used = required_arg($opt, $arg);
         $opt_theme = $arg;
 
+    } elsif ($opt eq "-deftitle") {
+        $opt_otitle = 0;
+
     } elsif ($opt eq "-origtitle") {
         $opt_otitle = 1;
 
-    } elsif ($opt eq "-deftitle") {
-        $opt_otitle = 0;
+    } elsif ($opt eq "-og-title") {
+        $opt_otitle = 2;
 
     } elsif ($opt eq "-http-accept-language") {
         $arg_used = required_arg($opt, $arg);
@@ -2813,8 +2822,9 @@ USAGE
     -as|-autosave           Save auto guessed exact matches
     -cachedays <NUM>        Number of days to cache pages [default: $max_cache_days]
     -theme <NAME>           Select theme name [default: $opt_theme]
-    -origtitle              Use original movie title
     -deftitle               Use default (regional) movie title [default]
+    -origtitle              Use original movie title
+    -og-title               Use opengraph title (english)
     -http-accept-language <LANG>  Set HTTP Accept-Language header value
     -http-user-agent <AGENT>      Set HTTP User-Agent header value
     -http-header <HEADER=VALUE>   Set any HTTP header
