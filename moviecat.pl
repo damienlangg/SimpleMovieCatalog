@@ -1434,7 +1434,12 @@ sub report_missing
 }
 
 sub by_title {
-    $pmlist->{$a}->{movie}->title  cmp  $pmlist->{$b}->{movie}->title;
+    my $ta = $pmlist->{$a}->{movie}->title;
+    my $tb = $pmlist->{$b}->{movie}->title;
+    # ignore queotes when sorting
+    $ta =~ s/"//g;
+    $tb =~ s/"//g;
+    $ta cmp $tb;
 }
 
 sub by_rating {
@@ -1468,9 +1473,10 @@ sub page_head_group {
 }
 
 sub page_head_jsort {
-    my ($sname) = @_;
+    my ($sname, $label) = @_;
+    if (!$label) { $label = $sname; }
     print_html "<a id=\"SORT_", uc($sname), "\"",
-                " href=javascript:sort_", lc($sname), "()>$sname</a> ";
+                " href=javascript:sort_", lc($sname), "()>$label</a> ";
 }
 
 sub page_head_jsort_user {
@@ -1480,9 +1486,9 @@ sub page_head_jsort_user {
 }
 
 sub page_head_sort {
-    my ($fbase, $this_fadd, $add, $sname) = @_;
+    my ($fbase, $this_fadd, $add, $sname, $label) = @_;
     if ($opt_js) {
-        page_head_jsort($sname);
+        page_head_jsort($sname, $label);
     } else {
         if ($this_fadd eq $add) {
             print_html "<b>[$sname]</b>";
@@ -1556,7 +1562,7 @@ sub page_start
         page_head_sort $fbase, $fadd, "-runtime", "Runtime";
         if ($opt_js) {
             page_head_sort $fbase, $fadd, "-year", "Year";
-            page_head_sort $fbase, $fadd, "-dirtime", "DirTime";
+            page_head_sort $fbase, $fadd, "-dirtime", "dirtime", "File-Time";
             if (@opt_user) {
                 print_html "User Votes: ";
                 my $uid;
