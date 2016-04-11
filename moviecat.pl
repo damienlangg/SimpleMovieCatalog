@@ -59,7 +59,8 @@ require "IMDB_Movie.pm";
 $IMDB::Movie::download_func = \&cache_imdb_id;
 
 my $prog_dir = $FindBin::Bin;
-my $imdb_cache = "$prog_dir/imdb_cache";
+my $imdb_cache_base = "$prog_dir/imdb_cache";
+my $imdb_cache = $imdb_cache_base;
 my $scan_log = "$prog_dir/scan.log";
 my $image_dir = "images";
 my $image_cache;
@@ -1298,7 +1299,8 @@ sub format_movie
         print_html '<div class="links">Links: ';
         format_links $m, 1, @opt_links;
     }
-    # print_html "<br><a href=../imdb_cache/imdb-",$m->id,".html>cache</a>";
+    #my $cache_dir = $imdb_cache; $cache_dir =~ s/^.*\///;
+    #print_html "<br><a href=../$cache_dir/imdb-",$m->id,".html>cache</a>";
     print_html "</div></td></tr>";
 
     print_html "</table><br>\n";
@@ -2684,6 +2686,11 @@ sub set_opt
     } elsif ($opt eq "-http-accept-language") {
         $arg_used = required_arg($opt, $arg);
         $LWP::Simple::ua->default_header('Accept-Language' => $arg);
+        my $a = $arg;
+        $a =~ s/\s//g;
+        $a =~ s/[^\w.,=-]/_/g;
+        if ($a) { $a = "-$a"; }
+        $imdb_cache = $imdb_cache_base . $a;
 
     } elsif ($opt eq "-http-user-agent") {
         $arg_used = required_arg($opt, $arg);
