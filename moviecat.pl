@@ -37,6 +37,7 @@ use File::Copy;
 use File::stat qw(); # no-override
 use LWP::Simple;
 use IO::Handle;
+use Data::Dumper;
 
 #use Term::ReadKey qw(GetTerminalSize);
 my $have_term = eval 'use Term::ReadKey; 1';
@@ -393,6 +394,7 @@ sub cache_image
         return 1;
     }
     print_note ".";
+    print_debug "Getting image: ", $m->img, "";
     my $image = get($m->img);
     if (!$image) {
         print_error "Getting image: ", $m->img, "";
@@ -442,6 +444,7 @@ sub getmovie
         return undef;
     }
     $m = IMDB::Movie->new_html($id, $html);
+    print_debug("MOVIE: ", Dumper($m));
     if (!$m) {
         print_log "*** Error: parse imdb $id\n";
         print_note " FAIL2";
@@ -530,6 +533,7 @@ sub findmovie
     }
     # direct hit or no match
     $m = IMDB::Movie->new_html(0, $html);
+    print_debug("MOVIE: ", Dumper($m));
     if (!$m) {
         print_log "*** Error: parse imdb '$title' ($year)\n";
         return undef;
@@ -2235,6 +2239,7 @@ sub do_search
     print_info "Searching for '$title' ($year)...";
     # my $mfound = IMDB::Movie->new($title);
     my $mfound = IMDB::Movie->new($title, $year);
+    print_debug("MOVIE: ", Dumper($mfound));
     print_info "\n";
     if ($mfound eq undef) {
         print_info "No match found for '$title'\n";

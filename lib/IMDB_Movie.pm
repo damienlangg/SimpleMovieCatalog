@@ -9,7 +9,7 @@ use HTML::TokeParser;
 use Data::Dumper;
 use HTML::Tagset ();
 
-$VERSION = '0.37';
+$VERSION = '0.38';
 $ERROR = "";
 @MATCH = ();
 $FIND_OPT = ""; # "&site=aka"
@@ -458,7 +458,11 @@ sub _image_og {
     my ($tag,$image);
     $tag = _jump_prop($parser, "property", "og:image", "meta") or return undef;
     $image = $tag->[1]->{content};
+    # a missing poster returns imdb logo with a url like:
+    # http://ia.media-imdb.com/images/G/01/imdb/images/logos/imdb_fb_logo-123._CB123.png
     if ($image =~ /\/nopicture\//i) { return ""; }
+    if ($image =~ /images\/logos/i) { return ""; }
+    if ($image =~ /imdb_fb_logo/i) { return ""; }
     #print "og:image = $image\n";
     return $image;
 }
