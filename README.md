@@ -192,8 +192,12 @@ Option Notes:
 
     The following patterns can be used in the URL:
         %ID%    -   Movie ID
-        %TITLE% -   Movie Title
         %YEAR%  -   Movie Year
+        %TITLE% -   Movie Title (opengraph/english)
+        %OGTITLE% - Movie Title (opengraph/english)
+        %OTITLE% -  Movie Title (original language)
+        %RTITLE% -  Movie Title (regional translation)
+        %XTITLE% -  Movie Title (what is configured to be displayed)
     And a custom name can be specified like this: NAME=URL
     If a custom name is not specified the domain name is used.
     If an image file is present named like: link-NAME.png it will
