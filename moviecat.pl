@@ -1104,6 +1104,7 @@ sub html_head
 sub format_html_path
 {
     my $path = shift;
+    utf8::decode($path);
     my $link = $path;
     $link =~ s/([\/\\])/$1<wbr>/g;
     # on windows use \ separator ($^O: cygwin MSWin32 linux...)
