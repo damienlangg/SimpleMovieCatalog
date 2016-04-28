@@ -93,11 +93,8 @@ my @series_tag = ( 's\d{1,2}e\d{1,2}', 'season\W+\d+', 'episode\W+\d+', '\d+x\d+
 
 my @subsearch = (
         "http://opensubtitles.org/en/search2/sublanguageid-eng/moviename-%TITLE%",
-        "http://subscene.com/filmsearch.aspx?q=%TITLE%",
-        #"http://podnapisi.net/ppodnapisi/search?tbsl=1&asdp=0&sJ=2&sY=&sAKA=1&sK=%TITLE%",
-        # todo: maybe auto quote at runtime?
-        #"http://podnapisi.net/ppodnapisi/search?tbsl=1&amp;asdp=0&amp;sJ=2&amp;sY=&amp;sAKA=1&amp;sK=%TITLE%",
-        "http://www.podnapisi.net/subtitles/search/?keywords=%TITLE%"
+        "https://subscene.com/subtitles/title?q=%TITLE%",
+        "https://www.podnapisi.net/subtitles/search/?keywords=%TITLE%",
         );
 
 my @opt_links = (
@@ -1154,10 +1151,10 @@ sub format_links
     my ($m, $strip_tld, @links) = @_;
     my $id = $m->id;
     my $year = $m->year;
-    my $title = url_safe($m->title);
-    my $og_title = url_safe($m->{og_title} ? $m->{og_title} : $m->title);
-    my $o_title = url_safe($m->{otitle} ? $m->{otitle} : $m->title);
-    my $r_title = url_safe($m->{rtitle} ? $m->{rtitle} : $m->title);
+    my $title = $m->title;
+    my $og_title = $m->{og_title} ? $m->{og_title} : $m->title;
+    my $o_title = $m->{otitle} ? $m->{otitle} : $m->title;
+    my $r_title = $m->{rtitle} ? $m->{rtitle} : $m->title;
     for my $link (@links) {
         my ($site, $csite, $url) = parse_opt_link($strip_tld, $link);
         $url =~ s/%ID%/$id/g;
@@ -1167,6 +1164,7 @@ sub format_links
         $url =~ s/%RTITLE%/$r_title/g;
         $url =~ s/%OGTITLE%/$og_title/g;
         $url =~ s/%XTITLE%/$title/g; # whatever is configured to be displayed
+        $url = url_safe($url);
         print_html_n '<a target=_blank href="', $url, '">';
         # link css image placeholder
         print_html_n "<span class=ln-tx-$csite>$site</span>";
