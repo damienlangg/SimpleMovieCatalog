@@ -49,20 +49,28 @@ if (eval 'use Time::HiRes; 1') {
 }
 my $g_stime = $hires_time->();
 
-#use IMDB_Movie;
-push @INC, $FindBin::Bin;
-push @INC, $FindBin::Bin . "/lib";
+# System install mode: if enabled, cache and log are placed inside the
+# report directory instead of program dir, because the user will not have
+# permission to write to it. And program dir is absolute instead of deduced
+# from binary pathname
+my $system_install = 0;
+
+my $prog_dir;
+
+if ($system_install) {
+    $prog_dir = "/usr/share/smoviecat";
+} else {
+    $prog_dir = $FindBin::Bin;
+}
+push @INC, "$prog_dir/lib";
 require "IMDB_Movie.pm";
 
 ### Globals
 
-# override download function
-$IMDB::Movie::download_func = \&cache_imdb_id;
-
-my $prog_dir = $FindBin::Bin;
-my $imdb_cache_base = "$prog_dir/imdb_cache";
+# cache and log are placed in proper directories in init()
+my $imdb_cache_base = "imdb_cache";
 my $imdb_cache = $imdb_cache_base;
-my $scan_log = "$prog_dir/scan.log";
+my $scan_log = "scan.log";
 my $image_dir = "images";
 my $image_cache;
 my $max_cache_days = 90; # keep cache for up to 3 months
@@ -157,6 +165,9 @@ my $last_cache_valid;
 
 $| = 1; # autoflush stdout
 
+# override download function
+$IMDB::Movie::download_func = \&cache_imdb_id;
+
 ### Utility Funcs
 
 sub print_html {
@@ -172,12 +183,19 @@ sub print_level {
     print @_;
 }
 
+my $defer_log;
+
 sub print_log {
     my $line = join '', @_;
     chomp $line;
     # print_level 2, $line, "\n";
     my $stamp = sprintf "[ %.6f ] ", ($hires_time->() - $g_stime);
-    print $F_LOG $stamp, $line, "\n";
+    my $msg = $stamp . $line . "\n";
+    if (not $F_LOG) {
+        $defer_log .= $msg;
+    } else {
+        print $F_LOG $msg;
+    }
 }
 
 sub print_error {
@@ -2915,7 +2933,7 @@ sub init
         $base_dir = $1;
         $base_name = $2;
     } else {
-        $base_dir = "";
+        $base_dir = ""; # could use "./"
         $base_name = $base_path;
     }
     if (!$base_name) {
@@ -2923,6 +2941,15 @@ sub init
     }
     $base_path = $base_dir . $base_name;
     $image_cache = $base_dir . $image_dir;
+    if ($system_install) {
+        # put cache and log in report dir for system install
+        $imdb_cache = "$base_dir$imdb_cache";
+        $scan_log = "$base_dir$scan_log";
+    } else {
+        # put cache and log in prog dir for user install
+        $imdb_cache = "$prog_dir/$imdb_cache";
+        $scan_log = "$prog_dir/$scan_log";
+    }
     makedir $base_dir;
     makedir $imdb_cache;
     makedir $image_cache;
@@ -2942,11 +2969,20 @@ sub init
 }
 
 sub open_log {
+    if ($F_LOG) { return; }
     open $F_LOG, ">", $scan_log;
     $F_LOG->autoflush(1);
+    if ($defer_log) {
+        print $F_LOG $defer_log;
+        $defer_log = undef;
+    }
+}
+
+sub log_start {
     print_log "$progname $progver";
     print_log "Perl: ", $^X, " ", sprintf("v%vd", $^V), " ", $^O;
     print_log "CYGWIN='", $ENV{CYGWIN}, "'";
+    print_log "system_install=$system_install";
 }
 
 
@@ -2954,11 +2990,13 @@ sub open_log {
 
 ### Main
 
-open_log;
+log_start;
 
 parse_opt(@ARGV);
 
 init;
+
+open_log;
 
 do_scan;
 
