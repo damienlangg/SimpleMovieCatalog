@@ -1,4 +1,4 @@
-# Simple Movie Catalog 2.4.0
+# Simple Movie Catalog 2.5.0
 
 Simple Movie Catalog will scan a given directory for movies,
 query imdb for info and generate a catalog in html which offers

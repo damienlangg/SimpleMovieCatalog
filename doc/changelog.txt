@@ -1,5 +1,12 @@
 Changelog:
 
+2016-05-02 Release 2.5.0
+ * Prepare code for system-wide installation
+ * Subtitle links fixes
+ * Use opengraph (english) title in external link query
+ * Correctly format accents in pathname
+ * Fixed detection of missing poster
+
 2016-04-12 Release 2.4.0
  * Fixed -origtitle
  * Added -og-title for opengraph title (english)
