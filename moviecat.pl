@@ -32,6 +32,7 @@ my $progurl = "http://smoviecat.sf.net/";
 use Cwd;
 use FindBin;
 use File::Find;
+use File::Path;
 use File::Basename;
 use File::Copy;
 use File::stat qw(); # no-override
@@ -277,6 +278,14 @@ sub cut_ext_l {
 sub normal_path {
     my $path = shift;
     $path =~ tr[\\][/];
+    return $path;
+}
+
+# expand ~ and ${VAR}
+sub expand_path {
+    my $path = shift;
+    $path =~ s/^~\//$ENV{HOME}\//;
+    while ($path =~ s/\$\{([a-zA-Z_]+)\}/$ENV{$1}/) {};
     return $path;
 }
 
@@ -2256,8 +2265,9 @@ sub set_opt
 
     } else {
         $ndirs++;
-        push @{$group[$ngroup]->{dirs}}, normal_path($opt);
-        print_log("DIR: '$opt'");
+        my $dir = expand_path(normal_path($opt));
+        push @{$group[$ngroup]->{dirs}}, $dir;
+        print_log("DIR: '$opt' -> '$dir'");
     }
     return $arg_used;
 }
@@ -2418,12 +2428,14 @@ sub parse_opt
 sub makedir
 {
     my $dir = shift or return;
-    -d $dir or mkdir $dir or abort "Can't mkdir $dir";
+    if (-d $dir) { return; }
+    #mkdir $dir or abort "Can't mkdir $dir";
+    File::Path::make_path($dir) or abort "Can't mkdir $dir";
 }
 
 sub init
 {
-    $base_path = normal_path($base_path);
+    $base_path = expand_path(normal_path($base_path));
     if ($base_path =~ /^(.*\/)([^\/]*)$/) {
         $base_dir = $1;
         $base_name = $2;

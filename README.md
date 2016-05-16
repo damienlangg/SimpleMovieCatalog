@@ -214,6 +214,9 @@ Option Notes:
     For more information on HTTP headers see:
     https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
 
+  Directories:
+    Provided DIRECTORY to scan and output pathname (-o option)
+    go through expansion of ~ and ${ENV}
 
 ````
 
