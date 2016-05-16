@@ -131,7 +131,6 @@ my $opt_match_fname = 1;# Match file names
 my $opt_auto_save = 0;  # Save auto guessed exact matches
 my $opt_group_table = 1;# use table for groups
 my $opt_xml = 0;        # xml export
-my $opt_js = 1;         # javascript sort & filter
 my $opt_aka = 0;        # search AKA titles
 my $opt_theme = 'white'; # default theme
 my $opt_otitle = 0;     # original title
@@ -1085,9 +1084,7 @@ sub html_head
     print_html "<title>$title</title>";
     # Favicon
     print_html '<link rel="shortcut icon" href="favicon.ico">';
-    if ($opt_js) {
-        print_html "<script src=\"$jsname\" type=\"text/javascript\"></script>";
-    }
+    print_html "<script src=\"$jsname\" type=\"text/javascript\"></script>";
 
     # base CSS style
     print_html "<style type=text/css><!--";
@@ -1492,7 +1489,7 @@ sub by_runtime {
 sub get_gfname {
     my $gfname = shift;
     return "" unless $gfname;
-    return "" unless (scalar @group > 1 or ($opt_js and $opt_miss));
+    return "" unless (scalar @group > 1 or $opt_miss);
     return "" if ($group[0]->{title} eq $gfname);
     $gfname =~ s/[\W]/_/g; # replace non-alphanum with _
     $gfname = "_" . lc( $gfname ); # lo-case
@@ -1524,15 +1521,7 @@ sub page_head_jsort_user {
 
 sub page_head_sort {
     my ($fbase, $this_fadd, $add, $sname, $label) = @_;
-    if ($opt_js) {
-        page_head_jsort($sname, $label);
-    } else {
-        if ($this_fadd eq $add) {
-            print_html "<b>[$sname]</b>";
-        } else {
-            print_html "<a href=$fbase$add.html>$sname</a>";
-        }
-    }
+    page_head_jsort($sname, $label);
 }
 
 sub page_start
@@ -1564,7 +1553,7 @@ sub page_start
     print_html '</select></form>';
     print_html '<script>set_preferred_theme()</script>';
 
-    if (scalar @group > 1 or ($opt_js and $opt_miss)) {
+    if (scalar @group > 1 or $opt_miss) {
         print_html '<table class=GroupTable>';
         #print_html "<td valign=top>Group:";
         print_html "<td><table cellpadding=0 cellspacing=0><tr>" if ($opt_group_table);
@@ -1597,21 +1586,14 @@ sub page_start
         page_head_sort $fbase, $fadd, "", "Title";
         page_head_sort $fbase, $fadd, "-rating", "Rating";
         page_head_sort $fbase, $fadd, "-runtime", "Runtime";
-        if ($opt_js) {
-            page_head_sort $fbase, $fadd, "-year", "Year";
-            page_head_sort $fbase, $fadd, "-dirtime", "dirtime", "File-Time";
-            if (@opt_user) {
-                print_html "User Votes: ";
-                my $uid;
-                for my $uv (@user_vote) {
-                    $uid++;
-                    page_head_jsort_user $uid, $uv->{'name'};
-                }
-            }
-        } else {
-            page_head_sort $fbase, $fadd, "-genre", "Genre";
-            if ($opt_miss and scalar @group == 1) {
-                page_head_sort $fbase, $fadd, "-missinfo", "Missing Info";
+        page_head_sort $fbase, $fadd, "-year", "Year";
+        page_head_sort $fbase, $fadd, "-dirtime", "dirtime", "File-Time";
+        if (@opt_user) {
+            print_html "User Votes: ";
+            my $uid;
+            for my $uv (@user_vote) {
+                $uid++;
+                page_head_jsort_user $uid, $uv->{'name'};
             }
         }
         print_html "</div>";
@@ -1636,8 +1618,6 @@ sub page_footer
 {
     if (scalar keys %{$pmlist} == 0) {
         print_html "<br>No Movies Found!<br>";
-    } elsif (scalar @group < 2 and !$opt_js) {
-        print_html "<br>Total: ", scalar keys %{$pmlist}, " Movies<br>";
     }
     if (@user_vote) {
         print_html "User votes: ";
@@ -1825,9 +1805,7 @@ sub print_page
 
     page_start($gname, $fadd);
 
-    if ($opt_js) {
-        page_filter;
-    }
+    page_filter;
 
     print_html '<table id="MTABLE" cellspacing="0" cellpadding="0">';
     for my $id (sort $sort_by keys %{$pmlist}) {
@@ -1985,42 +1963,32 @@ sub print_report
         $pgroup = $g; # set current group
         $pmlist = \%{$g->{mlist}};
         print_page $gname, "", \&by_title;
-        if (!$opt_js) {
-            print_page $gname, "-rating", \&by_rating;
-            print_page $gname, "-runtime", \&by_runtime;
-            print_page_genre $gname;
-            if ($opt_miss and scalar @group == 1) {
-                print_page_miss $gname, "-missinfo";
-            }
-        }
         if ($opt_xml) {
             print_xml $gname;
         }
     }
-    if ($opt_miss and (scalar @group > 1 or $opt_js)) {
+    if ($opt_miss) {
         print_page_miss "Missing Info", "";
     }
-    if ($opt_js) {
-        copy_lib $jsname;
-        # *.png
-        for my $f (glob "$prog_dir/lib/*.png") {
-            copy_lib basename($f);
-        }
-        # favicon
-        copy_lib "favicon.ico";
-        # links css
-        create_links_css();
-        create_links_css("-d"); # "dark" variant
-        # *.css
-        my $theme_found = 0;
-        for my $tfile (glob "$prog_dir/lib/*.css") {
-            my $theme = basename($tfile);
-            if ($theme eq "$opt_theme.css") { $theme_found = 1; }
-            copy_lib $theme;
-        }
-        if (!$theme_found) {
-            print_error "Theme not found: $opt_theme";
-        }
+    copy_lib $jsname;
+    # *.png
+    for my $f (glob "$prog_dir/lib/*.png") {
+        copy_lib basename($f);
+    }
+    # favicon
+    copy_lib "favicon.ico";
+    # links css
+    create_links_css();
+    create_links_css("-d"); # "dark" variant
+    # *.css
+    my $theme_found = 0;
+    for my $tfile (glob "$prog_dir/lib/*.css") {
+        my $theme = basename($tfile);
+        if ($theme eq "$opt_theme.css") { $theme_found = 1; }
+        copy_lib $theme;
+    }
+    if (!$theme_found) {
+        print_error "Theme not found: $opt_theme";
     }
 }
 
@@ -2198,10 +2166,10 @@ sub set_opt
         @opt_links = ();
 
     } elsif ($opt eq "-js") {
-        $opt_js = 1;
+        # ignore obsolete option
 
     } elsif ($opt eq "-nojs") {
-        $opt_js = 0;
+        print_error "unsupported obsolete option: $opt";
 
     } elsif ($opt eq "-xml") {
         $opt_xml = 1;
@@ -2374,8 +2342,6 @@ USAGE
     -ns|-noskip             Clear preset skip lists
     -gs|-gskip <NAME>       Group Skip file or dir
     -gx|-gregex <EXPR>      Group Skip using regular expressions
-    -js                     Use javascript for sorting [default]
-    -nojs                   Use static html for sorting
     -xml                    Export catalog to .xml files
     -nosubs                 Clear subtitle search site list
     -nolink                 Clear custom links list

@@ -104,8 +104,6 @@ Usage: perl moviecat.pl [OPTIONS] [DIRECTORY ...]
     -ns|-noskip             Clear preset skip lists
     -gs|-gskip <NAME>       Group Skip file or dir
     -gx|-gregex <EXPR>      Group Skip using regular expressions
-    -js                     Use javascript for sorting [default]
-    -nojs                   Use static html for sorting
     -xml                    Export catalog to .xml files
     -nosubs                 Clear subtitle search site list
     -nolink                 Clear custom links list
