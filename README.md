@@ -18,6 +18,11 @@ sorting and grouping of found movies by different criteria.
 7. [Contributing](#contributing)
     1. [Development](#development)
 
+## Screenshots
+
+![Screenshot of dark-grid (SimpleMovieCatalog)](https://dl.dropboxusercontent.com/u/18447700/smc-dark-grid.png "Screenshot")
+![Screenshot of dark-columns (SimpleMovieCatalog)](https://dl.dropboxusercontent.com/u/18447700/smc-dark-columns.png "Screenshot")
+
 ## Install
 
 ### Windows:
