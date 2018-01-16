@@ -39,6 +39,7 @@ use File::stat qw(); # no-override
 use LWP::Simple;
 use IO::Handle;
 use Data::Dumper;
+require LWP::Protocol::https;
 
 #use Term::ReadKey qw(GetTerminalSize);
 my $have_term = eval 'use Term::ReadKey; 1';
@@ -222,7 +223,9 @@ sub print_detail {
 
 sub print_debug {
     print_log "DEBUG: ", @_;
-    print_level 3, @_;
+    my $msg = "@_";
+    chomp $msg;
+    print_level 3, "$msg\n";
 }
 
 sub _print_debug {
@@ -2472,7 +2475,9 @@ sub init
         $IMDB::Movie::FIND_OPT = "&site=aka";
     }
     print_debug "AKA: '", $IMDB::Movie::FIND_OPT, "'";
-    print_debug "LWP Headers:\n", $LWP::Simple::ua->default_headers->as_string;
+    print_debug "LWP Headers: ", $LWP::Simple::ua->default_headers->as_string;
+    $LWP::Simple::ua->ssl_opts(verify_hostname => 0);
+    print_debug "LWP SSL verify_hostname=", $LWP::Simple::ua->ssl_opts('verify_hostname');
 }
 
 sub open_log {
