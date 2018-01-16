@@ -1,5 +1,10 @@
 Changelog:
 
+2018-01-16 Release 2.6.0
+ * Fixed movie guess - search results parse
+ * Fixes for https
+ * Other minor cleanups
+
 2016-05-02 Release 2.5.0
  * Prepare code for system-wide installation
  * Subtitle links fixes

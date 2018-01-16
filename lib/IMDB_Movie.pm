@@ -9,7 +9,7 @@ use HTML::TokeParser;
 use Data::Dumper;
 use HTML::Tagset ();
 
-$VERSION = '0.38';
+$VERSION = '0.39';
 $ERROR = "";
 @MATCH = ();
 $FIND_OPT = ""; # "&site=aka"
