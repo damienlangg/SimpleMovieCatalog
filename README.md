@@ -21,8 +21,8 @@ sorting and grouping of found movies by different criteria.
 
 ## Screenshots
 
-![Screenshot of dark-grid (SimpleMovieCatalog)](https://rolle.design/smc-dark-grid.png "Screenshot")
-![Screenshot of dark-columns (SimpleMovieCatalog)](https://rolle.design/smc-dark-columns.png "Screenshot")
+![Screenshot of dark-grid (SimpleMovieCatalog)](https://i.imgur.com/1tmDGYy.png "Screenshot")
+![Screenshot of dark-columns (SimpleMovieCatalog)](https://i.imgur.com/2QeaAk6.png "Screenshot")
 
 ## Install
 
