@@ -2,7 +2,7 @@
 
 =copyright
 
-    Simple Movie Catalog 2.3.0
+    Simple Movie Catalog 2.6.0
     Copyright (C) 2008-2016 damien.langg@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -22,7 +22,7 @@
 
 use strict;
 
-my $progver = "2.3.0";
+my $progver = "2.6.0";
 my $author = 'damien.langg@gmail.com';
 my $copyright = "Copyright 2008-2016, $author";
 my $progbin = "moviecat.pl";
@@ -32,11 +32,14 @@ my $progurl = "http://smoviecat.sf.net/";
 use Cwd;
 use FindBin;
 use File::Find;
+use File::Path;
 use File::Basename;
 use File::Copy;
 use File::stat qw(); # no-override
 use LWP::Simple;
 use IO::Handle;
+use Data::Dumper;
+require LWP::Protocol::https;
 
 #use Term::ReadKey qw(GetTerminalSize);
 my $have_term = eval 'use Term::ReadKey; 1';
@@ -48,19 +51,30 @@ if (eval 'use Time::HiRes; 1') {
 }
 my $g_stime = $hires_time->();
 
-#use IMDB_Movie;
-push @INC, $FindBin::Bin;
-push @INC, $FindBin::Bin . "/lib";
+# System install mode: if enabled, cache and log are placed inside the
+# report directory instead of program dir, because the user will not have
+# permission to write to it. And program dir is absolute instead of deduced
+# from binary pathname
+my $system_install = 0;
+
+my $prog_dir;
+
+if ($system_install) {
+    $prog_dir = "/usr/share/smoviecat";
+} else {
+    $prog_dir = $FindBin::Bin;
+}
+push @INC, "$prog_dir/lib";
 require "IMDB_Movie.pm";
+
+my $enable_interactive = 0;
 
 ### Globals
 
-# override download function
-$IMDB::Movie::download_func = \&cache_imdb_id;
-
-my $prog_dir = $FindBin::Bin;
-my $imdb_cache = "$prog_dir/imdb_cache";
-my $scan_log = "$prog_dir/scan.log";
+# cache and log are placed in proper directories in init()
+my $imdb_cache_base = "imdb_cache";
+my $imdb_cache = $imdb_cache_base;
+my $scan_log = "scan.log";
 my $image_dir = "images";
 my $image_cache;
 my $max_cache_days = 90; # keep cache for up to 3 months
@@ -91,10 +105,8 @@ my @series_tag = ( 's\d{1,2}e\d{1,2}', 'season\W+\d+', 'episode\W+\d+', '\d+x\d+
 
 my @subsearch = (
         "http://opensubtitles.org/en/search2/sublanguageid-eng/moviename-%TITLE%",
-        "http://subscene.com/filmsearch.aspx?q=%TITLE%",
-        #"http://podnapisi.net/ppodnapisi/search?tbsl=1&asdp=0&sJ=2&sY=&sAKA=1&sK=%TITLE%",
-        # todo: maybe auto quote at runtime?
-        "http://podnapisi.net/ppodnapisi/search?tbsl=1&amp;asdp=0&amp;sJ=2&amp;sY=&amp;sAKA=1&amp;sK=%TITLE%",
+        "https://subscene.com/subtitles/title?q=%TITLE%",
+        "https://www.podnapisi.net/subtitles/search/?keywords=%TITLE%",
         );
 
 my @opt_links = (
@@ -121,7 +133,6 @@ my $opt_match_fname = 1;# Match file names
 my $opt_auto_save = 0;  # Save auto guessed exact matches
 my $opt_group_table = 1;# use table for groups
 my $opt_xml = 0;        # xml export
-my $opt_js = 1;         # javascript sort & filter
 my $opt_aka = 0;        # search AKA titles
 my $opt_theme = 'white'; # default theme
 my $opt_otitle = 0;     # original title
@@ -157,6 +168,9 @@ my $last_cache_valid;
 
 $| = 1; # autoflush stdout
 
+# override download function
+$IMDB::Movie::download_func = \&cache_imdb_id;
+
 ### Utility Funcs
 
 sub print_html {
@@ -172,12 +186,19 @@ sub print_level {
     print @_;
 }
 
+my $defer_log;
+
 sub print_log {
     my $line = join '', @_;
     chomp $line;
     # print_level 2, $line, "\n";
     my $stamp = sprintf "[ %.6f ] ", ($hires_time->() - $g_stime);
-    print $F_LOG $stamp, $line, "\n";
+    my $msg = $stamp . $line . "\n";
+    if (not $F_LOG) {
+        $defer_log .= $msg;
+    } else {
+        print $F_LOG $msg;
+    }
 }
 
 sub print_error {
@@ -202,7 +223,9 @@ sub print_detail {
 
 sub print_debug {
     print_log "DEBUG: ", @_;
-    print_level 3, @_;
+    my $msg = "@_";
+    chomp $msg;
+    print_level 3, "$msg\n";
 }
 
 sub _print_debug {
@@ -258,6 +281,14 @@ sub cut_ext_l {
 sub normal_path {
     my $path = shift;
     $path =~ tr[\\][/];
+    return $path;
+}
+
+# expand ~ and ${VAR}
+sub expand_path {
+    my $path = shift;
+    $path =~ s/^~\//$ENV{HOME}\//;
+    while ($path =~ s/\$\{([a-zA-Z_]+)\}/$ENV{$1}/) {};
     return $path;
 }
 
@@ -392,6 +423,7 @@ sub cache_image
         return 1;
     }
     print_note ".";
+    print_debug "Getting image: ", $m->img, "";
     my $image = get($m->img);
     if (!$image) {
         print_error "Getting image: ", $m->img, "";
@@ -412,10 +444,15 @@ sub cache_image
 sub cache_movie
 {
     my $m = shift;
-    if ($opt_otitle) {
+    if ($opt_otitle == 1) {
         if ($m->{otitle} and !defined($m->{rtitle})) {
             $m->{rtitle} = $m->{title}; # save regional title
             $m->{title} = $m->{otitle}; # use original title
+        }
+    } elsif ($opt_otitle == 2) {
+        if ($m->{og_title} and !defined($m->{rtitle})) {
+            $m->{rtitle} = $m->{title}; # save regional title
+            $m->{title} = $m->{og_title}; # use opengraph title
         }
     }
     $movie{$m->id} = $m;
@@ -436,6 +473,7 @@ sub getmovie
         return undef;
     }
     $m = IMDB::Movie->new_html($id, $html);
+    print_debug("MOVIE: ", Dumper($m));
     if (!$m) {
         print_log "*** Error: parse imdb $id\n";
         print_note " FAIL2";
@@ -524,6 +562,7 @@ sub findmovie
     }
     # direct hit or no match
     $m = IMDB::Movie->new_html(0, $html);
+    print_debug("MOVIE: ", Dumper($m));
     if (!$m) {
         print_log "*** Error: parse imdb '$title' ($year)\n";
         return undef;
@@ -1057,9 +1096,7 @@ sub html_head
     print_html "<title>$title</title>";
     # Favicon
     print_html '<link rel="shortcut icon" href="favicon.ico">';
-    if ($opt_js) {
-        print_html "<script src=\"$jsname\" type=\"text/javascript\"></script>";
-    }
+    print_html "<script src=\"$jsname\" type=\"text/javascript\"></script>";
 
     # base CSS style
     print_html "<style type=text/css><!--";
@@ -1094,6 +1131,7 @@ sub html_head
 sub format_html_path
 {
     my $path = shift;
+    utf8::decode($path);
     my $link = $path;
     $link =~ s/([\/\\])/$1<wbr>/g;
     # on windows use \ separator ($^O: cygwin MSWin32 linux...)
@@ -1129,19 +1167,33 @@ sub parse_opt_link
     return ($site, $csite, $url);
 }
 
+sub url_safe
+{
+    $a = shift;
+    $a =~ s/ /+/g;
+    $a = xml_quote($a);
+    return $a;
+}
+
 sub format_links
 {
     my ($m, $strip_tld, @links) = @_;
     my $id = $m->id;
     my $year = $m->year;
     my $title = $m->title;
-    $title =~ s/ /+/g;
-    $title = xml_quote($title);
+    my $og_title = $m->{og_title} ? $m->{og_title} : $m->title;
+    my $o_title = $m->{otitle} ? $m->{otitle} : $m->title;
+    my $r_title = $m->{rtitle} ? $m->{rtitle} : $m->title;
     for my $link (@links) {
         my ($site, $csite, $url) = parse_opt_link($strip_tld, $link);
         $url =~ s/%ID%/$id/g;
         $url =~ s/%YEAR%/$year/g;
-        $url =~ s/%TITLE%/$title/g;
+        $url =~ s/%TITLE%/$og_title/g;
+        $url =~ s/%OTITLE%/$o_title/g;
+        $url =~ s/%RTITLE%/$r_title/g;
+        $url =~ s/%OGTITLE%/$og_title/g;
+        $url =~ s/%XTITLE%/$title/g; # whatever is configured to be displayed
+        $url = url_safe($url);
         print_html_n '<a target=_blank href="', $url, '">';
         # link css image placeholder
         print_html_n "<span class=ln-tx-$csite>$site</span>";
@@ -1201,7 +1253,8 @@ sub format_movie
     }
     # grid layout hover info
     print_html '<div class="frame"><div class="info">';
-    print_html '<span class=titletitle>', $m->title ,'</span><span class=titleyear>', $m->year, '</span>';
+    my $m_title = xml_quote($m->title);
+    print_html '<span class=titletitle>', $m_title ,'</span><span class=titleyear>', $m->year, '</span>';
     print_html '<span class="grid_rating"><b>', $m->user_rating, '</b> / 10</span>';
     print_html '<span class="titleruntime">', $m->runtime ? $m->runtime : "?" ,' min</span>';
     print_html '<span class="imdb2"><a href="http://www.imdb.com/title/tt', $m->id, '" target="_blank">imdb</a></span>';
@@ -1211,7 +1264,7 @@ sub format_movie
     # standard layout
     print_html '<td class="title"><b>';
     print_html "<h1><a target=_blank class=\"MTITLE\" href=\"http://www.imdb.com/title/tt",
-               $m->id, "\">", $m->title, "</a> <span class=\"year-label\"> <span class=\"MYEAR\">", $m->year, "</span></span></h1>";
+               $m->id, "\">", $m_title, "</a> <span class=\"year-label\"> <span class=\"MYEAR\">", $m->year, "</span></span></h1>";
     print_html " <small><i>", $m->type, "</i></small>";
     print_html "</td></tr>";
 
@@ -1298,7 +1351,8 @@ sub format_movie
         print_html '<div class="links">Links: ';
         format_links $m, 1, @opt_links;
     }
-    # print_html "<br><a href=../imdb_cache/imdb-",$m->id,".html>cache</a>";
+    #my $cache_dir = $imdb_cache; $cache_dir =~ s/^.*\///;
+    #print_html "<br><a href=../$cache_dir/imdb-",$m->id,".html>cache</a>";
     print_html "</div></td></tr>";
 
     print_html "</table><br>\n";
@@ -1426,7 +1480,12 @@ sub report_missing
 }
 
 sub by_title {
-    $pmlist->{$a}->{movie}->title  cmp  $pmlist->{$b}->{movie}->title;
+    my $ta = $pmlist->{$a}->{movie}->title;
+    my $tb = $pmlist->{$b}->{movie}->title;
+    # ignore queotes when sorting
+    $ta =~ s/"//g;
+    $tb =~ s/"//g;
+    $ta cmp $tb;
 }
 
 sub by_rating {
@@ -1442,7 +1501,7 @@ sub by_runtime {
 sub get_gfname {
     my $gfname = shift;
     return "" unless $gfname;
-    return "" unless (scalar @group > 1 or ($opt_js and $opt_miss));
+    return "" unless (scalar @group > 1 or $opt_miss);
     return "" if ($group[0]->{title} eq $gfname);
     $gfname =~ s/[\W]/_/g; # replace non-alphanum with _
     $gfname = "_" . lc( $gfname ); # lo-case
@@ -1460,9 +1519,10 @@ sub page_head_group {
 }
 
 sub page_head_jsort {
-    my ($sname) = @_;
+    my ($sname, $label) = @_;
+    if (!$label) { $label = $sname; }
     print_html "<a id=\"SORT_", uc($sname), "\"",
-                " href=javascript:sort_", lc($sname), "()>$sname</a> ";
+                " href=javascript:sort_", lc($sname), "()>$label</a> ";
 }
 
 sub page_head_jsort_user {
@@ -1472,16 +1532,8 @@ sub page_head_jsort_user {
 }
 
 sub page_head_sort {
-    my ($fbase, $this_fadd, $add, $sname) = @_;
-    if ($opt_js) {
-        page_head_jsort($sname);
-    } else {
-        if ($this_fadd eq $add) {
-            print_html "<b>[$sname]</b>";
-        } else {
-            print_html "<a href=$fbase$add.html>$sname</a>";
-        }
-    }
+    my ($fbase, $this_fadd, $add, $sname, $label) = @_;
+    page_head_jsort($sname, $label);
 }
 
 sub page_start
@@ -1513,7 +1565,7 @@ sub page_start
     print_html '</select></form>';
     print_html '<script>set_preferred_theme()</script>';
 
-    if (scalar @group > 1 or ($opt_js and $opt_miss)) {
+    if (scalar @group > 1 or $opt_miss) {
         print_html '<table class=GroupTable>';
         #print_html "<td valign=top>Group:";
         print_html "<td><table cellpadding=0 cellspacing=0><tr>" if ($opt_group_table);
@@ -1546,21 +1598,14 @@ sub page_start
         page_head_sort $fbase, $fadd, "", "Title";
         page_head_sort $fbase, $fadd, "-rating", "Rating";
         page_head_sort $fbase, $fadd, "-runtime", "Runtime";
-        if ($opt_js) {
-            page_head_sort $fbase, $fadd, "-year", "Year";
-            page_head_sort $fbase, $fadd, "-dirtime", "DirTime";
-            if (@opt_user) {
-                print_html "User Votes: ";
-                my $uid;
-                for my $uv (@user_vote) {
-                    $uid++;
-                    page_head_jsort_user $uid, $uv->{'name'};
-                }
-            }
-        } else {
-            page_head_sort $fbase, $fadd, "-genre", "Genre";
-            if ($opt_miss and scalar @group == 1) {
-                page_head_sort $fbase, $fadd, "-missinfo", "Missing Info";
+        page_head_sort $fbase, $fadd, "-year", "Year";
+        page_head_sort $fbase, $fadd, "-dirtime", "dirtime", "File-Time";
+        if (@opt_user) {
+            print_html "User Votes: ";
+            my $uid;
+            for my $uv (@user_vote) {
+                $uid++;
+                page_head_jsort_user $uid, $uv->{'name'};
             }
         }
         print_html "</div>";
@@ -1574,7 +1619,7 @@ sub page_end
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
     $year += 1900;
     $mon += 1;
-    my $datestr = "$year-$mon-$mday $hour:$min";
+    my $datestr = sprintf("%d-%02d-%02d %02d:%02d", $year, $mon, $mday, $hour, $min);
     print_html "<br><div style=\"text-align:right\"><i>Generated by ";
     print_html "<a href=\"$progurl\">$progname $progver</a> on $datestr</i></div>";
     print_html "</body></html>";
@@ -1585,8 +1630,6 @@ sub page_footer
 {
     if (scalar keys %{$pmlist} == 0) {
         print_html "<br>No Movies Found!<br>";
-    } elsif (scalar @group < 2 and !$opt_js) {
-        print_html "<br>Total: ", scalar keys %{$pmlist}, " Movies<br>";
     }
     if (@user_vote) {
         print_html "User votes: ";
@@ -1741,7 +1784,9 @@ sub page_filter
     print_html "<table id=RANGE_TABLE cellspacing=0 cellpadding=0>";
 
     my $input_number = "input type=text maxlength=5 size=4 "
-    ."onkeypress=\"return numbersOnly(event);\" onchange=\"do_filter();\"";
+    ."onkeypress=\"return numbersOnly(event);\" "
+    ."onkeyup=\"numbersOnlyObj(this);\" "
+    ."onchange=\"numbersOnlyObj(this);do_filter();\"";
     print_html "<tr class=\"rangetr\"><td class=\"newsort\">Year: <td>";
     print_html "<$input_number id=YMIN value=$minyear> - ";
     print_html "<$input_number id=YMAX value=$maxyear></tr>";
@@ -1772,9 +1817,7 @@ sub print_page
 
     page_start($gname, $fadd);
 
-    if ($opt_js) {
-        page_filter;
-    }
+    page_filter;
 
     print_html '<table id="MTABLE" cellspacing="0" cellpadding="0">';
     for my $id (sort $sort_by keys %{$pmlist}) {
@@ -1932,42 +1975,32 @@ sub print_report
         $pgroup = $g; # set current group
         $pmlist = \%{$g->{mlist}};
         print_page $gname, "", \&by_title;
-        if (!$opt_js) {
-            print_page $gname, "-rating", \&by_rating;
-            print_page $gname, "-runtime", \&by_runtime;
-            print_page_genre $gname;
-            if ($opt_miss and scalar @group == 1) {
-                print_page_miss $gname, "-missinfo";
-            }
-        }
         if ($opt_xml) {
             print_xml $gname;
         }
     }
-    if ($opt_miss and (scalar @group > 1 or $opt_js)) {
+    if ($opt_miss) {
         print_page_miss "Missing Info", "";
     }
-    if ($opt_js) {
-        copy_lib $jsname;
-        # *.png
-        for my $f (glob "$prog_dir/lib/*.png") {
-            copy_lib basename($f);
-        }
-        # favicon
-        copy_lib "favicon.ico";
-        # links css
-        create_links_css();
-        create_links_css("-d"); # "dark" variant
-        # *.css
-        my $theme_found = 0;
-        for my $tfile (glob "$prog_dir/lib/*.css") {
-            my $theme = basename($tfile);
-            if ($theme eq "$opt_theme.css") { $theme_found = 1; }
-            copy_lib $theme;
-        }
-        if (!$theme_found) {
-            print_error "Theme not found: $opt_theme";
-        }
+    copy_lib $jsname;
+    # *.png
+    for my $f (glob "$prog_dir/lib/*.png") {
+        copy_lib basename($f);
+    }
+    # favicon
+    copy_lib "favicon.ico";
+    # links css
+    create_links_css();
+    create_links_css("-d"); # "dark" variant
+    # *.css
+    my $theme_found = 0;
+    for my $tfile (glob "$prog_dir/lib/*.css") {
+        my $theme = basename($tfile);
+        if ($theme eq "$opt_theme.css") { $theme_found = 1; }
+        copy_lib $theme;
+    }
+    if (!$theme_found) {
+        print_error "Theme not found: $opt_theme";
     }
 }
 
@@ -1975,6 +2008,7 @@ sub print_report
 ###############################
 
 ### Interactive
+
 
 sub path_to_guess
 {
@@ -2025,485 +2059,10 @@ sub path_to_guess
     return ($title, $year, $type, $ccount);
 }
 
-sub get_guess_list
-{
-    my @guess;
-    my %seen; # make unique
-    for my $file (@_) {
-        my ($t,$y) = path_to_guess($file);
-        next unless ($t);
-        my $sid = lc("$t y $y");
-        next if ($seen{$sid}++);
-        push @guess, { title => $t, year => $y };
-    }
-    return @guess;
+if ($enable_interactive) {
+    #require 'lib/interactive.pm';
+    eval `cat 'lib/interactive.pm'`;
 }
-
-sub list_file
-{
-    my ($dir, $f) = @_;
-    my $fn = "$dir/$f";
-    if (-d $fn) {
-        print "           $f/\n";
-    } elsif (-f $fn) {
-        my $size = (-s _) / 1024 / 1024;
-        printf "  %6.1fM  %s\n", $size, $f;
-    } else {
-        print "           $f\n";
-    }
-}
-
-sub list_files
-{
-    my $dir = shift;
-    my @flist;
-    opendir(my $dh, $dir) or print_error("opendir $dir") and return;
-    for my $f (sort by_alpha readdir($dh)) {
-        next if ($f eq "." or $f eq "..");
-        my $fn = "$dir/$f";
-        if (-d $fn) {
-            list_file $dir, $f;
-        } else { push @flist, $f; }
-    }
-    for my $f (@flist) {
-        list_file $dir, $f;
-    }
-    print "\n";
-    close $dh;
-}
-
-
-sub list_relevant
-{
-    my ($dir, @files) = @_;
-    print_info "Relevant files:\n";
-    for my $f (sort by_alpha @files) {
-        #print_info "  $f\n";
-        list_file $dir, $f;
-    }
-    print_info "\n";
-}
-
-sub print_dir
-{
-    my ($all, $i, $dir) = @_;
-    my $dtag;
-    if ($all_dirs{$dir}->{info}) {
-        next if (!$all);
-        if ($all_dirs{$dir}->{guess}) {
-            $dtag = "g";
-        } else {
-            $dtag = "*";
-        }
-    } elsif ($all_dirs{$dir}->{relevant}) {
-        $dtag = "-";
-    } else {
-        next if ($all < 2);
-        $dtag = " ";
-    }
-    print_info "  $dtag [$i] $dir\n";
-}
-
-sub list_dirs
-{
-    my $all = shift;
-    my @dirs = @_;
-    if ($all) { print_info "\nAll Directories:\n\n"; }
-    else { print_info "\nDirectories with missing info:\n\n"; }
-    my $i;
-    for my $dir (@dirs) {
-        $i++;
-        print_dir $all, $i, $dir;
-    }
-    print_info "\n";
-}
-
-sub get_subdirs
-{
-    my ($dir, @dirs) = @_;
-    my @subdirs;
-    for my $d (@dirs) {
-        if (index($d, "$dir/") == 0) {
-            my $subdir = substr($d, length "$dir/");
-            if (index($subdir, "/") < 0) {
-                # found subdir
-                push @subdirs, $subdir;
-            }
-        }
-    }
-    return @subdirs;
-}
-
-sub list_subdirs
-{
-    my ($dir, @dirs) = @_;
-    my @subdirs = get_subdirs($dir, @dirs);
-    if (scalar @subdirs) {
-        print_info "\nSub-Directories:\n";
-    } else {
-        print_info "No Sub-Directories.";
-    }
-    for my $sd (@subdirs) {
-        my $d = "$dir/$sd";
-        my $i = $all_dirs{$d}->{idx};
-        print_dir 2, $i+1, $sd;
-    }
-    print_info "\n";
-}
-
-sub find_dir
-{
-    my ($dir, $arg, @dirs) = @_;
-    if ($arg eq "/") {
-        return 0;
-    } elsif ($arg eq ".") {
-        return $all_dirs{$dir}->{idx};
-    } elsif ($arg eq "..") {
-        return -1 if (rindex($dir, "/") < 0);
-        $arg = substr($dir, 0, rindex($dir, "/"));
-    } else {
-        # search relative dir
-        my $sdir = "$dir/$arg";
-        if ($all_dirs{$sdir}) {
-            return $all_dirs{$sdir}->{idx};
-        }
-    }
-    # search absolute dir
-    if ($all_dirs{$arg}) {
-        return $all_dirs{$arg}->{idx};
-    }
-    return -1;
-}
-
-sub run_cmd
-{
-    my ($dir, $cmd) = @_;
-    if (!$cmd) {
-        print_error "Missing CMD";
-        return;
-    }
-    my $cwd = getcwd;
-    # opendir $cwd, ".";
-    chdir $dir;
-    print_info "Running '$cmd' in $dir\n\n";
-    system($cmd);
-    chdir $cwd;
-    # system("pwd");
-    print_info "\n";
-}
-
-sub unique_matches {
-    my %seen;
-    # fix first match type
-    if ($_[0] and $_[0]->{id} and !$_[0]->{type} and ($_[0]->{id} eq $_[1]->{id})) {
-        $_[0]->{type} = $_[1]->{type};
-    }
-    grep(!$seen{$_->{id}}++, @_);
-}
-
-sub get_input
-{
-    my $in = <STDIN>;
-    print_log "INPUT: $in";
-    if ($in eq undef) { print_info "<eof>\nexit\n"; last; } # eof
-    chomp $in;
-    if ($in eq "q" or $in eq "quit" or $in eq "exit") {
-        exit;
-    }
-    return $in;
-}
-
-sub do_search
-{
-    my ($dir, $title, $year) = @_;
-    print_info "Searching for '$title' ($year)...";
-    # my $mfound = IMDB::Movie->new($title);
-    my $mfound = IMDB::Movie->new($title, $year);
-    print_info "\n";
-    if ($mfound eq undef) {
-        print_info "No match found for '$title'\n";
-    } else {
-        my @matches = unique_matches(@{$mfound->matches});
-        if (!@matches) {
-            push @matches, {id => $mfound->id, title => $mfound->title, year => $mfound->year};
-        }
-        sub match_string {
-            my $ma = shift;
-            return "[".$ma->{id}."]  ".$ma->{title}." (", $ma->{year}, ") ".$ma->{type};
-        }
-        my $i;
-        for my $ma (@matches) {
-            $i++;
-            print_info "  $i) ", match_string($ma);
-            print_info "[Exact match]" if $mfound->{direct_hit};
-            print_info "\n";
-            # print_info "     ", IMDB::Movie::get_url_id($ma->{id}), "\n";
-            last if ($i >= 20);
-        }
-        my $num_m = scalar @matches;
-        $num_m = $num_m > 20 ? 20 : $num_m;
-        print_info "Select [1-$num_m] or <enter> to return\n";
-        print_info "Match: ";
-        my $sel = get_input;
-        if ($sel >=1 and $sel <= $num_m) {
-            my $ma = $matches[$sel-1];
-            print_info "Selected match:\n";
-            print_info "  $sel) ", match_string($ma), "\n";
-            print_info "Getting full info ..";
-            my $m = getmovie($ma->{id});
-            if (!$m) {
-                print_error "Getting full info for [", $ma->{id}, "]";
-            } else {
-                print_info " OK.\n";
-                save_movie($dir, $m);
-                dir_assign_movie($dir, $m);
-                print_info "Done.\n";
-            }
-            print_info "[enter to continue]";
-            get_input;
-        }
-    }
-    print_info "\n";
-}
-
-
-sub print_ihelp
-{
-    print_info << "IHELP";
-
-Interactive help:
-
-TITLE (YEAR)    -  Search by TITLE [(YEAR) optional]
-s TITLE (YEAR)  -  Search by TITLE [(YEAR) optional]
-ID              -  Specify IMDB ID
-URL             -  Specify IMDB URL
-
-.               -  Show current dir info and guesses
-l / ll          -  List relevant / all files
-d / dd          -  List dirs (missing info / all)
-dir             -  List sub-dirs to current dir
-cd N/DIR        -  Change to dir number(N) / name(DIR)
-<enter>         -  Next dir with missing info
-n / p           -  Next / Previous dir
-pwd             -  Print Current Dir
-ignoredir       -  Add dir to ignore.txt
-!CMD            -  Run command CMD in dir
-r               -  Recreate Report
-? / h / help    -  Print Help
-q / quit        -  Quit
-
-IHELP
-}
-
-sub interactive
-{
-    # sort
-    my @sort_dirs = sort by_alpha keys %all_dirs;
-    for (my $i=0; $i<scalar @sort_dirs; $i++) {
-        # index
-        $all_dirs{$sort_dirs[$i]}->{idx} = $i;
-    }
-
-    my $cur_dir = 0;
-    my $nmiss = count_missing;
-    print_info "Directories with missing info: ",
-               $nmiss, " / ", scalar @sort_dirs, "\n\n";
-    print_info "\n===== Interactive (debug) mode =====\n";
-
-    my $dir;
-    my @files;
-    my @guess;
-    my $num_guess;
-
-    my $s_nextmiss = 0;
-    my $s_chdir = 1;
-    my $s_info = 2;
-    my $s_cmd = 3;
-    my $s_search = 4;
-    my $state = $nmiss ? $s_nextmiss : $s_chdir;
-
-    while (1) {
-
-        if ($state <= $s_nextmiss) {
-            # NEXT_MISS:
-            while ($cur_dir < scalar @sort_dirs -1) {
-                last if (is_missing($sort_dirs[$cur_dir]));
-                $cur_dir++;
-            }
-        }
-
-        if ($state <= $s_chdir) {
-            # CHDIR:
-            $dir = $sort_dirs[$cur_dir];
-            @files = ();
-            if ($all_dirs{$dir}->{relevant}) {
-                @files = keys %{$all_dirs{$dir}->{relevant}};
-            }
-            @guess = get_guess_list($dir, cut_ext_l(@files));
-            # show max 9 guesses
-            $num_guess = scalar @guess > 9 ? 9 : scalar @guess;
-        }
-
-        if ($state <= $s_info) {
-            # INFO:
-            print_info "\n\nDirectory:\n\n";
-            print_dir 2, $cur_dir + 1, $dir;
-            print_info "\nMovies:";
-            if ($all_dirs{$dir}->{id}) {
-                print_info "\n";
-                for my $id (keys %{$all_dirs{$dir}->{id}}) {
-                    print_info "  * [$id] ", $movie{$id}->title,
-                    " (", $movie{$id}->year, ")\n";
-                }
-            } else {
-                print_info " *Missing Info*\n";
-            }
-            print_info "\nGuessed titles:\n";
-            for my $n (1 .. $num_guess) {
-                print_info "  $n) ", $guess[$n-1]->{title},
-                " (", $guess[$n-1]->{year}, ")\n";
-            }
-            print_info "\nSelect [1-",$num_guess,"] or enter title or imdb url\n";
-        }
-
-        # CMD:
-        $state = $s_cmd;
-        print_info "[enter=next missing  q=quit  ?=help]\n";
-        print_info "> ";
-        my $cmd = get_input;
-
-        if ($cmd eq undef) {  # enter
-            if ($cur_dir == scalar @sort_dirs -1) {
-                print_info "Last Directory! [", $cur_dir+1, "]\n";
-            } else {
-                $cur_dir++;
-                $state = $s_nextmiss;
-            }
-            next;
-
-        } elsif ($cmd eq "?" or $cmd eq "h" or $cmd eq "help") {
-            print_ihelp;
-
-        } elsif ($cmd eq ".") {
-            $state = $s_info;
-            next;
-
-        } elsif ($cmd eq "pwd") {
-            print_dir 2, $cur_dir + 1, $dir;
-
-        } elsif ($cmd eq "l") {
-            list_relevant $dir, @files;
-
-        } elsif ($cmd eq "ll" or $cmd eq "ls") {
-            list_files $dir;
-
-        } elsif ($cmd eq "d") {
-            list_dirs 0, @sort_dirs;
-
-        } elsif ($cmd eq "dd") {
-            list_dirs 2, @sort_dirs;
-
-        } elsif ($cmd eq "dir") {
-            list_subdirs $dir, @sort_dirs;
-
-        } elsif ($cmd =~ /^c +(\d+)$/) {
-            if ($1 >=1 and $1 <= scalar @sort_dirs) {
-                $cur_dir = $1 - 1;
-                $state = $s_nextmiss;
-                next;
-            }
-
-        } elsif ($cmd =~ /^cd +(.+) *$/) {
-            my $arg = $1;
-            if (($arg =~ /^\d+$/) and $arg >=1 and $arg <= scalar @sort_dirs) {
-                $cur_dir = $arg - 1;
-                $state = $s_chdir;
-                next;
-            } else {
-                my $new_dir = find_dir($dir, $arg, @sort_dirs);
-                if ($new_dir >= 0 and $new_dir <= scalar @sort_dirs) {
-                    $cur_dir = $new_dir;
-                    $state = $s_chdir;
-                    next;
-                }
-                print_info "Directory '", $arg, "' Not found!\n";
-            }
-
-        } elsif ($cmd eq "n") {
-            if ($cur_dir < scalar @sort_dirs -1) {
-                $cur_dir++;
-                $state = $s_chdir;
-                next;
-            } else {
-                print_info "Last Directory! [", $cur_dir+1, "]\n";
-            }
-
-        } elsif ($cmd eq "p") {
-            if ($cur_dir > 0) {
-                $cur_dir--;
-                $state = $s_chdir;
-                next;
-            } else {
-                print_info "First Directory! [", $cur_dir+1, "]\n";
-            }
-
-        } elsif ($cmd eq "ignoredir") {
-            my $F_IGN;
-            my $fign = "$prog_dir/ignore.txt";
-            if (!open($F_IGN, ">>", $fign)) {
-                print_error "open $fign $!";
-            } else {
-                print $F_IGN "\n-ignore $dir\n";
-                close $F_IGN;
-                print_info "Dir added to $fign.\n(use -c ignore.txt)\n\n";
-            }
-
-        } elsif ($cmd eq "r") {
-            print_report;
-            print_info "\n";
-
-        } elsif ($cmd =~ /^!(.*)$/) {
-            my $run = $1;
-            run_cmd($dir, $run);
-
-        } elsif ($cmd =~ /^\d{7}$/) {
-            # search by ID
-            $state = $s_search;
-
-        } elsif ($cmd >= 1 and $cmd <= $num_guess) {
-            do_search($dir, $guess[$cmd - 1]->{title}, $guess[$cmd - 1]->{year});
-            $state = $s_info;
-            next;
-
-        } elsif ($cmd =~ /^s +(.+)$/) {
-            $cmd = $1;
-            $state = $s_search;
-
-        } elsif (length $cmd >3) {
-            $state = $s_search;
-
-        } else {
-            print_info "Unknown cmd: '$cmd'\n";
-        }
-
-        if ($state == $s_search) {
-            # SEARCH:
-            my $title = $cmd;
-            my $year;
-            if ($title =~ /^(.+) \((\d{4})\)$/) {
-                $title = $1;
-                $year = $2;
-            } elsif ($title =~ /imdb.com\/title\/tt(\d{7})/i) {
-                $title = $1;
-            }
-            do_search($dir, $title, $year);
-            $state = $s_info;
-            next;
-        }
-
-    }
-}
-
 
 ###############################
 
@@ -2529,7 +2088,7 @@ sub set_opt
     } elsif ($opt eq "-q" or $opt eq "-quiet") {
         $verbose = 0;
 
-    } elsif ($opt eq "-i" or $opt eq "-interactive") {
+    } elsif ($enable_interactive and ($opt eq "-i" or $opt eq "-interactive")) {
         $opt_i = 1;
 
     } elsif ($opt eq "-o" or $opt eq "-out") {
@@ -2619,10 +2178,10 @@ sub set_opt
         @opt_links = ();
 
     } elsif ($opt eq "-js") {
-        $opt_js = 1;
+        # ignore obsolete option
 
     } elsif ($opt eq "-nojs") {
-        $opt_js = 0;
+        print_error "unsupported obsolete option: $opt";
 
     } elsif ($opt eq "-xml") {
         $opt_xml = 1;
@@ -2673,15 +2232,23 @@ sub set_opt
         $arg_used = required_arg($opt, $arg);
         $opt_theme = $arg;
 
+    } elsif ($opt eq "-deftitle") {
+        $opt_otitle = 0;
+
     } elsif ($opt eq "-origtitle") {
         $opt_otitle = 1;
 
-    } elsif ($opt eq "-deftitle") {
-        $opt_otitle = 0;
+    } elsif ($opt eq "-og-title") {
+        $opt_otitle = 2;
 
     } elsif ($opt eq "-http-accept-language") {
         $arg_used = required_arg($opt, $arg);
         $LWP::Simple::ua->default_header('Accept-Language' => $arg);
+        my $a = $arg;
+        $a =~ s/\s//g;
+        $a =~ s/[^\w.,=-]/_/g;
+        if ($a) { $a = "-$a"; }
+        $imdb_cache = $imdb_cache_base . $a;
 
     } elsif ($opt eq "-http-user-agent") {
         $arg_used = required_arg($opt, $arg);
@@ -2701,8 +2268,9 @@ sub set_opt
 
     } else {
         $ndirs++;
-        push @{$group[$ngroup]->{dirs}}, normal_path($opt);
-        print_log("DIR: '$opt'");
+        my $dir = expand_path(normal_path($opt));
+        push @{$group[$ngroup]->{dirs}}, $dir;
+        print_log("DIR: '$opt' -> '$dir'");
     }
     return $arg_used;
 }
@@ -2755,11 +2323,10 @@ sub usage
     print_info << "USAGE";
 Usage: perl $progbin [OPTIONS] [DIRECTORY ...]
   Options:
-    -h|-help|-ihelp         Help (short|long|interactive)
+    -h|-help                Help (short|long)
     -V|-version             Version
     -v/q|-verbose/quiet     Verbose/Quiet output
     -c|-config <CFGFILE>    Load configuration
-    -i|-interactive         Interactive debug mode (deprecated)
     -o|-out <FILENAME>      Output path base name
     -t|-title <TITLE>       Set Title (multiple to define groups)
     -g|-group               Group separator
@@ -2772,6 +2339,9 @@ Usage: perl $progbin [OPTIONS] [DIRECTORY ...]
     -ext EXT                Add a file extension of recognized media files
     DIRECTORY               Directory to scan
 USAGE
+    # deprecated:
+    # -ihelp                  Help (interactive)
+    # -i|-interactive         Interactive debug mode (deprecated)
 
     if (!$long) {
         print_info "    (Use -help for More Options)\n";
@@ -2785,8 +2355,6 @@ USAGE
     -ns|-noskip             Clear preset skip lists
     -gs|-gskip <NAME>       Group Skip file or dir
     -gx|-gregex <EXPR>      Group Skip using regular expressions
-    -js                     Use javascript for sorting [default]
-    -nojs                   Use static html for sorting
     -xml                    Export catalog to .xml files
     -nosubs                 Clear subtitle search site list
     -nolink                 Clear custom links list
@@ -2804,8 +2372,9 @@ USAGE
     -as|-autosave           Save auto guessed exact matches
     -cachedays <NUM>        Number of days to cache pages [default: $max_cache_days]
     -theme <NAME>           Select theme name [default: $opt_theme]
-    -origtitle              Use original movie title
     -deftitle               Use default (regional) movie title [default]
+    -origtitle              Use original movie title
+    -og-title               Use opengraph title (english)
     -http-accept-language <LANG>  Set HTTP Accept-Language header value
     -http-user-agent <AGENT>      Set HTTP User-Agent header value
     -http-header <HEADER=VALUE>   Set any HTTP header
@@ -2844,8 +2413,8 @@ sub parse_opt
             usage ($opt =~ /-help/);
             exit;
         }
-        if ($opt eq "-ih" or $opt eq "-ihelp") {
-            print_ihelp;
+        if ($enable_interactive and ($opt eq "-ih" or $opt eq "-ihelp")) {
+            print_ihelp();
             exit;
         }
         if (set_opt($opt, $arg)) {
@@ -2862,17 +2431,19 @@ sub parse_opt
 sub makedir
 {
     my $dir = shift or return;
-    -d $dir or mkdir $dir or abort "Can't mkdir $dir";
+    if (-d $dir) { return; }
+    #mkdir $dir or abort "Can't mkdir $dir";
+    File::Path::make_path($dir) or abort "Can't mkdir $dir";
 }
 
 sub init
 {
-    $base_path = normal_path($base_path);
+    $base_path = expand_path(normal_path($base_path));
     if ($base_path =~ /^(.*\/)([^\/]*)$/) {
         $base_dir = $1;
         $base_name = $2;
     } else {
-        $base_dir = "";
+        $base_dir = ""; # could use "./"
         $base_name = $base_path;
     }
     if (!$base_name) {
@@ -2880,6 +2451,15 @@ sub init
     }
     $base_path = $base_dir . $base_name;
     $image_cache = $base_dir . $image_dir;
+    if ($system_install) {
+        # put cache and log in report dir for system install
+        $imdb_cache = "$base_dir$imdb_cache";
+        $scan_log = "$base_dir$scan_log";
+    } else {
+        # put cache and log in prog dir for user install
+        $imdb_cache = "$prog_dir/$imdb_cache";
+        $scan_log = "$prog_dir/$scan_log";
+    }
     makedir $base_dir;
     makedir $imdb_cache;
     makedir $image_cache;
@@ -2895,15 +2475,26 @@ sub init
         $IMDB::Movie::FIND_OPT = "&site=aka";
     }
     print_debug "AKA: '", $IMDB::Movie::FIND_OPT, "'";
-    print_debug "LWP Headers:\n", $LWP::Simple::ua->default_headers->as_string;
+    print_debug "LWP Headers: ", $LWP::Simple::ua->default_headers->as_string;
+    $LWP::Simple::ua->ssl_opts(verify_hostname => 0);
+    print_debug "LWP SSL verify_hostname=", $LWP::Simple::ua->ssl_opts('verify_hostname');
 }
 
 sub open_log {
+    if ($F_LOG) { return; }
     open $F_LOG, ">", $scan_log;
     $F_LOG->autoflush(1);
+    if ($defer_log) {
+        print $F_LOG $defer_log;
+        $defer_log = undef;
+    }
+}
+
+sub log_start {
     print_log "$progname $progver";
     print_log "Perl: ", $^X, " ", sprintf("v%vd", $^V), " ", $^O;
     print_log "CYGWIN='", $ENV{CYGWIN}, "'";
+    print_log "system_install=$system_install";
 }
 
 
@@ -2911,11 +2502,13 @@ sub open_log {
 
 ### Main
 
-open_log;
+log_start;
 
 parse_opt(@ARGV);
 
 init;
+
+open_log;
 
 do_scan;
 
@@ -2925,8 +2518,8 @@ print_report;
 
 print_note "\nDONE.\n";
 
-if ($opt_i) {
-    interactive;
+if ($opt_i and $enable_interactive) {
+    interactive();
 }
 
 close $F_LOG;

@@ -65,6 +65,10 @@ a:hover {
   }
 }
 
+#STATUS {
+  font-size: 19px;
+  font-weight: 900;
+}
 
 .movietable {
   @include gradient(#ddd, #fff);

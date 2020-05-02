@@ -9,7 +9,7 @@ use HTML::TokeParser;
 use Data::Dumper;
 use HTML::Tagset ();
 
-$VERSION = '0.36';
+$VERSION = '0.39';
 $ERROR = "";
 @MATCH = ();
 $FIND_OPT = ""; # "&site=aka"
@@ -21,6 +21,10 @@ sub error {
     $ERROR = shift;
     # carp $ERROR;
     return $preverr;
+}
+
+sub log_debug {
+    #print "DEBUG: [lib] ", @_, "\n";
 }
 
 sub new {
@@ -64,6 +68,7 @@ sub new_html {
     my ($class, $id, $html) = @_;
     @MATCH = ();
     chomp($id);
+    log_debug("new_html($id)");
     carp "can't instantiate $class without html" unless ($html);
     my $parser = _get_toker_html($html);
     my ($title, $type, $year, $newid, $newhtml);
@@ -81,16 +86,17 @@ sub new_html {
         return undef;
     }
     if ($newid) {
-        # print STDERR "NEW ID: $newid ($id)\n";
+        log_debug("NEW ID: $newid ($id)");
         $id = $newid; 
     }
     if ($newhtml) {
-        # print STDERR "NEW HTML: $newhtml ($id)\n";
+        log_debug("NEW HTML: $newhtml ($id)");
         $html = $newhtml; 
     }
-    # print STDERR "IMDB ID: $id\n";
 
     $title = unqote_and_strip_space($title);
+
+    log_debug("IMDB ID: $id '$title' $year");
 
     my $self = {
         title       => $title,
@@ -98,7 +104,8 @@ sub new_html {
     };
     if (!$id) { $id      = _get($html, \$parser, "id", \&_id); }
     $self->{id}          = $id;
-    $self->{otitle}      = _get($html, \$parser, "header", \&_header);
+    $self->{otitle}      = _get($html, \$parser, "otitle", \&_otitle, \&_otitle_old);
+    $self->{og_title}    = _get($html, \$parser, "og_title", \&_og_title);
     $self->{runtime}     = _get($html, \$parser, "runtime", \&_runtime, \&_runtime_old);
     $self->{img}         = _get($html, \$parser, "img", \&_image, \&_image_alt, \&_image_og);
     $self->{user_rating} = _get($html, \$parser, "rating", \&_user_rating, \&_user_rating_old);
@@ -246,6 +253,7 @@ sub get_matches
     @MATCH = ();
     $parser->get_tag('title');
     $pagetitle = $parser->get_text();
+    log_debug("get_matches($pagetitle)");
     if (_is_search_title($pagetitle)) {
         # this is a search result!
         _get_lucky($parser);
@@ -308,30 +316,37 @@ sub _get_lucky {
     my ($parser) = @_;
     my ($tag,$id);
 
+    log_debug("get_lucky");
     # don't textify <img> tags
     $parser->{textify} = ();
+    _jump_id($parser, "main", "div", "span");
     while ($tag = $parser->get_tag('a')) {
         my $href = $tag->[1]->{href};
         next unless $href;
         if (($id) = $href =~ /^\/title\/tt(\d{7})[\/]?/) {
-            my $title = $parser->get_text;
+            next if ($href =~ /\/vote\?/); # skip vote link
+            my $title = $parser->get_trimmed_text('/a');
             next unless ($title);
             next if ($title eq "[IMG]");
+            #log_debug("get_lucky: id:$id title:'$title'");
             my $year;
             my $type;
             $parser->get_tag('/a');
-            if ($parser->get_text =~ /\((\d{4})\) *(\(.*\))?$/) {
+            my $year_text = $parser->get_phrase;
+            #log_debug("get_lucky: year_text = '$year_text'");
+            if ($year_text =~ /\((\d{4})\) *(\(.*\))?$/) {
                 $year = $1;
                 $type = $2;
-                # print "TYPE: $type\n";
+                #log_debug("get_lucky: year:$year type:$type");
             }
             $tag = $parser->get_tag();
             if ($tag->[0] eq "small") {
                 $type .= $parser->get_text;
-                # print "TYPE. $type\n";
+                #log_debug("get_lucky: type:$type");
             }
-            # print "match: $id $title $year $type\n";
-            push @MATCH, {id => $id, title => $title, year => $year, type => $type};
+            my $match_entry = {id => $id, title => $title, year => $year, type => $type};
+            log_debug("match entry: id:$id title:$title year:$year type:$type");
+            push @MATCH, $match_entry;
         }
     }
 
@@ -367,7 +382,7 @@ sub _id {
     return undef;
 }
 
-sub _header {
+sub _otitle_old {
     my $parser = shift;
     my $tag;
     my $stag;
@@ -389,6 +404,29 @@ sub _header {
     return undef;
 }
 
+sub _otitle {
+    my $parser = shift;
+    my $tag;
+    my $otitle;
+    $tag = _jump_class($parser, "originalTitle") or return undef;
+    $otitle = get_text_html($parser);
+    $otitle = unqote_and_strip_space($otitle);
+    return $otitle;
+}
+
+#    <meta property='og:title' content="Tomorrowland (2015)" />
+#    opengraph title
+sub _og_title {
+    my $parser = shift;
+    my $tag;
+    my $ogtitle;
+    $tag = _jump_prop($parser, "property", "og:title", "meta") or return undef;
+    $ogtitle = $tag->[1]->{content};
+    $ogtitle = unqote_and_strip_space($ogtitle);
+    # strip year
+    $ogtitle =~ s/ *\([^(]*\) *$//;
+    return $ogtitle;
+}
 
 sub _image_alt {
     my $parser = shift;
@@ -434,7 +472,11 @@ sub _image_og {
     my ($tag,$image);
     $tag = _jump_prop($parser, "property", "og:image", "meta") or return undef;
     $image = $tag->[1]->{content};
+    # a missing poster returns imdb logo with a url like:
+    # http://ia.media-imdb.com/images/G/01/imdb/images/logos/imdb_fb_logo-123._CB123.png
     if ($image =~ /\/nopicture\//i) { return ""; }
+    if ($image =~ /images\/logos/i) { return ""; }
+    if ($image =~ /imdb_fb_logo/i) { return ""; }
     #print "og:image = $image\n";
     return $image;
 }
@@ -523,6 +565,23 @@ sub _jump_class {
     return 0;
 }
 
+# <div id="main">
+sub _jump_id {
+    my ($parser, $html_id, @tags) = @_;
+    my $tag;
+    while ($tag = $parser->get_tag(@tags)) {
+        # print "\nTAG[", scalar @{$tag}, "]: ", join(' ',@{$tag}), "\n";
+        # is a start tag?
+        if (scalar @{$tag} > 2) {
+            if ($tag->[1]->{id} =~ /$html_id/i) {
+                log_debug("_jump_id: found $html_id: ", $tag->[3]);
+                return $tag;
+            }
+        }
+    }
+    return 0;
+}
+
 # <span class="hidden" itemprop="ratingValue">-</span>
 # <span itemprop="ratingValue">8.4</span>
 
@@ -538,7 +597,10 @@ sub _jump_prop {
                 # print ("skip: ", $parser->get_text(), "\n");
                 next;
             }
-            return $tag if ($tag->[1]->{$prop_name} =~ /$prop_val/i);
+            if ($tag->[1]->{$prop_name} =~ /$prop_val/i) {
+                # print "\nFOUND TAG[", scalar @{$tag}, "]: ", join(' ',@{$tag}), "\n";
+                return $tag
+            }
         }
     }
     return 0;
@@ -753,7 +815,7 @@ sub download_page_id {
 
 sub get_page_id {
     my ($id,$site) = @_;
-    #print "get_page_id($id)\n";
+    log_debug("get_page_id($id)");
     return $download_func->($id);
 }
 
@@ -779,6 +841,7 @@ sub get_url_find {
 sub get_page_find {
     my ($key, $year, $site) = @_;
     my $url = get_url_find($key, $year, $site);
+    log_debug("get_page_find($key, $year, $site) -> $url");
     my $content = get($url);
     if (!$content) {
         error "can't connect to server $url";
