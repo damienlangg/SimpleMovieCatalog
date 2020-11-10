@@ -765,7 +765,7 @@ sub _plot {
 
 sub _storyline {
     # storyline is longer than plot
-    my $plot = _get_info(shift, "storyline", "h2", "/p", "em", "span") or return undef;
+    my $plot = _get_info(shift, "storyline", "h2", "/span") or return undef;
     $plot =~ s/ *\|.*$//;
     # print "\nstory: $plot\n";
     return $plot;
