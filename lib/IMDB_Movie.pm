@@ -658,13 +658,11 @@ sub _genre {
     my $parser = shift;
     my ($tag,@genre);
 
-    # OLD: my $genre = _get_info($parser, "genre", "h5", "/div");
-    my $genre = _get_info($parser, "genres:|genre:", "h4|h5", "/div") or return undef;
+    my $genre = _get_info($parser, "^genres|^genre", "span", "/ul") or return undef;
     # print "\nGENRE: '$genre'\n";
     $genre =~ s/ see more.*$//i;
     $genre =~ s/ more.*$//i;
-    $genre =~ s/[^\w|-]//g;
-    @genre = split(/\|/, $genre);
+    @genre = split(' ', $genre);
 
     return undef if (!@genre);
     return [ unique(@genre) ];
