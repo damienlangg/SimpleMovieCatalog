@@ -411,6 +411,7 @@ sub _otitle {
     $tag = _jump_class($parser, "originalTitle") or return undef;
     $otitle = get_text_html($parser);
     $otitle = unqote_and_strip_space($otitle);
+    $otitle =~ s/^Original title: //;
     return $otitle;
 }
 
