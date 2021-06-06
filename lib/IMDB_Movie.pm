@@ -705,8 +705,8 @@ sub _user_rating {
     my $tag;
     my $rating;
 
-    # <span itemprop="ratingValue">8.4</span>
-    _jump_prop($parser, "itemprop", "ratingValue", "span") or return undef;
+    # <span class="AggregateRatingButton__RatingScore-sc-1il8omz-1 fhMjqK">8.2</span>
+    _jump_prop($parser, "class", "AggregateRatingButton__RatingScore-sc-1il8omz-1 fhMjqK", "span") or return undef;
     $rating = $parser->get_text() or return undef;
     if ($rating =~ /([\d.]+)/) {
         return $1;
